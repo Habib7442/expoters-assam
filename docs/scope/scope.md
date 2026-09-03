@@ -1,0 +1,176 @@
+# Scope: ExportsAssam.com
+
+A B2B trade directory and enquiry platform connecting Assam/Indian exporters with buyers, in the style of IndiaMART. Every buyer action routes to WhatsApp; the only on-site payment is supplier membership via Razorpay.
+
+**Build approach:** Tracer Bullet (prove the whole pipe works end to end, through every layer, before building any part fully; every slice is real and shippable, just narrow).
+**Workflow:** GA (after `/develop`: `/check verify`, `/test`, a fresh model `/check review`, then `/document`; most features get a spec first). This project handles auth, Razorpay payments, and buyer PII, which is exactly the signal that calls for GA.
+
+_These are recommendations to keep your build orderly, not requirements. Skip anything that does not fit: if you already know how to build a feature, use `/develop` and skip `/architect`. You decide when a feature is `done`._
+
+**Out of scope for this scope file:** the admin dashboard lives in a completely separate app (`E:\Web Dev\expoters-assam-admin`, its own repo, its own `AGENTS.md`) and is planned there, not here.
+
+## At a glance
+
+| # | Feature | Phase | Status |
+|---|---|---|---|
+| 1 | Stack, tooling, auth & Supabase connection | Foundation | existing |
+| 2 | Database schema & access model | Foundation | done |
+| 3 | Design system tokens | Foundation | done |
+| 4 | Product page & Send Enquiry (core loop) | Skeleton | in-progress |
+| 5 | Company profile pages | Slice 2 | planned · needs a decision |
+| 6 | Listings, categories & country filters | Slice 2 | planned · needs a decision |
+| 7 | Home page | Slice 2 | in-progress |
+| 8 | Post Buy Requirement | Slice 3 | planned · needs a decision |
+| 9 | Enquiries on companies & buy requirements | Slice 3 | planned |
+| 10 | Supplier self-service product submission | Slice 3 | planned · needs a decision |
+| 11 | Membership plans & Razorpay | Slice 4 | planned · needs a decision |
+| 12 | AI-powered / semantic search | Slice 5 | planned · needs a decision |
+| 13 | SEO & GEO | Slice 5 | planned |
+| 14 | PostHog analytics | Slice 5 | planned |
+| 15 | Cloudflare R2 image storage | Infrastructure | in-progress |
+
+## Foundations
+
+### 1. Stack, tooling, auth & Supabase connection · existing
+Next.js (App Router, TypeScript, Tailwind, shadcn/ui) scaffolded; Clerk wired for authentication (`ClerkProvider`, `proxy.ts` middleware, sign in/up routes); Supabase project linked with a public client and a privileged server-only client. Predates this scope pass, verified working (typecheck, lint, and the dev server all clean).
+code in `./` (`proxy.ts`, `app/layout.tsx`, `lib/supabase/`)
+
+### 2. Database schema & access model · done
+The core tables from `AGENTS.md` Section 7 (companies, products, categories, buy_requirements, enquiries, memberships, buyers), plus the access model given Clerk, not Supabase Auth, manages sessions.
+**Done when:** every table exists with its required columns and constraints (a product needs a name, category, and image before it can be approved), RLS is enabled on every table, and the access model (server-route-mediated writes vs. per-user RLS policies) is decided and applied.
+- [x] Design it (spec): `/architect database schema & access model`
+- [x] Build it: `/develop database schema & access model`
+   - [x] Schema & constraints: all 7 tables, the two derived views, every CHECK/trigger/index (AC-1, AC-3, AC-4, AC-5, AC-6, AC-8, AC-9)
+   - [x] RLS, grants & storage: RLS policies, the explicit anon/authenticated revoke, the two Storage buckets (AC-2)
+   - [x] Query helpers: `assertOwnsCompany`, `getCurrentTier`/`getCurrentTiersFor`, `getOrCreateBuyerByPhone` in both apps (AC-4, AC-7, security model)
+   - [x] Apply & generate types: `supabase db push`, generate and copy `database.types.ts` to both apps (AC-1)
+- [x] Verify it: `/check verify database schema & access model`
+- [x] Test it: `/test database schema & access model`
+- [x] Review it (fresh model): `/check review database schema & access model`
+- [x] Document it: `/document database schema & access model`
+spec [0001](../specs/0001-database-schema-access-model/index.md) · code in `supabase/migrations/`, `lib/supabase/`, `lib/auth/` (both apps)
+
+### 3. Design system tokens · done
+Apply `DESIGN.md`'s locked color, type, and spacing tokens into the Tailwind/shadcn theme so every later screen matches it by default instead of drifting from it screen by screen.
+**Done when:** `globals.css` theme tokens match `DESIGN.md` exactly (background, greens, the small gold accent, headings/body fonts), and a sample card and button visibly reflect them.
+- [x] Build it: `/develop design system tokens`
+code in `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `.claude/skills/develop/design.md`
+
+## Skeleton: core loop
+
+### 4. Product page & Send Enquiry (core loop) · in-progress
+The walking skeleton: a buyer opens one real product and sends an enquiry that writes to Supabase, then continues the conversation on WhatsApp themselves via a pre-filled `wa.me` link (no WhatsApp API, no credentials, no external approval). Real auth, real schema, real UI, deliberately narrow, proves the whole pipe end to end before anything else is built.
+**Done when:** a buyer can open a product page backed by real Supabase data and send an enquiry; it lands in `enquiries` and the buyer is handed a working WhatsApp link to the supplier.
+- [x] Design it (spec): `/architect product page & send enquiry`
+- [x] Build it: `/develop product page & send enquiry`
+   - [x] Data layer: `company_contacts` table, `products.slug`, the `create_enquiry` function, migration applied and types regenerated in both apps (AC-5, AC-6, AC-7, AC-8)
+   - [x] Query helpers + demo seed data so the page has something real to render (AC-1, AC-7, AC-8)
+   - [x] Product page (`/products/[slug]`), metadata, image config (AC-1)
+   - [x] Send Enquiry dialog, form, and the `sendEnquiry` server action with rate limiting, dedup, and the `wa.me` link (AC-2, AC-3, AC-4, AC-5, AC-8)
+- [ ] Verify it: `/check verify product page & send enquiry`
+- [ ] Test it: `/test product page & send enquiry`
+- [ ] Review it (fresh model): `/check review product page & send enquiry`
+- [ ] Document it: `/document product page & send enquiry`
+spec [0003](../specs/0003-product-page-send-enquiry/index.md) · code in `supabase/migrations/20260827080000_add_company_contacts_and_product_slug.sql`, `lib/supabase/queries/products.ts`, `lib/actions/send-enquiry.ts`, `app/products/[slug]/`, `components/send-enquiry-dialog.tsx`, `scripts/seed-demo.ts`
+
+## Slice 2: browse the directory
+
+### 5. Company profile pages · needs a decision
+Each supplier's profile page: logo, about, location, product range, and verified badge.
+**Done when:** a company page renders real Supabase data, including the products it lists.
+- [ ] Design it (spec): `/architect company profile pages`
+
+### 6. Listings, categories & country filters · needs a decision
+Browse products or companies by category, or by supplier location/country.
+**Done when:** a visitor can filter the product or company list by category and by country, and the URL reflects the active filter.
+- [ ] Design it (spec): `/architect listings, categories & country filters`
+
+### 7. Home page · in-progress
+Hero with search bar, quick stats (verified exporters, products, buyers, countries connected), featured products/exporters, latest buy requirements, and entry actions ("List Your Business Free", "Post Buy Requirement").
+**Done when:** the home page shows real counts and real featured content pulled from Supabase, not placeholders.
+- [x] Design it (spec, assumed): `/architect home page` (not yet run — recorded as an assumed spec by `/develop`, see spec 0002; still owed ratification)
+- [ ] Build it: `/develop home page`
+   - [x] Navbar (top bar + sticky header) and hero section, static/placeholder data (AC-1, AC-2, AC-3, AC-4)
+   - [x] Why ExportsAssam value-props band (Global Reach, Verified Businesses, Trusted Connections, Grow Your Business)
+   - [x] Signup CTA band and site-wide footer (no newsletter email capture built — not in the PRD's data model, would be an unbuilt/unwired feature; the band reuses the existing "List Your Business Free" signup action instead)
+   - [ ] Category grid, featured products, featured exporters, latest buy requirements — real Supabase data
+spec [0002](../specs/0002-home-page-navbar-hero.md) · code in `app/layout.tsx`, `components/site-header.tsx`, `components/site-footer.tsx`, `app/page.tsx`
+
+## Slice 3: capture more leads
+
+### 8. Post Buy Requirement · needs a decision
+A buyer posts what they want to buy (product, quantity, location, notes); it is saved, optionally shown publicly under Latest Buy Requirements, and forwarded to WhatsApp.
+**Done when:** a buyer can submit a requirement, it appears in the public list when marked visible, and the WhatsApp message is received.
+- [ ] Design it (spec): `/architect post buy requirement`
+
+### 9. Enquiries on companies & buy requirements · planned
+Extend the Send Enquiry action already proven in the core loop (feature 4) to company profile pages and buy requirement listings.
+**Done when:** Send Enquiry works from a company page and from a buy requirement, using the same write-and-WhatsApp-forward path the core loop already proved.
+- [ ] Build it: `/develop enquiries on companies & buy requirements`
+
+### 10. Supplier self-service product submission · needs a decision
+A supplier lists their own product from their own dashboard; it stays `pending` until an admin approves it. (The approval action itself lives in the separate admin app; this feature is only the supplier-facing submission side.)
+**Done when:** a supplier can submit a product with images, it is stored `pending`, and it does not appear on any public read path until approved.
+- [ ] Design it (spec): `/architect supplier self-service product submission`
+
+## Slice 4: revenue
+
+### 11. Membership plans & Razorpay · needs a decision
+Basic/Silver/Gold tiers; a supplier upgrades and pays via Razorpay; a successful payment auto-upgrades the account (badge, ranking boost, featured placement).
+**Done when:** a supplier can choose Silver or Gold, pay via Razorpay, and their membership tier updates automatically on successful payment, with the payment logged.
+- [ ] Design it (spec): `/architect membership plans & razorpay`
+
+## Slice 5: findability
+
+### 12. AI-powered / semantic search · needs a decision
+Fast product/company search with spelling tolerance and instant suggestions, built on Supabase semantic matching, not a third party search SaaS.
+**Done when:** search returns relevant results tolerant of common typos and updates as the user types.
+- [ ] Design it (spec): `/architect ai-powered search`
+
+### 13. SEO & GEO · planned
+Sitemap, per-page metadata and structured data, clean URLs, and AI-crawler readiness, per PRD Sections 8 to 9 and the installed `seo-aeo-best-practices` skill.
+**Done when:** every product and company page has correct metadata and structured data, a sitemap exists, and crawler access is configured.
+- [ ] Build it: `/develop seo & geo`
+
+### 14. PostHog analytics · planned
+Page views, search behavior, and enquiry funnel drop-off tracked via PostHog.
+**Done when:** key events (page view, search performed, enquiry sent, buy requirement posted) appear in PostHog.
+- [ ] Build it: `/develop posthog analytics`
+
+## Infrastructure
+
+### 15. Cloudflare R2 image storage · in-progress
+Moves where product and company images live, from the Supabase Storage buckets spec 0001 created to Cloudflare R2, mainly for R2's zero egress cost as the directory's image traffic grows. Enrolled after spec 0001 shipped; the two Supabase buckets stay in place with public read revoked, not deleted.
+**Done when:** the demo product's image (feature 4) is served from R2 through a custom domain, `next/image` renders it in both dev and a Vercel production build, and the old Supabase buckets no longer serve public reads.
+- [x] Design it (spec): `/architect switch image storage from Supabase Storage to Cloudflare R2`
+- [ ] Build it: `/develop cloudflare r2 image storage`
+   - [ ] R2 setup: bucket, scoped API token, custom domain connected (DNS-on-Cloudflare precondition checked first), env vars in `.env.local` (AC-1)
+   - [ ] Storage helper: `lib/storage/r2-client.ts` (unguarded core) + `lib/storage/r2.ts` (`server-only` entry), checksum config (AC-1, AC-2, AC-5)
+   - [ ] Demo seed migrated to R2, `next.config.ts` updated, re-seed verified against the live product page (AC-3, AC-4)
+   - [ ] Old Supabase buckets' public read revoked; spec 0001's storage section annotated as superseded (AC-6)
+- [ ] Verify it: `/check verify cloudflare r2 image storage`
+- [ ] Test it: `/test cloudflare r2 image storage`
+- [ ] Review it (fresh model): `/check review cloudflare r2 image storage`
+- [ ] Document it: `/document cloudflare r2 image storage`
+spec [0004](../specs/0004-cloudflare-r2-image-storage.md)
+
+## Legend
+
+**The decision box.** Every feature carries exactly one, the sub-task whose label ends with `(spec)`. Its wording varies, so skills locate it by that `(spec)` suffix, never by an exact label. Every other box is an execution box and `/architect` never ticks one.
+
+**Feature lifecycle**: the scope updates as a feature moves; each row is what it shows and who sets it:
+
+| State | Set by | The feature shows |
+|---|---|---|
+| `planned` · needs a decision | `/scope` | one box: `Design it (spec): /architect <feature>` |
+| `in-progress` (designed) | `/architect` at spec capture | `Design it` ticked; spec linked; `Build it: /develop <feature>` + 2 to 5 milestones; the tier's closing boxes (`Verify it`, `Test it`, `Review it`, `Document it` at GA); any surfaced follow-up enrolled |
+| `in-progress` (building) | `/develop` | milestone sub-boxes tick one by one; code pointer filled |
+| `in-progress` (verified) | `/check verify` | `Build it` + milestones ticked; `Verify it` ticked |
+| `done` | you, when you decide it is (any skill sets it when you say so); `/sync` reconciles | boxes you ran ticked, skipped ones marked skipped; at GA, the suggested point to call it done is after `/test`; `/sync` captures conventions |
+
+- **Next step** = the first unticked box (always a command or a tracked milestone).
+- **needs a decision** = run `/architect` first; otherwise straight to `/develop`. The tag drops once the spec is captured.
+- **Atomic build tasks live in the spec's `## Build plan`, not here**: the scope carries only the milestone rollup.
+- **Status**: `planned` → `in-progress` → `done`, plus `existing` (pre-workflow) and `dropped` (de-scoped, kept for history).
+- **Workflow tier tag** beside a heading (e.g. `· Alpha`) would set that one feature's rigor above or below the GA default; none currently differ, so none carry a tag.
+- **Pointer line** (`spec <n> · code in <path>`): the spec link added by `/architect`, the code path by `/develop`.

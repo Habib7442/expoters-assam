@@ -1,6 +1,19 @@
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Sora } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  weight: ["600", "700"],
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,9 +34,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable, sora.variable)}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ClerkProvider appearance={{ theme: shadcn }}>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </ClerkProvider>
+      </body>
     </html>
   );
 }
