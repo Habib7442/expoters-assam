@@ -22,12 +22,13 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 7 | Home page | Slice 2 | in-progress |
 | 8 | Post Buy Requirement | Slice 3 | planned · needs a decision |
 | 9 | Enquiries on companies & buy requirements | Slice 3 | planned |
-| 10 | Supplier self-service product submission | Slice 3 | planned · needs a decision |
+| 10 | Supplier business listing | Slice 3 | in-progress |
 | 11 | Membership plans & Razorpay | Slice 4 | planned · needs a decision |
 | 12 | AI-powered / semantic search | Slice 5 | planned · needs a decision |
 | 13 | SEO & GEO | Slice 5 | planned |
 | 14 | PostHog analytics | Slice 5 | planned |
 | 15 | Cloudflare R2 image storage | Infrastructure | in-progress |
+| 16 | Supplier product submission | Slice 3 | planned · needs a decision |
 
 ## Foundations
 
@@ -88,13 +89,20 @@ Browse products or companies by category, or by supplier location/country.
 ### 7. Home page · in-progress
 Hero with search bar, quick stats (verified exporters, products, buyers, countries connected), featured products/exporters, latest buy requirements, and entry actions ("List Your Business Free", "Post Buy Requirement").
 **Done when:** the home page shows real counts and real featured content pulled from Supabase, not placeholders.
-- [x] Design it (spec, assumed): `/architect home page` (not yet run — recorded as an assumed spec by `/develop`, see spec 0002; still owed ratification)
-- [ ] Build it: `/develop home page`
+- [x] Design it (spec): `/architect home page`
+- [x] Build it: `/develop home page`
    - [x] Navbar (top bar + sticky header) and hero section, static/placeholder data (AC-1, AC-2, AC-3, AC-4)
    - [x] Why ExportsAssam value-props band (Global Reach, Verified Businesses, Trusted Connections, Grow Your Business)
    - [x] Signup CTA band and site-wide footer (no newsletter email capture built — not in the PRD's data model, would be an unbuilt/unwired feature; the band reuses the existing "List Your Business Free" signup action instead)
-   - [ ] Category grid, featured products, featured exporters, latest buy requirements — real Supabase data
-spec [0002](../specs/0002-home-page-navbar-hero.md) · code in `app/layout.tsx`, `components/site-header.tsx`, `components/site-footer.tsx`, `app/page.tsx`
+   - [x] Data layer: `lib/supabase/queries/home.ts` query helpers, each owning its own failure handling (AC-5, AC-6, AC-7, AC-8, AC-9, AC-11)
+   - [x] Category tile, product card, exporter card, buy requirement card components (AC-5, AC-6, AC-7, AC-8, AC-10)
+   - [x] Wire category grid, featured products, featured exporters, latest buy requirements into `app/page.tsx`, parallel fetched, each section omitted on its own failure (AC-5, AC-6, AC-7, AC-8, AC-11)
+   - [x] Real stats strip numbers from `directory_stats` (AC-9) — strip markup didn't exist yet, built it as part of this task
+- [ ] Verify it: `/check verify home page`
+- [ ] Test it: `/test home page`
+- [ ] Review it (fresh model): `/check review home page`
+- [ ] Document it: `/document home page`
+spec [0002](../specs/0002-home-page-navbar-hero/index.md) · code in `app/layout.tsx`, `components/site-header.tsx`, `components/site-footer.tsx`, `app/page.tsx`, `lib/supabase/queries/home.ts`, `components/category-tile.tsx`, `components/product-card.tsx`, `components/exporter-card.tsx`, `components/buy-requirement-card.tsx`
 
 ## Slice 3: capture more leads
 
@@ -108,10 +116,25 @@ Extend the Send Enquiry action already proven in the core loop (feature 4) to co
 **Done when:** Send Enquiry works from a company page and from a buy requirement, using the same write-and-WhatsApp-forward path the core loop already proved.
 - [ ] Build it: `/develop enquiries on companies & buy requirements`
 
-### 10. Supplier self-service product submission · needs a decision
-A supplier lists their own product from their own dashboard; it stays `pending` until an admin approves it. (The approval action itself lives in the separate admin app; this feature is only the supplier-facing submission side.)
-**Done when:** a supplier can submit a product with images, it is stored `pending`, and it does not appear on any public read path until approved.
-- [ ] Design it (spec): `/architect supplier self-service product submission`
+### 10. Supplier business listing · in-progress
+A supplier turns their Clerk account into a real, pending business listing: name, location, logo, and a WhatsApp contact number, created together as one atomic step. It stays `pending` until an admin approves it in the separate admin app; a rejected listing shows why and can be edited and resubmitted. (The approval action itself lives in the separate admin app; this feature is only the supplier-facing listing side.) This is the first half of what was originally scoped as supplier self-service submission; submitting products under an approved company is its own follow-on feature (16), deferred until a real approved company exists to design and build against.
+**Done when:** a supplier can submit their business listing, it is stored `pending` with its WhatsApp contact created atomically, it never appears on any public read path until approved, and a rejected listing shows the reason and can be fixed and resubmitted.
+- [x] Design it (spec): `/architect supplier business listing`
+- [x] Build it: `/develop supplier business listing`
+   - [x] Schema: widen `companies.status` to allow `rejected`, add `rejection_reason` (AC-5, AC-6, AC-7)
+   - [x] Atomic DB functions: `create_business_listing`, `update_business_listing` (AC-2, AC-5, AC-6)
+   - [x] Data layer & server actions: `getMyCompany`, `submitBusinessListing`, `updateBusinessListing`, logo upload + storage config (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-9, AC-10)
+   - [x] `/list-business` page and rewiring the "List Your Business Free" CTAs (AC-1, AC-4, AC-5, AC-6, AC-7, AC-11)
+- [ ] Verify it: `/check verify supplier business listing`
+- [ ] Test it: `/test supplier business listing`
+- [ ] Review it (fresh model): `/check review supplier business listing`
+- [ ] Document it: `/document supplier business listing`
+spec [0005](../specs/0005-supplier-business-listing/index.md) · code in `supabase/migrations/20260903120000_add_business_listing.sql`, `supabase/migrations/20260903120500_add_business_listing_rate_limit.sql`, `supabase/migrations/20260903121000_fix_update_business_listing_conflict_target.sql`, `supabase/migrations/20260903130000_add_business_listing_email.sql`, `lib/supabase/queries/companies.ts`, `lib/actions/business-listing.ts`, `app/list-business/page.tsx`, `components/business-listing-form.tsx`
+
+### 16. Supplier product submission · needs a decision · from spec 0005
+An approved supplier submits their own product (name, category, images) from their own dashboard; it stays `pending` until an admin approves it in the separate admin app. Deferred out of feature 10 (spec 0005's Follow-up) until a real approved company exists to design and build against; gated on `companies.status = 'approved'`.
+**Done when:** an approved supplier can submit a product with images, it is stored `pending`, and it does not appear on any public read path until approved.
+- [ ] Design it (spec): `/architect supplier product submission`
 
 ## Slice 4: revenue
 

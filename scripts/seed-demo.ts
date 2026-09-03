@@ -36,6 +36,7 @@ const DEMO_COMPANY = {
   name: "Demo Assam Agarwood Co.",
   location: "Guwahati, Assam",
   country: "India",
+  email: "demo@exportsassam.com",
 };
 const DEMO_PRODUCT = {
   name: "Assam Agarwood Chips — Grade A",

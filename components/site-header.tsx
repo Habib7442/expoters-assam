@@ -79,7 +79,7 @@ export function SiteHeader() {
                 </button>
               </SignInButton>
               <Button
-                render={<Link href="/sign-up" />}
+                render={<Link href="/list-business" />}
                 nativeButton={false}
                 className="rounded-full h-8 px-2.5 text-xs sm:h-9 sm:px-4 sm:text-sm"
               >
