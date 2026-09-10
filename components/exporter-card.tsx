@@ -1,18 +1,23 @@
 import Image from "next/image";
+import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 
 type ExporterCardProps = {
+  slug: string;
   name: string;
   logoUrl: string | null;
   location: string;
   verified: boolean;
 };
 
-export function ExporterCard({ name, logoUrl, location, verified }: ExporterCardProps) {
+export function ExporterCard({ slug, name, logoUrl, location, verified }: ExporterCardProps) {
   return (
-    <div className="flex w-full min-w-0 flex-col items-center gap-3 rounded-2xl border border-border bg-background p-5 text-center shadow-sm">
+    <Link
+      href={`/companies/${slug}`}
+      className="flex w-full min-w-0 flex-col items-center gap-3 rounded-2xl border border-border bg-background p-5 text-center shadow-sm transition-shadow hover:shadow-md"
+    >
       {logoUrl ? (
         <Image
           src={logoUrl}
@@ -36,6 +41,6 @@ export function ExporterCard({ name, logoUrl, location, verified }: ExporterCard
           Verified
         </Badge>
       )}
-    </div>
+    </Link>
   );
 }

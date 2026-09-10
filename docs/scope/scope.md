@@ -76,10 +76,19 @@ spec [0003](../specs/0003-product-page-send-enquiry/index.md) · code in `supaba
 
 ## Slice 2: browse the directory
 
-### 5. Company profile pages · needs a decision
-Each supplier's profile page: logo, about, location, product range, and verified badge.
+### 5. Company profile pages · in-progress
+Each supplier's profile page: logo, about, location, product range, verified badge, and membership tier badge (reusing the product page's `getCurrentTier` pattern). Routed by a new `companies.slug` column, mirroring `products.slug` (spec 0003): nullable-add, backfilled, then `not null unique`, since companies already had rows when this was added (unlike products). `create_business_listing` now assigns a slug at insert time (slugified name, deduplicated with a numeric suffix on collision); a rename never changes the slug. Decided and built inline with the engineer, no separate spec: a direct extension of an already-established pattern, not a new product decision.
 **Done when:** a company page renders real Supabase data, including the products it lists.
-- [ ] Design it (spec): `/architect company profile pages`
+- [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
+- [x] Build it: `/develop company profile pages`
+   - [x] Migration: `companies.slug` (nullable, backfilled, then `not null unique`), `slugify()` helper, `create_business_listing` assigns a slug at insert
+   - [x] Data layer: `getCompanyBySlug` in `lib/supabase/queries/companies.ts`, sanitizing `logo_url`/product `image_url` through the same `isR2Url` guard as the product page and home page
+   - [x] `/companies/[slug]` page; `ExporterCard` (home page) and the product page's company block now link to it
+- [ ] Verify it: `/check verify company profile pages`
+- [ ] Test it: `/test company profile pages`
+- [ ] Review it (fresh model): `/check review company profile pages`
+- [ ] Document it: `/document company profile pages`
+code in `supabase/migrations/20260909033000_add_company_slug.sql`, `lib/supabase/queries/companies.ts`, `app/companies/[slug]/page.tsx`, `components/exporter-card.tsx`, `app/products/[slug]/page.tsx`, `lib/supabase/queries/home.ts`, `lib/supabase/queries/products.ts`, `scripts/seed-demo.ts`
 
 ### 6. Listings, categories & country filters · needs a decision
 Browse products or companies by category, or by supplier location/country.
@@ -106,15 +115,28 @@ spec [0002](../specs/0002-home-page-navbar-hero/index.md) · code in `app/layout
 
 ## Slice 3: capture more leads
 
-### 8. Post Buy Requirement · needs a decision
-A buyer posts what they want to buy (product, quantity, location, notes); it is saved, optionally shown publicly under Latest Buy Requirements, and forwarded to WhatsApp.
+### 8. Post Buy Requirement · in-progress
+A buyer posts what they want to buy (product, quantity, location, notes); it is saved, optionally shown publicly under Latest Buy Requirements, and forwarded to WhatsApp. The "forwarded to WhatsApp" open question (a buy requirement has no single supplier to route a wa.me link to, unlike an enquiry) was decided inline with the engineer: hand the buyer a wa.me link to the platform's own WhatsApp number (`PLATFORM_WHATSAPP_NUMBER`, a placeholder for now per AGENTS.md Section 6 — TBD real number from the client), the same no-API pattern already used for enquiries, not the real WhatsApp API/BSP integration AGENTS.md flags as a separate open decision.
 **Done when:** a buyer can submit a requirement, it appears in the public list when marked visible, and the WhatsApp message is received.
-- [ ] Design it (spec): `/architect post buy requirement`
+- [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
+- [x] Build it: `/develop post buy requirement`
+   - [x] `create_buy_requirement` RPC: buyer resolution, a 3/hour rate limit (heavier action than an enquiry, so a lower cap), no dedup (distinct requirements from the same buyer are legitimate)
+   - [x] `postBuyRequirement` server action + `BuyRequirementForm`; `/buy-requirements/new` (post) and `/buy-requirements` (full public listing, fixing the two nav links that already pointed here)
+- [ ] Verify it: `/check verify post buy requirement`
+- [ ] Test it: `/test post buy requirement`
+- [ ] Review it (fresh model): `/check review post buy requirement`
+- [ ] Document it: `/document post buy requirement`
+code in `supabase/migrations/20260909050000_add_create_buy_requirement.sql`, `lib/actions/post-buy-requirement.ts`, `components/buy-requirement-form.tsx`, `app/buy-requirements/new/page.tsx`, `app/buy-requirements/page.tsx`, `.env.local`
 
-### 9. Enquiries on companies & buy requirements · planned
-Extend the Send Enquiry action already proven in the core loop (feature 4) to company profile pages and buy requirement listings.
+### 9. Enquiries on companies & buy requirements · in-progress
+Extend the Send Enquiry action already proven in the core loop (feature 4) to company profile pages and buy requirement listings. The company half is built: a new `create_company_enquiry` RPC mirrors `create_enquiry` exactly (buyer resolution, the same global per-buyer rate limit, a 10-minute dedup window scoped to the company, `product_id` left null), and `SendEnquiryDialog`/`sendEnquiry` were generalized to a `target: {type: "product"|"company"}` union rather than duplicated. The buy requirement half is blocked on feature 8 (Post Buy Requirement) not existing yet.
 **Done when:** Send Enquiry works from a company page and from a buy requirement, using the same write-and-WhatsApp-forward path the core loop already proved.
-- [ ] Build it: `/develop enquiries on companies & buy requirements`
+- [x] Build it (company half): `/develop enquiries on companies`
+   - [x] `create_company_enquiry` RPC, mirroring `create_enquiry`'s rate limit/dedup/buyer-resolution shape
+   - [x] `sendEnquiry`/`SendEnquiryDialog` generalized to a product/company target union
+   - [x] Wired onto `/companies/[slug]`; live-verified via the RPC directly (dedup returns the same `enquiry_id`) and via the running dev server (button renders on both pages)
+- [ ] Build it (buy requirement half): needs a decision, not just a build — feature 8 now exists, but a buy requirement has no public company-style WhatsApp contact to route to; the only recipient is the posting buyer's own phone number, which is private PII (`buyers` has no RLS policy at all, unlike a company's public contact). Handing that number to any anonymous visitor who clicks "enquire," or exposing it via a wa.me link, is a materially different privacy posture than the product/company cases and isn't specified in AGENTS.md/PRD. Route to `/architect` before building: who actually receives this enquiry, and how.
+code in `supabase/migrations/20260909040000_add_company_enquiry.sql`, `lib/actions/send-enquiry.ts`, `components/send-enquiry-dialog.tsx`, `app/companies/[slug]/page.tsx`, `app/products/[slug]/page.tsx`
 
 ### 10. Supplier business listing · in-progress
 A supplier turns their Clerk account into a real, pending business listing: name, location, logo, and a WhatsApp contact number, created together as one atomic step. It stays `pending` until an admin approves it in the separate admin app; a rejected listing shows why and can be edited and resubmitted. (The approval action itself lives in the separate admin app; this feature is only the supplier-facing listing side.) This is the first half of what was originally scoped as supplier self-service submission; submitting products under an approved company is its own follow-on feature (16), deferred until a real approved company exists to design and build against.
@@ -166,16 +188,17 @@ Page views, search behavior, and enquiry funnel drop-off tracked via PostHog.
 Moves where product and company images live, from the Supabase Storage buckets spec 0001 created to Cloudflare R2, mainly for R2's zero egress cost as the directory's image traffic grows. Enrolled after spec 0001 shipped; the two Supabase buckets stay in place with public read revoked, not deleted.
 **Done when:** the demo product's image (feature 4) is served from R2 through a custom domain, `next/image` renders it in both dev and a Vercel production build, and the old Supabase buckets no longer serve public reads.
 - [x] Design it (spec): `/architect switch image storage from Supabase Storage to Cloudflare R2`
-- [ ] Build it: `/develop cloudflare r2 image storage`
-   - [ ] R2 setup: bucket, scoped API token, custom domain connected (DNS-on-Cloudflare precondition checked first), env vars in `.env.local` (AC-1)
-   - [ ] Storage helper: `lib/storage/r2-client.ts` (unguarded core) + `lib/storage/r2.ts` (`server-only` entry), checksum config (AC-1, AC-2, AC-5)
-   - [ ] Demo seed migrated to R2, `next.config.ts` updated, re-seed verified against the live product page (AC-3, AC-4)
-   - [ ] Old Supabase buckets' public read revoked; spec 0001's storage section annotated as superseded (AC-6)
-- [ ] Verify it: `/check verify cloudflare r2 image storage`
-- [ ] Test it: `/test cloudflare r2 image storage`
-- [ ] Review it (fresh model): `/check review cloudflare r2 image storage`
+- [x] Build it: `/develop cloudflare r2 image storage`
+   - [x] R2 setup: dedicated domain (`exportersasssm.com`) connected to Cloudflare, bucket (`exportsassam-images`), scoped API token (Object Read & Write, single bucket), custom domain (`images.exportersasssm.com`), env vars in `.env.local` (AC-1)
+   - [x] Storage helper: `lib/storage/r2-client.ts` (unguarded core: `createR2Client`, `uploadToR2`, `deleteFromR2`, `parseR2Url`) + `lib/storage/r2.ts` (`server-only` entry), checksum config (AC-1, AC-2, AC-5)
+   - [x] Demo seed migrated to R2, `next.config.ts` updated, re-seed verified against the live product page (AC-3, AC-4)
+   - [x] Old Supabase buckets' public read revoked; spec 0001's storage section annotated as superseded (AC-6). Caught live: dropping the RLS policy alone didn't work, `storage.buckets.public` also had to be set `false`
+   - [x] Migrated the business listing feature's (10) logo upload from Supabase Storage to R2, since revoking the old bucket would otherwise have broken it; not in this spec's original design, decided inline with the engineer
+- [x] Verify it: `/check verify cloudflare r2 image storage`
+- [x] Test it: `/test cloudflare r2 image storage`
+- [x] Review it (fresh model): `/check review cloudflare r2 image storage`
 - [ ] Document it: `/document cloudflare r2 image storage`
-spec [0004](../specs/0004-cloudflare-r2-image-storage.md)
+spec [0004](../specs/0004-cloudflare-r2-image-storage/index.md) · code in `lib/storage/r2-client.ts`, `lib/storage/r2.ts`, `scripts/seed-demo.ts`, `next.config.ts`, `lib/actions/business-listing.ts`, `supabase/migrations/20260903140000_revoke_supabase_storage_public_read.sql`, `supabase/migrations/20260909020000_disable_supabase_storage_public_buckets.sql`
 
 ## Legend
 

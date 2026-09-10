@@ -18,6 +18,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "../lib/supabase/database.types";
 import { generateSlug } from "../lib/supabase/queries/products";
+import { createR2Client, uploadToR2 } from "../lib/storage/r2-client";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -30,6 +31,20 @@ const supabaseAdmin = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SECRET_KEY!,
 );
+
+// Same reason as above: lib/storage/r2.ts is server-only guarded and reads
+// its env vars at import time in a way this plain script can't rely on, so
+// this script builds its own R2 client from lib/storage/r2-client.ts, the
+// unguarded core (spec 0004's Module design).
+const r2Client = createR2Client({
+  accountId: process.env.R2_ACCOUNT_ID!,
+  accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+  secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+});
+const r2Config = {
+  bucket: process.env.R2_BUCKET!,
+  publicDomain: process.env.R2_PUBLIC_IMAGE_DOMAIN!,
+};
 
 const DEMO_CATEGORY = { name: "Agarwood & Oud", slug: "agarwood-oud" };
 const DEMO_COMPANY = {
@@ -95,6 +110,7 @@ async function upsertCompany() {
     .from("companies")
     .insert({
       ...DEMO_COMPANY,
+      slug: generateSlug(DEMO_COMPANY.name),
       status: "approved",
       submitted_by: "admin",
       verified: true,
@@ -115,15 +131,7 @@ async function upsertCompanyContact(companyId: string, whatsappNumber: string) {
 async function uploadDemoImage(): Promise<string> {
   const localPath = path.join(__dirname, "..", "public", "hero_section.webp");
   const file = readFileSync(localPath);
-  const storagePath = "demo/agarwood-chips.webp";
-
-  const { error } = await supabaseAdmin.storage
-    .from("product-images")
-    .upload(storagePath, file, { contentType: "image/webp", upsert: true });
-  if (error) throw error;
-
-  const { data } = supabaseAdmin.storage.from("product-images").getPublicUrl(storagePath);
-  return data.publicUrl;
+  return uploadToR2(r2Client, r2Config, "products", "demo/agarwood-chips.webp", file, "image/webp");
 }
 
 async function upsertProduct(categoryId: string, companyId: string, imageUrl: string) {
@@ -134,7 +142,18 @@ async function upsertProduct(categoryId: string, companyId: string, imageUrl: st
     .eq("name", DEMO_PRODUCT.name)
     .maybeSingle();
   if (findError) throw findError;
-  if (existing) return existing;
+
+  if (existing) {
+    // Re-uploading the demo image (e.g. after switching storage providers)
+    // should actually change what the product page renders, not leave a
+    // stale image_url pointing at wherever the file used to live.
+    const { error: updateError } = await supabaseAdmin
+      .from("products")
+      .update({ image_url: imageUrl, gallery_urls: [imageUrl] })
+      .eq("id", existing.id);
+    if (updateError) throw updateError;
+    return existing;
+  }
 
   let attempt = 0;
   let slug = generateSlug(DEMO_PRODUCT.name);

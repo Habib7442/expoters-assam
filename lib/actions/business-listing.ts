@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { deleteFromR2, parseR2Url, uploadToR2 } from "@/lib/storage/r2";
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const ALLOWED_LOGO_TYPES: Record<string, string> = {
@@ -77,25 +78,17 @@ function collectFieldErrors(error: z.ZodError): Record<string, string> {
 
 async function uploadLogo(clerkUserId: string, file: File): Promise<string> {
   const ext = ALLOWED_LOGO_TYPES[file.type];
-  const path = `${clerkUserId}/${crypto.randomUUID()}.${ext}`;
-
-  const { error } = await supabaseAdmin.storage
-    .from("company-logos")
-    .upload(path, file, { contentType: file.type, upsert: false });
-  if (error) throw error;
-
-  const { data } = supabaseAdmin.storage.from("company-logos").getPublicUrl(path);
-  return data.publicUrl;
+  const key = `${clerkUserId}/${crypto.randomUUID()}.${ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return uploadToR2("logos", key, buffer, file.type);
 }
 
-/** Best effort only: an orphaned Storage object is an accepted, low cost tradeoff (spec 0005). */
+/** Best effort only: an orphaned R2 object is an accepted, low cost tradeoff (spec 0005). */
 async function deleteLogoBestEffort(logoUrl: string): Promise<void> {
   try {
-    const marker = "/company-logos/";
-    const index = logoUrl.indexOf(marker);
-    if (index === -1) return;
-    const path = logoUrl.slice(index + marker.length);
-    await supabaseAdmin.storage.from("company-logos").remove([path]);
+    const parsed = parseR2Url(logoUrl);
+    if (!parsed) return;
+    await deleteFromR2(parsed.category, parsed.key);
   } catch {
     // best effort only
   }

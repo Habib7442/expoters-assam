@@ -1,0 +1,29 @@
+import type { Metadata } from "next";
+
+import { getCategoriesWithProductCounts } from "@/lib/supabase/queries/home";
+import { BuyRequirementForm } from "@/components/buy-requirement-form";
+
+export const metadata: Metadata = {
+  title: "Post a Buy Requirement | ExportsAssam",
+  description: "Tell exporters what you're looking to buy, and hear back on WhatsApp.",
+};
+
+export default async function PostBuyRequirementPage() {
+  const categories = await getCategoriesWithProductCounts();
+
+  return (
+    <main className="flex flex-1 flex-col bg-bg-soft">
+      <div className="mx-auto w-full max-w-lg px-4 py-10 sm:px-6 sm:py-14">
+        <div className="mb-6 flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">
+            Post a Buy Requirement
+          </h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
+            Tell exporters what you&apos;re looking to buy. We&apos;ll help you connect with sellers.
+          </p>
+        </div>
+        <BuyRequirementForm categories={categories ?? []} />
+      </div>
+    </main>
+  );
+}

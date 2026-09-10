@@ -1,4 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
+import { isR2Url } from "@/lib/storage/r2-client";
+
+const R2_PUBLIC_DOMAIN = process.env.R2_PUBLIC_IMAGE_DOMAIN ?? "";
 
 export type ProductWithCompany = {
   id: string;
@@ -10,6 +13,7 @@ export type ProductWithCompany = {
   category: { name: string } | null;
   company: {
     id: string;
+    slug: string;
     name: string;
     logo_url: string | null;
     location: string | null;
@@ -31,7 +35,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithCompany
       `
       id, slug, name, description, image_url, gallery_urls,
       categories ( name ),
-      companies!inner ( id, name, logo_url, location, verified )
+      companies!inner ( id, slug, name, logo_url, location, verified )
     `,
     )
     .eq("slug", slug)
@@ -41,15 +45,20 @@ export async function getProductBySlug(slug: string): Promise<ProductWithCompany
   if (error) throw error;
   if (!data) return null;
 
+  const galleryUrls = data.gallery_urls.filter((url) => isR2Url(R2_PUBLIC_DOMAIN, url));
+  const imageUrl = isR2Url(R2_PUBLIC_DOMAIN, data.image_url) ? data.image_url : (galleryUrls[0] ?? data.image_url);
+  const logoUrl =
+    data.companies.logo_url && isR2Url(R2_PUBLIC_DOMAIN, data.companies.logo_url) ? data.companies.logo_url : null;
+
   return {
     id: data.id,
     slug: data.slug,
     name: data.name,
     description: data.description,
-    image_url: data.image_url,
-    gallery_urls: data.gallery_urls,
+    image_url: imageUrl,
+    gallery_urls: galleryUrls,
     category: data.categories,
-    company: data.companies,
+    company: { ...data.companies, logo_url: logoUrl },
   };
 }
 

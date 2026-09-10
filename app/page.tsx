@@ -253,6 +253,7 @@ export default async function Home() {
             {featuredExporters.map((exporter) => (
               <ExporterCard
                 key={exporter.id}
+                slug={exporter.slug}
                 name={exporter.name}
                 logoUrl={exporter.logoUrl}
                 location={exporter.location}

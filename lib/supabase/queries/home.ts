@@ -1,4 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
+import { isR2Url } from "@/lib/storage/r2-client";
+
+const R2_PUBLIC_DOMAIN = process.env.R2_PUBLIC_IMAGE_DOMAIN ?? "";
 
 export type CategoryWithCount = {
   id: string;
@@ -67,17 +70,20 @@ export async function getFeaturedProducts(limit: number): Promise<FeaturedProduc
     return null;
   }
 
-  return (data ?? []).map((product) => ({
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
-    imageUrl: product.image_url,
-    companyName: product.companies.name,
-  }));
+  return (data ?? [])
+    .filter((product) => isR2Url(R2_PUBLIC_DOMAIN, product.image_url))
+    .map((product) => ({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      imageUrl: product.image_url,
+      companyName: product.companies.name,
+    }));
 }
 
 export type FeaturedExporter = {
   id: string;
+  slug: string;
   name: string;
   logoUrl: string | null;
   location: string;
@@ -88,7 +94,7 @@ export type FeaturedExporter = {
 export async function getFeaturedExporters(limit: number): Promise<FeaturedExporter[] | null> {
   const { data, error } = await supabase
     .from("companies")
-    .select("id, name, logo_url, location, country, verified")
+    .select("id, slug, name, logo_url, location, country, verified")
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .order("id", { ascending: true })
@@ -101,8 +107,9 @@ export async function getFeaturedExporters(limit: number): Promise<FeaturedExpor
 
   return (data ?? []).map((company) => ({
     id: company.id,
+    slug: company.slug,
     name: company.name,
-    logoUrl: company.logo_url,
+    logoUrl: company.logo_url && isR2Url(R2_PUBLIC_DOMAIN, company.logo_url) ? company.logo_url : null,
     location: company.location ?? company.country,
     verified: company.verified,
   }));

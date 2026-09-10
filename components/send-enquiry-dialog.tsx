@@ -20,26 +20,32 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 type SendEnquiryDialogProps = {
-  productId: string
-  productName: string
+  target:
+    | { type: "product"; productId: string; productName: string }
+    | { type: "company"; companyId: string; companyName: string }
 }
 
-export function SendEnquiryDialog({ productId, productName }: SendEnquiryDialogProps) {
+export function SendEnquiryDialog({ target }: SendEnquiryDialogProps) {
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<SendEnquiryResult | null>(null)
 
+  const targetName = target.type === "product" ? target.productName : target.companyName
+
   function handleSubmit(formData: FormData) {
     setResult(null)
     startTransition(async () => {
-      const response = await sendEnquiry({
-        productId,
-        productName,
+      const contact = {
         name: String(formData.get("name") ?? ""),
         phone: String(formData.get("phone") ?? ""),
         email: String(formData.get("email") ?? ""),
         message: String(formData.get("message") ?? ""),
-      })
+      }
+      const response = await sendEnquiry(
+        target.type === "product"
+          ? { targetType: "product", productId: target.productId, productName: target.productName, ...contact }
+          : { targetType: "company", companyId: target.companyId, companyName: target.companyName, ...contact },
+      )
       setResult(response)
     })
   }
@@ -87,7 +93,7 @@ export function SendEnquiryDialog({ productId, productName }: SendEnquiryDialogP
             <DialogHeader>
               <DialogTitle>Send an enquiry</DialogTitle>
               <DialogDescription className="line-clamp-2">
-                About &quot;{productName}&quot;
+                About &quot;{targetName}&quot;
               </DialogDescription>
             </DialogHeader>
 
