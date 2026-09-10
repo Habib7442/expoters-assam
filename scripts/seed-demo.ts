@@ -11,13 +11,14 @@
  * `.env.local` with Node's native `--env-file` flag (no `dotenv` dependency
  * needed).
  */
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "../lib/supabase/database.types";
-import { generateSlug } from "../lib/supabase/queries/products";
+import { generateSlug } from "../lib/supabase/queries/slug";
 import { createR2Client, uploadToR2 } from "../lib/storage/r2-client";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -104,7 +105,18 @@ async function upsertCompany() {
     .eq("name", DEMO_COMPANY.name)
     .maybeSingle();
   if (findError) throw findError;
-  if (existing) return existing;
+
+  if (existing) {
+    // Same reasoning as upsertProduct below: a re-run should actually sync
+    // DEMO_COMPANY's fields onto the existing row, not silently leave it
+    // stale if this constant is ever edited.
+    const { error: updateError } = await supabaseAdmin
+      .from("companies")
+      .update(DEMO_COMPANY)
+      .eq("id", existing.id);
+    if (updateError) throw updateError;
+    return existing;
+  }
 
   const { data, error } = await supabaseAdmin
     .from("companies")
@@ -128,10 +140,19 @@ async function upsertCompanyContact(companyId: string, whatsappNumber: string) {
   if (error) throw error;
 }
 
+/**
+ * Content-derived key, not a fixed one: every upload sets a one year
+ * `immutable` Cache-Control (Key invariants, spec 0004), so overwriting the
+ * same key on every seed run risks a CDN/browser continuing to serve stale
+ * bytes if the source file's content ever changes. Hashing the bytes gives
+ * a key that only changes when the content actually does — identical
+ * content across re-runs reuses (and harmlessly re-uploads) the same key.
+ */
 async function uploadDemoImage(): Promise<string> {
   const localPath = path.join(__dirname, "..", "public", "hero_section.webp");
   const file = readFileSync(localPath);
-  return uploadToR2(r2Client, r2Config, "products", "demo/agarwood-chips.webp", file, "image/webp");
+  const contentHash = createHash("sha256").update(file).digest("hex").slice(0, 16);
+  return uploadToR2(r2Client, r2Config, "products", `demo/agarwood-chips-${contentHash}.webp`, file, "image/webp");
 }
 
 async function upsertProduct(categoryId: string, companyId: string, imageUrl: string) {

@@ -1,9 +1,7 @@
 import "server-only";
 import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { isR2Url } from "@/lib/storage/r2-client";
-
-const R2_PUBLIC_DOMAIN = process.env.R2_PUBLIC_IMAGE_DOMAIN ?? "";
+import { isR2Url } from "@/lib/storage/r2";
 
 export type MyCompany = {
   id: string;
@@ -91,7 +89,7 @@ export async function getCompanyBySlug(slug: string): Promise<CompanyProfile | n
     id: data.id,
     name: data.name,
     slug: data.slug,
-    logoUrl: data.logo_url && isR2Url(R2_PUBLIC_DOMAIN, data.logo_url) ? data.logo_url : null,
+    logoUrl: data.logo_url && isR2Url(data.logo_url) ? data.logo_url : null,
     about: data.about,
     location: data.location,
     country: data.country,
@@ -100,7 +98,7 @@ export async function getCompanyBySlug(slug: string): Promise<CompanyProfile | n
       id: product.id,
       slug: product.slug,
       name: product.name,
-      imageUrl: isR2Url(R2_PUBLIC_DOMAIN, product.image_url) ? product.image_url : null,
+      imageUrl: isR2Url(product.image_url) ? product.image_url : null,
     })),
   };
 }

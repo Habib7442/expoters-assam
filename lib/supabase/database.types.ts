@@ -94,6 +94,13 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "buy_requirements_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_product_counts"
+            referencedColumns: ["category_id"]
+          },
         ]
       }
       buyers: {
@@ -436,6 +443,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "category_product_counts"
+            referencedColumns: ["category_id"]
+          },
+          {
             foreignKeyName: "products_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
@@ -453,6 +467,13 @@ export type Database = {
       }
     }
     Views: {
+      category_product_counts: {
+        Row: {
+          category_id: string | null
+          product_count: number | null
+        }
+        Relationships: []
+      }
       company_tiers: {
         Row: {
           company_id: string | null

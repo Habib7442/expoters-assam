@@ -31,6 +31,19 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
   const [result, setResult] = useState<BusinessListingResult | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(initialValues?.logoUrl ?? null)
 
+  // Controlled, not defaultValue: <form action={fn}> resets every
+  // uncontrolled field the instant a submission starts (React's built-in
+  // form-action behavior, not tied to whether the action succeeds), so a
+  // validation error would otherwise wipe what the user just typed. A
+  // controlled value survives that reset since React re-asserts it from
+  // state on the next render. The file input can't be controlled (browser
+  // security), so it still clears on any submission — unavoidable.
+  const [name, setName] = useState(initialValues?.name ?? "")
+  const [location, setLocation] = useState(initialValues?.location ?? "")
+  const [email, setEmail] = useState(initialValues?.email ?? "")
+  const [whatsappNumber, setWhatsappNumber] = useState(initialValues?.whatsappNumber ?? "")
+  const [about, setAbout] = useState(initialValues?.about ?? "")
+
   function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
@@ -83,7 +96,8 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
           id="listing-name"
           name="name"
           required
-          defaultValue={initialValues?.name}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="Your business name"
           aria-invalid={!!fieldErrors?.name}
         />
@@ -96,7 +110,8 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
           id="listing-location"
           name="location"
           required
-          defaultValue={initialValues?.location ?? undefined}
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
           placeholder="City, State"
           aria-invalid={!!fieldErrors?.location}
         />
@@ -110,7 +125,8 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
           name="email"
           type="email"
           required
-          defaultValue={initialValues?.email ?? undefined}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder="you@yourbusiness.com"
           aria-invalid={!!fieldErrors?.email}
         />
@@ -124,7 +140,8 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
           name="whatsappNumber"
           type="tel"
           required
-          defaultValue={initialValues?.whatsappNumber ?? undefined}
+          value={whatsappNumber}
+          onChange={(e) => setWhatsappNumber(e.target.value)}
           placeholder="+91 98765 43210"
           aria-invalid={!!fieldErrors?.whatsappNumber}
         />
@@ -141,7 +158,8 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
           id="listing-about"
           name="about"
           rows={3}
-          defaultValue={initialValues?.about ?? undefined}
+          value={about}
+          onChange={(e) => setAbout(e.target.value)}
           placeholder="What do you export, and what makes your business stand out?"
         />
       </div>

@@ -6,11 +6,9 @@ import { BadgeCheck } from "lucide-react";
 
 import { getCurrentTier } from "@/lib/supabase/queries/company-tiers";
 import { getProductBySlug } from "@/lib/supabase/queries/products";
-import { isR2Url } from "@/lib/storage/r2-client";
+import { isR2Url } from "@/lib/storage/r2";
 import { Badge } from "@/components/ui/badge";
 import { SendEnquiryDialog } from "@/components/send-enquiry-dialog";
-
-const R2_PUBLIC_DOMAIN = process.env.R2_PUBLIC_IMAGE_DOMAIN ?? "";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -38,7 +36,7 @@ export default async function ProductPage({ params }: Props) {
 
   const tier = await getCurrentTier(product.company.id);
   const galleryImages = product.gallery_urls.filter((url) => url !== product.image_url);
-  const images = [product.image_url, ...galleryImages].filter((url) => isR2Url(R2_PUBLIC_DOMAIN, url));
+  const images = [product.image_url, ...galleryImages].filter((url) => isR2Url(url));
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">

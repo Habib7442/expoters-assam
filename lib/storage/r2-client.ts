@@ -92,10 +92,17 @@ export function parseR2Url(publicDomain: string, url: string): { category: R2Cat
   const [categoryRaw, ...keyParts] = url.slice(prefix.length).split("/");
   if (keyParts.length === 0) return null;
 
-  const category = decodeURIComponent(categoryRaw);
-  if (category !== "products" && category !== "logos") return null;
+  try {
+    const category = decodeURIComponent(categoryRaw);
+    if (category !== "products" && category !== "logos") return null;
 
-  return { category, key: keyParts.map(decodeURIComponent).join("/") };
+    return { category, key: keyParts.map(decodeURIComponent).join("/") };
+  } catch {
+    // A malformed percent-escape (e.g. a bare "%") makes decodeURIComponent
+    // throw; per this function's own contract, that's just another way a
+    // URL isn't shaped like one of ours, not a crash.
+    return null;
+  }
 }
 
 /**
@@ -108,9 +115,5 @@ export function parseR2Url(publicDomain: string, url: string): { category: R2Cat
  * throws itself, even on a malformed URL or percent-escape.
  */
 export function isR2Url(publicDomain: string, url: string): boolean {
-  try {
-    return parseR2Url(publicDomain, url) !== null;
-  } catch {
-    return false;
-  }
+  return parseR2Url(publicDomain, url) !== null;
 }

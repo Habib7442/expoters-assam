@@ -1,7 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { isR2Url } from "@/lib/storage/r2-client";
-
-const R2_PUBLIC_DOMAIN = process.env.R2_PUBLIC_IMAGE_DOMAIN ?? "";
+import { isR2Url } from "@/lib/storage/r2";
 
 export type CategoryWithCount = {
   id: string;
@@ -14,35 +12,39 @@ export type CategoryWithCount = {
  * Every category with a live count of its approved products (whose company
  * is also approved), one aggregate fetch rather than one query per category
  * (AC-5). Zero is a valid count; a category is never dropped for having one.
+ *
+ * The count comes from the `category_product_counts` view (grouped, computed
+ * entirely in Postgres), not a client-side count over fetched product rows:
+ * PostgREST's `max_rows = 1000` (supabase/config.toml) would otherwise
+ * silently truncate the product list once approved products cross that
+ * count, understating some categories with no error. The view returns at
+ * most one row per category regardless of how many products exist, so it
+ * can never hit that limit.
  */
 export async function getCategoriesWithProductCounts(): Promise<CategoryWithCount[] | null> {
   const [
     { data: categories, error: categoriesError },
-    { data: approvedProducts, error: productsError },
+    { data: counts, error: countsError },
   ] = await Promise.all([
     supabase.from("categories").select("id, name, slug").order("name", { ascending: true }),
-    supabase
-      .from("products")
-      .select("category_id, companies!inner(status)")
-      .eq("status", "approved")
-      .eq("companies.status", "approved"),
+    supabase.from("category_product_counts").select("category_id, product_count"),
   ]);
 
-  if (categoriesError || productsError) {
-    console.error("getCategoriesWithProductCounts failed", categoriesError ?? productsError);
+  if (categoriesError || countsError) {
+    console.error("getCategoriesWithProductCounts failed", categoriesError ?? countsError);
     return null;
   }
 
-  const counts = new Map<string, number>();
-  for (const row of approvedProducts ?? []) {
-    counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
+  const countByCategory = new Map<string, number>();
+  for (const row of counts ?? []) {
+    if (row.category_id) countByCategory.set(row.category_id, row.product_count ?? 0);
   }
 
   return (categories ?? []).map((category) => ({
     id: category.id,
     name: category.name,
     slug: category.slug,
-    productCount: counts.get(category.id) ?? 0,
+    productCount: countByCategory.get(category.id) ?? 0,
   }));
 }
 
@@ -71,7 +73,7 @@ export async function getFeaturedProducts(limit: number): Promise<FeaturedProduc
   }
 
   return (data ?? [])
-    .filter((product) => isR2Url(R2_PUBLIC_DOMAIN, product.image_url))
+    .filter((product) => isR2Url(product.image_url))
     .map((product) => ({
       id: product.id,
       slug: product.slug,
@@ -109,7 +111,7 @@ export async function getFeaturedExporters(limit: number): Promise<FeaturedExpor
     id: company.id,
     slug: company.slug,
     name: company.name,
-    logoUrl: company.logo_url && isR2Url(R2_PUBLIC_DOMAIN, company.logo_url) ? company.logo_url : null,
+    logoUrl: company.logo_url && isR2Url(company.logo_url) ? company.logo_url : null,
     location: company.location ?? company.country,
     verified: company.verified,
   }));
@@ -169,10 +171,17 @@ export async function getDirectoryStats(): Promise<DirectoryStats | null> {
     return null;
   }
 
+  // directory_stats is four independent scalar count() subqueries with no
+  // base FROM/GROUP BY, so it always returns exactly one row today (verified
+  // live) — this guard is for if that ever changes, not a currently
+  // reachable case. Same contract as every sibling function here: null
+  // means "hide the section," never a strip of real-looking zeros.
+  if (!data) return null;
+
   return {
-    verifiedExporters: data?.verified_exporters ?? 0,
-    products: data?.products ?? 0,
-    buyers: data?.buyers ?? 0,
-    countries: data?.countries ?? 0,
+    verifiedExporters: data.verified_exporters ?? 0,
+    products: data.products ?? 0,
+    buyers: data.buyers ?? 0,
+    countries: data.countries ?? 0,
   };
 }

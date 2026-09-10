@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   description: "Tell exporters what you're looking to buy, and hear back on WhatsApp.",
 };
 
+// Real Supabase data, not build-time content: without a dynamic API in this
+// page, Next would otherwise prerender it once and freeze the category list
+// (same reasoning as app/page.tsx).
+export const dynamic = "force-dynamic";
+
 export default async function PostBuyRequirementPage() {
   const categories = await getCategoriesWithProductCounts();
 

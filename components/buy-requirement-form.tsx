@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useTransition } from "react"
+import { type SubmitEvent, useRef, useState, useTransition } from "react"
 
 import { postBuyRequirement, type PostBuyRequirementResult } from "@/lib/actions/post-buy-requirement"
 import { Button } from "@/components/ui/button"
@@ -21,8 +21,17 @@ type BuyRequirementFormProps = {
 export function BuyRequirementForm({ categories }: BuyRequirementFormProps) {
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<PostBuyRequirementResult | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
-  function handleSubmit(formData: FormData) {
+  // A plain onSubmit handler, not <form action={fn}>: React resets every
+  // uncontrolled field the instant a form action starts (before the action
+  // even runs, regardless of success), which would wipe what the user just
+  // typed on a validation error. Reading FormData here and resetting the
+  // form ourselves, only once the submission actually succeeds, avoids that
+  // entirely.
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
     setResult(null)
     startTransition(async () => {
       const response = await postBuyRequirement({
@@ -37,6 +46,7 @@ export function BuyRequirementForm({ categories }: BuyRequirementFormProps) {
         isPublic: formData.get("isPublic") === "on",
       })
       setResult(response)
+      if (response.ok) formRef.current?.reset()
     })
   }
 
@@ -68,7 +78,8 @@ export function BuyRequirementForm({ categories }: BuyRequirementFormProps) {
 
   return (
     <form
-      action={handleSubmit}
+      ref={formRef}
+      onSubmit={handleSubmit}
       className="flex flex-col gap-5 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8"
     >
       <div className="flex flex-col gap-1.5">

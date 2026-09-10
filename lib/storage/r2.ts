@@ -2,6 +2,7 @@ import "server-only";
 import {
   createR2Client,
   deleteFromR2 as deleteFromR2Core,
+  isR2Url as isR2UrlCore,
   parseR2Url as parseR2UrlCore,
   uploadToR2 as uploadToR2Core,
   type R2Category,
@@ -21,6 +22,23 @@ const publicDomain = requireEnv("R2_PUBLIC_IMAGE_DOMAIN");
 
 const client = createR2Client({ accountId, accessKeyId, secretAccessKey });
 const config = { bucket, publicDomain };
+
+/**
+ * The validated public domain, for any caller that needs to check a
+ * stored URL against it (e.g. a query layer guarding against a stale
+ * non-R2 URL before handing it to `next/image`) without duplicating a
+ * `process.env` read that has no fail-fast of its own. Reading this forces
+ * the same `requireEnv` check above to run, unlike reading
+ * `process.env.R2_PUBLIC_IMAGE_DOMAIN` directly in a file that doesn't
+ * otherwise import `r2.ts` — a real gap this replaced, since a page whose
+ * whole module graph never touched `r2.ts` never saw any validation at all.
+ */
+export const R2_PUBLIC_DOMAIN = publicDomain;
+
+/** `isR2Url` closed over this bucket's validated public domain. */
+export function isR2Url(url: string): boolean {
+  return isR2UrlCore(publicDomain, url);
+}
 
 /**
  * App facing entry point: uploads a file to R2 and returns its public URL.

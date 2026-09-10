@@ -7,12 +7,14 @@ const parseR2UrlCoreMock = vi.fn<(...args: unknown[]) => { category: "products";
   category: "products",
   key: "x.webp",
 }));
+const isR2UrlCoreMock = vi.fn<(...args: unknown[]) => boolean>(() => true);
 
 vi.mock("@/lib/storage/r2-client", () => ({
   createR2Client: (...args: unknown[]) => createR2ClientMock(...args),
   uploadToR2: (...args: unknown[]) => uploadToR2CoreMock(...args),
   deleteFromR2: (...args: unknown[]) => deleteFromR2CoreMock(...args),
   parseR2Url: (...args: unknown[]) => parseR2UrlCoreMock(...args),
+  isR2Url: (...args: unknown[]) => isR2UrlCoreMock(...args),
 }));
 
 const ORIGINAL_ENV = { ...process.env };
@@ -32,6 +34,7 @@ describe("lib/storage/r2", () => {
     uploadToR2CoreMock.mockClear();
     deleteFromR2CoreMock.mockClear();
     parseR2UrlCoreMock.mockClear();
+    isR2UrlCoreMock.mockClear();
     process.env = { ...ORIGINAL_ENV, ...REQUIRED_VARS };
   });
 
@@ -95,5 +98,25 @@ describe("lib/storage/r2", () => {
 
     expect(parseR2UrlCoreMock).toHaveBeenCalledWith(REQUIRED_VARS.R2_PUBLIC_IMAGE_DOMAIN, url);
     expect(result).toEqual({ category: "products", key: "x.webp" });
+  });
+
+  // covers: the fix for reading process.env.R2_PUBLIC_IMAGE_DOMAIN directly
+  // in a query file with no fail-fast of its own (CodeRabbit finding) — any
+  // caller that needs the validated domain, or a ready-to-use isR2Url, gets
+  // it from here instead of duplicating a soft process.env read.
+  it("exports the validated public domain", async () => {
+    const { R2_PUBLIC_DOMAIN } = await import("./r2");
+
+    expect(R2_PUBLIC_DOMAIN).toBe(REQUIRED_VARS.R2_PUBLIC_IMAGE_DOMAIN);
+  });
+
+  it("isR2Url delegates to the core function with the closed-over public domain", async () => {
+    const { isR2Url } = await import("./r2");
+    const url = "https://images.exportersasssm.com/products/x.webp";
+
+    const result = isR2Url(url);
+
+    expect(isR2UrlCoreMock).toHaveBeenCalledWith(REQUIRED_VARS.R2_PUBLIC_IMAGE_DOMAIN, url);
+    expect(result).toBe(true);
   });
 });

@@ -1,7 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { isR2Url } from "@/lib/storage/r2-client";
-
-const R2_PUBLIC_DOMAIN = process.env.R2_PUBLIC_IMAGE_DOMAIN ?? "";
+import { isR2Url } from "@/lib/storage/r2";
 
 export type ProductWithCompany = {
   id: string;
@@ -45,10 +43,9 @@ export async function getProductBySlug(slug: string): Promise<ProductWithCompany
   if (error) throw error;
   if (!data) return null;
 
-  const galleryUrls = data.gallery_urls.filter((url) => isR2Url(R2_PUBLIC_DOMAIN, url));
-  const imageUrl = isR2Url(R2_PUBLIC_DOMAIN, data.image_url) ? data.image_url : (galleryUrls[0] ?? data.image_url);
-  const logoUrl =
-    data.companies.logo_url && isR2Url(R2_PUBLIC_DOMAIN, data.companies.logo_url) ? data.companies.logo_url : null;
+  const galleryUrls = data.gallery_urls.filter((url) => isR2Url(url));
+  const imageUrl = isR2Url(data.image_url) ? data.image_url : (galleryUrls[0] ?? data.image_url);
+  const logoUrl = data.companies.logo_url && isR2Url(data.companies.logo_url) ? data.companies.logo_url : null;
 
   return {
     id: data.id,
@@ -60,27 +57,4 @@ export async function getProductBySlug(slug: string): Promise<ProductWithCompany
     category: data.categories,
     company: { ...data.companies, logo_url: logoUrl },
   };
-}
-
-/**
- * Turns a product name into a URL safe slug: NFKD-normalizes, strips
- * diacritics, lowercases, collapses non-alphanumeric runs to a single
- * hyphen, trims, and truncates to 80 characters. Falls back to a random id
- * based slug when the name normalizes to nothing (e.g. a name in a script
- * this naive rule strips entirely), so a slug is never blank.
- *
- * This only produces a candidate; it does not guarantee uniqueness. The
- * caller retries the insert with a suffix on a unique_violation (23505).
- */
-export function generateSlug(name: string): string {
-  const base = name
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80)
-    .replace(/-+$/g, "");
-
-  return base || `product-${crypto.randomUUID().slice(0, 8)}`;
 }

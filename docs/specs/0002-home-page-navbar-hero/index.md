@@ -22,7 +22,7 @@ This spec now covers the whole home page, not just the navbar and hero. The navb
 - **AC-4**: Responsive: the header collapses sensibly on mobile, the hero stacks single column on small screens. *(already built)*
 - **AC-5**: The home page shows a category grid listing every row in `categories`, ordered alphabetically by name, each tile showing the category name and a live count of products that are `approved` **and** whose company is also `approved` (the same invariant as AC-6, computed as one aggregate query, not one query per category). Zero is a valid, shown count; a category is never hidden for having no products yet.
 - **AC-6**: The home page shows a Featured Products section of up to 8 products, each an `approved` product whose company is also `approved`, ordered by `created_at desc` with `id asc` as a tie break, each card linking to its real `/products/[slug]` page. Fewer than 8 existing shows fewer cards, never a padded or placeholder card. No cap on how many of these 8 slots one company may occupy.
-- **AC-7**: The home page shows a Featured Exporters section of up to 6 `approved` companies, ordered by `created_at desc` with `id asc` as a tie break, each card showing the company's name, an initials avatar when it has no logo, its location (falling back to `country` when `location` is null), and a verified badge when `verified` is true. Cards are not clickable in this pass (no company profile page exists yet). Fewer than 6 existing shows fewer cards. No cap on how many of these 6 slots one company may occupy.
+- **AC-7**: The home page shows a Featured Exporters section of up to 6 `approved` companies, ordered by `created_at desc` with `id asc` as a tie break, each card showing the company's name, an initials avatar when it has no logo, its location (falling back to `country` when `location` is null), and a verified badge when `verified` is true. **Amended 2026-09-09**: cards now link to `/companies/[slug]` (scope feature 5, company profile pages, shipped after this spec) instead of being non-clickable; `ExporterCard` takes a `slug` prop for this. Fewer than 6 existing shows fewer cards. No cap on how many of these 6 slots one company may occupy.
 - **AC-8**: The home page shows a Latest Buy Requirements section of up to 5 rows from `buy_requirements` where `is_public = true`, selecting only `id, product_text, quantity, location, created_at` (never `contact_name`, `contact_email`, or `buyer_id`, even though RLS technically permits reading them), ordered by `created_at desc` with `id asc` as a tie break, each row's posted time shown as an absolute server rendered date, never a relative "x days ago" string. When zero such rows exist, the whole section (heading included) is absent from the rendered page, not an empty state message.
 - **AC-9**: The hero's stats strip (Verified Exporters, Products, Global Buyers, Countries) reads its four numbers from the existing `directory_stats` view instead of the placeholder numbers currently hardcoded, each rendered as a plain locale formatted integer with no `+` suffix; a genuine zero renders as `0`.
 - **AC-10**: A company card (Featured Exporters) whose `logo_url` is null renders an initials avatar (the company name's first character, `--green-wash` background, green text, the same token pair used elsewhere on the page) instead of a broken image or a generic placeholder graphic.
@@ -32,7 +32,7 @@ This spec now covers the whole home page, not just the navbar and hero. The navb
 
 **Chosen option**: Option 1: Most recently approved.
 
-Featured Products and Featured Exporters are ordered by recency (approval time when available, creation time otherwise), capped at 8 and 6 respectively; no schema change, no manual curation step, and a clean seam for scope feature 11 to add tier based ranking later.
+Featured Products and Featured Exporters are ordered by `created_at desc, id asc`, capped at 8 and 6 respectively; no schema change, no manual curation step, and a clean seam for scope feature 11 to add tier based ranking later. Switching to approval time is a named Follow-up once the separate admin app actually populates `approved_at`, not the current contract.
 
 Full options considered and the reasoning behind this choice: [rationale.md](rationale.md).
 
@@ -107,7 +107,7 @@ No server actions or API routes: every value here is a read, made with the exist
 
 **Negative / tradeoffs**:
 - "Most recently created" is not a real merit signal; a long standing excellent supplier gets no visibility boost over one approved yesterday. Accepted for now, revisit at feature 11.
-- Featured Exporters cards are not clickable in this pass, since there is no company profile page yet (scope feature 5). A visitor sees a card they cannot follow through on.
+- ~~Featured Exporters cards are not clickable in this pass, since there is no company profile page yet (scope feature 5). A visitor sees a card they cannot follow through on.~~ Resolved 2026-09-09: feature 5 shipped, cards now link to `/companies/[slug]` (AC-7).
 - `products.approved_at` exists in the schema and is not used by this ordering, since nothing in this repo currently sets it; Featured Products orders by `created_at` instead. If an approve action later starts populating `approved_at` (likely in the separate admin app), this ordering should switch to use it (see Follow-up).
 - No cap on how many Featured Products/Exporters slots one company can occupy; with a lopsided catalog (one supplier with many approved products) that supplier could dominate both sections. Accepted for now given the current small catalog.
 
@@ -118,7 +118,7 @@ No server actions or API routes: every value here is a read, made with the exist
 ## Follow-up
 
 - [ ] Revisit the Featured Products/Featured Exporters ordering and the no-cap-per-company decision once scope feature 11 (membership plans & Razorpay) ships, to blend in a tier based ranking boost, per the PRD's stated membership benefit.
-- [ ] Make Featured Exporters cards clickable once scope feature 5 (company profile pages) exists.
+- [x] Make Featured Exporters cards clickable once scope feature 5 (company profile pages) exists. Done 2026-09-09 (AC-7).
 - [ ] Confirm whether the separate admin app's product approval action sets `products.approved_at`; if it starts doing so, switch Featured Products' ordering from `created_at` to `approved_at` to actually reflect approval recency.
 - [ ] Consider ISR/`revalidate` for the home page once real traffic patterns are known; scope feature 13 (SEO & GEO) is the natural place to decide this, not this pass.
 - [ ] If a future feature needs true approval time ordering for companies (not just creation time), add a `companies.approved_at` column mirroring `products.approved_at`; not added now since nothing in this pass strictly needs it and it would need coordinated writes from the separate admin app.

@@ -12,7 +12,7 @@ The consequence of not deciding: the home page keeps shipping placeholder number
 
 ### Option 1: Most recently approved (chosen)
 
-Order Featured Products and Featured Exporters by recency of approval (products) or creation (companies, no approval timestamp exists), capped at the section's limit. No new column, no manual step.
+Order Featured Products and Featured Exporters by `created_at desc, id asc`, capped at the section's limit. The named intent was approval recency, but neither table is actually ordered by an approval timestamp today (see Cons); switching Products to `approved_at` is a Follow-up once the separate admin app populates it, not the current contract. No new column, no manual step.
 
 **Pros**:
 - Always has content the moment there is any approved data, nothing to curate by hand.

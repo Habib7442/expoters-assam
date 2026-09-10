@@ -115,7 +115,25 @@ describe("parseR2Url", () => {
     expect(parseR2Url(CONFIG.publicDomain, "https://images.exportersasssm.com/products")).toBeNull();
   });
 
-  it("never throws on a malformed URL", () => {
+  it("never throws when the prefix doesn't even match", () => {
     expect(() => parseR2Url(CONFIG.publicDomain, "not a url")).not.toThrow();
+  });
+
+  // covers: a same-domain URL that reaches decodeURIComponent with a
+  // malformed percent-escape (e.g. a bare "%") — the case the previous test
+  // never actually exercised, since "not a url" returns null at the prefix
+  // check and never reaches the decoder.
+  it("returns null instead of throwing on a malformed percent-escape in the key", () => {
+    const url = "https://images.exportersasssm.com/products/100%ZZ.webp";
+
+    expect(() => parseR2Url(CONFIG.publicDomain, url)).not.toThrow();
+    expect(parseR2Url(CONFIG.publicDomain, url)).toBeNull();
+  });
+
+  it("returns null instead of throwing on a malformed percent-escape in the category", () => {
+    const url = "https://images.exportersasssm.com/pro%ZZducts/x.webp";
+
+    expect(() => parseR2Url(CONFIG.publicDomain, url)).not.toThrow();
+    expect(parseR2Url(CONFIG.publicDomain, url)).toBeNull();
   });
 });

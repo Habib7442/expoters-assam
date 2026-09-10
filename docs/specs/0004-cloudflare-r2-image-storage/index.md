@@ -85,7 +85,7 @@ Full reasoning and the two rejected alternatives: see [rationale.md](rationale.m
 - `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`: an R2 API token scoped to the single bucket below, Object Read & Write
 - `R2_BUCKET`: the one bucket name, `exportsassam-images`
 - `R2_PUBLIC_IMAGE_DOMAIN`: the custom domain connected to the bucket for public reads, `images.exportersasssm.com` (a dedicated domain registered for this purpose, not the main site's own domain — see rationale.md's Context); this exact value is also hardcoded as a literal in `next.config.ts` (Value sourcing) — keep the two in sync by hand if it ever changes
-- No new Vercel-only configuration beyond adding the four secret vars to the project's env settings; the domain literal in `next.config.ts` needs no separate Vercel config since it ships in the built code
+- Configure all five variables above in every deployment's env settings, not four: `lib/storage/r2.ts` reads `R2_PUBLIC_IMAGE_DOMAIN` at module load (Key invariants) same as the other four, and fails fast if it's missing — the `next.config.ts` literal is a separate, additional concern (a build-time value Next can't read from an env var, see Value sourcing), it does not substitute for the runtime env var. Of the five, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are secrets; `R2_ACCOUNT_ID`, `R2_BUCKET`, and `R2_PUBLIC_IMAGE_DOMAIN` are not (all three are already visible in every image URL served to visitors).
 
 **Critical test scenarios**:
 - Happy path: `uploadToR2("products", "test.webp", …)` writes a file, the returned URL loads the exact bytes uploaded, verifies **AC-1**

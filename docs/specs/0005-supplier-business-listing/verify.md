@@ -6,28 +6,38 @@ _Steps derived from spec 0005 acceptance criteria. `/check verify` runs these; `
 
 ## UI / manual
 
+Genuine browser/HTTP level observations only. A checkbox here means the rendered page or a real HTTP request was actually driven, not that an equivalent database check passed — see Database below for that evidence.
+
 - [x] Sign out, visit `/list-business` → redirected to `/sign-in?redirect_url=...list-business` → AC-1 (browser sign in + landing back not exercised, blocked)
 - [ ] Sign in as a Clerk user with no company → the empty listing form renders (name, location, business email, WhatsApp number, logo required, about optional) → AC-1 — BLOCKED, no browser session
-- [x] Submit the form with a name, location, a logo URL, a valid business email, and a valid WhatsApp number → **exercised directly via `create_business_listing`, not through the browser form**: one `companies` row (`status='pending'`, `submitted_by='supplier'`, `clerk_user_id` set, `country='India'`, `email` set) and one `company_contacts` row with the normalized number, confirmed by query → AC-2 (the browser triggered path, including a real file upload, not exercised, blocked)
+- [ ] Submit the form through the actual browser (a real name, location, logo file upload, business email, WhatsApp number) → lands on the pending status view → AC-2 — BLOCKED, no browser session (the write itself is proven atomic at the database layer, see Database)
 - [ ] Submit with a missing name, location, logo, email, or WhatsApp number → a field level error appears under the right field → AC-3 — BLOCKED (client side zod validation only exercised by code reading, not a live submission)
-- [x] Submit with an invalid business email (fails the DB format check) → **exercised directly**: `create_business_listing` with `'not-an-email'` fails with `23514` on `companies_email_check`, and the whole write rolls back (`count = 0` confirmed after) → AC-3
-- [x] Submit with a WhatsApp number that fails the DB's format check → **exercised directly via `create_business_listing`** with `'notaphonenumber'`: fails with `23514` on `company_contacts_whatsapp_number_check`, and the earlier `companies` insert rolls back (`count = 0` confirmed after) → AC-3, plus the atomicity invariant on a failure path
 - [ ] Revisit `/list-business` as the same user (now `pending`) → sees the pre filled editable form → AC-4 — BLOCKED, no browser session
-- [x] Edit and save while `pending`/`rejected` → **exercised directly via `update_business_listing`**: row updates, `rejected` → `status` flips to `pending` and `rejection_reason` clears, confirmed by query before/after → AC-5
+- [ ] Edit and save while `pending`/`rejected`, through the browser → the row updates and a `rejected` listing's form shows cleared → AC-5 — BLOCKED, no browser session (the write itself is proven at the database layer, see Database)
 - [ ] Rejection reason shown in the UI → AC-7 — BLOCKED, no browser session (the data path `getMyCompany` → `rejectionReason` prop is code reviewed, not runtime observed)
-- [x] Save two edits back to back → **exercised directly**: the second `update_business_listing` call within the same round trip fails with `P0006: rate_limited` → security model
-- [x] Attempt to edit an `approved` company → **exercised directly**: `update_business_listing` fails with `P0005: not_editable`, row unchanged → AC-6 (the read only UI view itself not rendered, blocked)
-- [x] Attempt a second listing for the same account → **exercised directly**: second `create_business_listing` call fails with `23505` on `companies_clerk_user_id_key` → AC-9
-- [x] Check the home page's public read path while the test company is `pending` → a raw anon REST query (`GET /rest/v1/companies?name=eq....`) returns `[]`; the same query after flipping the row to `approved` returns it → AC-8, both the hidden and visible states proven, not assumed
+- [ ] Attempt to edit an `approved` company through the browser → sees the read only status view, not an editable form → AC-6 — BLOCKED, no browser session (the write layer's own refusal is proven at the database layer, see Database)
 - [x] Click "List Your Business Free" from the hero and the signup band → both render `href="/list-business"` in the fetched HTML → AC-11. The sticky header's third CTA is a Clerk `<Show>` client component that renders nothing in a no JS fetch; confirmed via source instead (`components/site-header.tsx:82`, `href="/list-business"`), not runtime observed
+
+## Database
+
+Exercised directly against the linked database — RPC calls or a raw anon REST query, never through the browser form. This proves the write/read layer works, not that the rendered UI correctly drives it (see UI / manual above for what's still blocked on a real browser session).
+
+- [x] `create_business_listing` with a name, location, a logo URL, a valid business email, and a valid WhatsApp number → one `companies` row (`status='pending'`, `submitted_by='supplier'`, `clerk_user_id` set, `country='India'`, `email` set) and one `company_contacts` row with the normalized number, confirmed by query → AC-2 (the write layer's atomicity)
+- [x] `create_business_listing` with an invalid business email → fails with `23514` on `companies_email_check`, and the whole write rolls back (`count = 0` confirmed after) → AC-3
+- [x] `create_business_listing` with a WhatsApp number that fails the DB's format check (`'notaphonenumber'`) → fails with `23514` on `company_contacts_whatsapp_number_check`, and the earlier `companies` insert rolls back (`count = 0` confirmed after) → AC-3, plus the atomicity invariant on a failure path
+- [x] `update_business_listing` while `pending`/`rejected` → row updates, `rejected` → `status` flips to `pending` and `rejection_reason` clears, confirmed by query before/after → AC-5
+- [x] Two `update_business_listing` calls back to back → the second fails with `P0006: rate_limited` → security model (`update_business_listing`'s cooldown only; `create_business_listing`/`submitBusinessListing` has no rate limit of its own, see index.md's Security model)
+- [x] `update_business_listing` against an `approved` row → fails with `P0005: not_editable`, row unchanged → AC-6 (the write layer's refusal; the read only UI view itself is separately blocked, see UI / manual)
+- [x] A second `create_business_listing` call for the same account → fails with `23505` on `companies_clerk_user_id_key` → AC-9
+- [x] A raw anon REST query (`GET /rest/v1/companies?name=eq....`) while the test company is `pending` → returns `[]`; the same query after flipping the row to `approved` → returns it → AC-8, both the hidden and visible states proven, not assumed
 
 ## Commands
 
 - [x] `npx tsc --noEmit` → no errors
 - [x] `npm run lint` → no errors
 - [x] `npm run build` → succeeds; `/list-business` shows as `ƒ` (dynamic) in the route table
-- [x] Direct RPC check: `create_business_listing` called twice with the same `p_clerk_user_id` → second call fails with `23505` on `companies_clerk_user_id_key`
-- [x] Direct RPC check: `update_business_listing` against a row with `status='approved'` → fails with `P0005`
+
+(The two RPC checks previously duplicated here — the `23505` duplicate-listing guard and `update_business_listing` against an `approved` row — now live once, under Database, since that's what they actually are.)
 
 ## Acceptance-criteria coverage
 

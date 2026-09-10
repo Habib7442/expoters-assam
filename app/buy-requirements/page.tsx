@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   description: "See what buyers are currently looking to source from Assam and Indian exporters.",
 };
 
+// Real Supabase data, not build-time content: without a dynamic API in this
+// page, Next would otherwise prerender it once and freeze that snapshot
+// (same reasoning as app/page.tsx).
+export const dynamic = "force-dynamic";
+
 export default async function BuyRequirementsPage() {
   const buyRequirements = await getLatestBuyRequirements(100);
 

@@ -2,7 +2,7 @@
 
 _Steps derived from spec 0004 acceptance criteria. `/check verify` runs these; `/test` locks the durable ones._
 
-Every step below was exercised live during the build (against the real linked Supabase project and the real Cloudflare R2 bucket/domain), not just typechecked. Two real bugs were caught and fixed this way (see index.md's Build plan steps 6 and index.md's Value sourcing note on `uploadToR2`'s URL construction).
+Every step below except AC-5 was exercised live during the build (against the real linked Supabase project and the real Cloudflare R2 bucket/domain), not just typechecked; two real bugs were caught and fixed this way (see index.md's Build plan steps 6 and index.md's Value sourcing note on `uploadToR2`'s URL construction). AC-5 is a static config check (the checksum flags are set exactly as specced) with no distinct runtime symptom of its own to observe beyond the uploads/downloads above already working — see its own line under Acceptance-criteria coverage.
 
 ## UI / manual
 
