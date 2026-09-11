@@ -58,13 +58,19 @@ export type FeaturedProduct = {
   companyName: string;
 };
 
-/** Up to `limit` approved products from approved companies, most recent first (AC-6). */
+/**
+ * Up to `limit` approved products from approved, *verified* companies, most
+ * recent first (AC-6) — the section showing these is captioned "verified
+ * exporters," so this enforces that explicitly rather than relying on
+ * `verified` happening to mirror `status = 'approved'` (see getProducts).
+ */
 export async function getFeaturedProducts(limit: number): Promise<FeaturedProduct[] | null> {
   const { data, error } = await supabase
     .from("products")
-    .select("id, slug, name, image_url, companies!inner(name, status)")
+    .select("id, slug, name, image_url, companies!inner(name, status, verified)")
     .eq("status", "approved")
     .eq("companies.status", "approved")
+    .eq("companies.verified", true)
     .order("created_at", { ascending: false })
     .order("id", { ascending: true })
     .limit(limit);

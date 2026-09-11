@@ -16,12 +16,18 @@ type GetProductsOptions = {
 };
 
 /**
- * Approved products from approved companies (RLS-equivalent filter applied
- * explicitly since `companies` is joined, not the queried table itself),
- * most recent first. `categorySlug` needs `categories!inner` to actually
- * exclude non-matching rows — PostgREST only filters top-level rows through
- * a left-joined embed when it's `!inner` (same reasoning as `companies` here
- * and in getFeaturedProducts).
+ * Approved products from approved, *verified* companies (RLS-equivalent
+ * filter applied explicitly since `companies` is joined, not the queried
+ * table itself) — the page listing these calls them "verified exporters",
+ * so the query enforces that rather than relying on `verified` happening to
+ * mirror `status = 'approved'` today (true only because the one place that
+ * approves a company also sets `verified: true` in the same write; nothing
+ * enforces they stay coupled, and a future membership tier is already
+ * expected to decouple them — see company-approvals.ts). Most recent first.
+ * `categorySlug` needs `categories!inner` to actually exclude non-matching
+ * rows — PostgREST only filters top-level rows through a left-joined embed
+ * when it's `!inner` (same reasoning as `companies` here and in
+ * getFeaturedProducts).
  */
 export async function getProducts({
   categorySlug,
@@ -31,11 +37,11 @@ export async function getProducts({
   const builder = categorySlug
     ? supabase
         .from("products")
-        .select("id, slug, name, image_url, companies!inner(name, status), categories!inner(slug)")
+        .select("id, slug, name, image_url, companies!inner(name, status, verified), categories!inner(slug)")
         .eq("categories.slug", categorySlug)
-    : supabase.from("products").select("id, slug, name, image_url, companies!inner(name, status)");
+    : supabase.from("products").select("id, slug, name, image_url, companies!inner(name, status, verified)");
 
-  let filtered = builder.eq("status", "approved").eq("companies.status", "approved");
+  let filtered = builder.eq("status", "approved").eq("companies.status", "approved").eq("companies.verified", true);
   if (query) filtered = filtered.ilike("name", `%${query}%`);
 
   const { data, error } = await filtered

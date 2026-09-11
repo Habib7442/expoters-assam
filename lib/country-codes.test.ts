@@ -13,19 +13,43 @@ describe("flagEmoji", () => {
 
 describe("splitPhoneNumber", () => {
   it("splits an India number", () => {
-    expect(splitPhoneNumber("+919876543210")).toEqual({ countryCode: "+91", localNumber: "9876543210" });
+    expect(splitPhoneNumber("+919876543210")).toEqual({
+      countryCode: "+91",
+      countryIso: "IN",
+      localNumber: "9876543210",
+    });
   });
 
   it("splits a US number without matching a shorter, unrelated code first", () => {
-    expect(splitPhoneNumber("+14155552671")).toEqual({ countryCode: "+1", localNumber: "4155552671" });
+    expect(splitPhoneNumber("+14155552671")).toEqual({
+      countryCode: "+1",
+      countryIso: "US",
+      localNumber: "4155552671",
+    });
   });
 
   it("splits a three-digit dial code (UAE)", () => {
-    expect(splitPhoneNumber("+971501234567")).toEqual({ countryCode: "+971", localNumber: "501234567" });
+    expect(splitPhoneNumber("+971501234567")).toEqual({
+      countryCode: "+971",
+      countryIso: "AE",
+      localNumber: "501234567",
+    });
   });
 
   it("falls back to the first country (India) for a bare number with no country code", () => {
-    expect(splitPhoneNumber("9876543210")).toEqual({ countryCode: "+91", localNumber: "9876543210" });
+    expect(splitPhoneNumber("9876543210")).toEqual({
+      countryCode: "+91",
+      countryIso: "IN",
+      localNumber: "9876543210",
+    });
+  });
+
+  it("resolves a shared dial code (+1) to its first listed country (US, not Canada)", () => {
+    expect(splitPhoneNumber("+16135550142")).toEqual({
+      countryCode: "+1",
+      countryIso: "US",
+      localNumber: "6135550142",
+    });
   });
 
   it("round trips a value produced by the form's own hidden-field format", () => {

@@ -34,6 +34,7 @@ export function SearchBar({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const serializedSearchParams = searchParams.toString()
   const urlValue = searchParams.get(paramName) ?? ""
 
   const [value, setValue] = useState(urlValue)
@@ -54,7 +55,7 @@ export function SearchBar({
     if (value === urlValue) return
 
     const handle = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString())
+      const params = new URLSearchParams(serializedSearchParams)
       if (value) params.set(paramName, value)
       else params.delete(paramName)
 
@@ -64,8 +65,7 @@ export function SearchBar({
     }, debounceMs)
 
     return () => clearTimeout(handle)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, debounceMs])
+  }, [value, urlValue, debounceMs, paramName, pathname, router, serializedSearchParams])
 
   return (
     <div className={cn("relative flex w-full max-w-md items-center", className)}>

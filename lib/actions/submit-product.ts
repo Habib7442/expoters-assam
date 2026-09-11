@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { uploadToR2 } from "@/lib/storage/r2";
+import { deleteFromR2, uploadToR2 } from "@/lib/storage/r2";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_IMAGES = 5;
@@ -44,13 +44,43 @@ export type SubmitProductResult =
       fieldErrors?: Record<string, string>;
     };
 
+const NOT_APPROVED_RESULT: SubmitProductResult = {
+  ok: false,
+  code: "company_not_approved",
+  message: "Your business needs to be approved before you can submit products.",
+};
+
+const SERVER_ERROR_RESULT: SubmitProductResult = {
+  ok: false,
+  code: "server_error",
+  message: "Something went wrong on our end. Please try again in a moment.",
+};
+
+/** Best effort only: an orphaned R2 object is an accepted, low cost tradeoff (same reasoning as business-listing.ts's deleteLogoBestEffort). */
+async function cleanupUploadedImages(keys: string[]): Promise<void> {
+  await Promise.all(
+    keys.map((key) =>
+      deleteFromR2("products", key).catch(() => {
+        // best effort only
+      }),
+    ),
+  );
+}
+
 /**
  * Creates a pending product submission for the signed in supplier's own
  * (already approved) company. Images upload to R2 before the database
  * write, same `{clerkUserId}/{uuid}.{ext}` key scheme as the business
  * listing logo (spec 0004's Follow-up named this convention ahead of time).
- * The atomicity, slug generation, and the approved-company gate all live in
- * `create_product_submission`, not here.
+ *
+ * Checks the company is approved *before* uploading anything (avoids
+ * uploading straight to R2 for the common case of a not-yet-approved
+ * caller), but `create_product_submission`'s own P0007 gate still runs too
+ * — this preflight can't be trusted alone against a race where the
+ * company's status changes between this check and the insert. Every
+ * generated R2 key is tracked so a failed upload or a failed/rejected RPC
+ * call cleans up whatever already made it to R2, rather than leaving those
+ * objects orphaned with no product row ever pointing at them.
  */
 export async function submitProduct(input: SubmitProductInput): Promise<SubmitProductResult> {
   const { userId } = await auth();
@@ -75,6 +105,16 @@ export async function submitProduct(input: SubmitProductInput): Promise<SubmitPr
 
   const { name, description, categoryId, images } = parsed.data;
 
+  const { data: company, error: companyError } = await supabaseAdmin
+    .from("companies")
+    .select("status")
+    .eq("clerk_user_id", userId)
+    .maybeSingle();
+
+  if (companyError) return SERVER_ERROR_RESULT;
+  if (!company || company.status !== "approved") return NOT_APPROVED_RESULT;
+
+  const uploadedKeys: string[] = [];
   let imageUrls: string[];
   try {
     imageUrls = await Promise.all(
@@ -82,10 +122,13 @@ export async function submitProduct(input: SubmitProductInput): Promise<SubmitPr
         const ext = ALLOWED_IMAGE_TYPES[file.type];
         const key = `${userId}/${crypto.randomUUID()}.${ext}`;
         const buffer = Buffer.from(await file.arrayBuffer());
-        return uploadToR2("products", key, buffer, file.type);
+        const url = await uploadToR2("products", key, buffer, file.type);
+        uploadedKeys.push(key);
+        return url;
       }),
     );
   } catch {
+    await cleanupUploadedImages(uploadedKeys);
     return { ok: false, code: "upload_failed", message: "Could not upload your images. Please try again." };
   }
 
@@ -98,27 +141,15 @@ export async function submitProduct(input: SubmitProductInput): Promise<SubmitPr
   });
 
   if (error) {
-    if (error.code === "P0007") {
-      return {
-        ok: false,
-        code: "company_not_approved",
-        message: "Your business needs to be approved before you can submit products.",
-      };
-    }
-    return {
-      ok: false,
-      code: "server_error",
-      message: "Something went wrong on our end. Please try again in a moment.",
-    };
+    await cleanupUploadedImages(uploadedKeys);
+    if (error.code === "P0007") return NOT_APPROVED_RESULT;
+    return SERVER_ERROR_RESULT;
   }
 
   const row = data?.[0];
   if (!row) {
-    return {
-      ok: false,
-      code: "server_error",
-      message: "Something went wrong on our end. Please try again in a moment.",
-    };
+    await cleanupUploadedImages(uploadedKeys);
+    return SERVER_ERROR_RESULT;
   }
 
   revalidatePath("/products/new");

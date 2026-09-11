@@ -78,14 +78,30 @@ export function flagEmoji(iso: string): string {
  * happens to be a prefix of the right one. Falls back to this list's first
  * entry (India) if nothing matches, treating the whole value as local
  * digits — better than showing a blank, incorrect split.
+ *
+ * `countryIso` is also returned for driving a `<select>`'s value: several
+ * countries share a dial code (US and Canada are both +1), so a dial code
+ * alone can't be used as a controlled select's value without two options
+ * colliding. When a dial code is shared, this can't truly disambiguate
+ * which country the number was originally entered under — it deterministically
+ * picks this list's first match (US over Canada), which is the best any
+ * dial-code-only stored value allows.
  */
-export function splitPhoneNumber(value: string): { countryCode: string; localNumber: string } {
+export function splitPhoneNumber(value: string): { countryCode: string; countryIso: string; localNumber: string } {
   const trimmed = value.trim();
   const byLength = [...COUNTRY_CODES].sort((a, b) => b.dialCode.length - a.dialCode.length);
   for (const country of byLength) {
     if (trimmed.startsWith(country.dialCode)) {
-      return { countryCode: country.dialCode, localNumber: trimmed.slice(country.dialCode.length).trim() };
+      return {
+        countryCode: country.dialCode,
+        countryIso: country.iso,
+        localNumber: trimmed.slice(country.dialCode.length).trim(),
+      };
     }
   }
-  return { countryCode: COUNTRY_CODES[0]!.dialCode, localNumber: trimmed.replace(/^\+/, "") };
+  return {
+    countryCode: COUNTRY_CODES[0]!.dialCode,
+    countryIso: COUNTRY_CODES[0]!.iso,
+    localNumber: trimmed.replace(/^\+/, ""),
+  };
 }

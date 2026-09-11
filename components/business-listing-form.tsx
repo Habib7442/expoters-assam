@@ -54,7 +54,7 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
   const [country, setCountry] = useState(initialValues?.country ?? "India")
   const [email, setEmail] = useState(initialValues?.email ?? "")
   const [gstNumber, setGstNumber] = useState(initialValues?.gstNumber ?? "")
-  const [countryCode, setCountryCode] = useState(initialPhone.countryCode)
+  const [countryIso, setCountryIso] = useState(initialPhone.countryIso)
   const [localNumber, setLocalNumber] = useState(initialPhone.localNumber)
   const [about, setAbout] = useState(initialValues?.about ?? "")
 
@@ -213,9 +213,9 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
           id="listing-whatsapp"
           name="whatsappNumber"
           required
-          countryCode={countryCode}
+          countryIso={countryIso}
           localNumber={localNumber}
-          onCountryCodeChange={setCountryCode}
+          onCountryIsoChange={setCountryIso}
           onLocalNumberChange={setLocalNumber}
           ariaInvalid={!!fieldErrors?.whatsappNumber}
         />
