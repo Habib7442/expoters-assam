@@ -153,10 +153,20 @@ A supplier turns their Clerk account into a real, pending business listing: name
 - [ ] Document it: `/document supplier business listing`
 spec [0005](../specs/0005-supplier-business-listing/index.md) · code in `supabase/migrations/20260903120000_add_business_listing.sql`, `supabase/migrations/20260903120500_add_business_listing_rate_limit.sql`, `supabase/migrations/20260903121000_fix_update_business_listing_conflict_target.sql`, `supabase/migrations/20260903130000_add_business_listing_email.sql`, `lib/supabase/queries/companies.ts`, `lib/actions/business-listing.ts`, `app/list-business/page.tsx`, `components/business-listing-form.tsx`
 
-### 16. Supplier product submission · needs a decision · from spec 0005
-An approved supplier submits their own product (name, category, images) from their own dashboard; it stays `pending` until an admin approves it in the separate admin app. Deferred out of feature 10 (spec 0005's Follow-up) until a real approved company exists to design and build against; gated on `companies.status = 'approved'`.
+### 16. Supplier product submission · in-progress · from spec 0005
+An approved supplier submits their own product (name, category, images) from their own dashboard; it stays `pending` until an admin approves it in the separate admin app. Deferred out of feature 10 (spec 0005's Follow-up) until a real approved company existed to design and build against; that gate has since shipped. Decided and built inline with the engineer, no separate spec: image upload reuses spec 0005's own `{clerkUserId}/{uuid}.{ext}` R2 key convention (already named as this feature's own owed decision in spec 0004's Follow-up), and slug generation reuses `public.slugify()` + the same collision-retry pattern `create_business_listing` already established — both direct extensions of already-decided patterns, not new product decisions.
 **Done when:** an approved supplier can submit a product with images, it is stored `pending`, and it does not appear on any public read path until approved.
-- [ ] Design it (spec): `/architect supplier product submission`
+- [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
+- [x] Build it: `/develop supplier product submission`
+   - [x] `create_product_submission` RPC: gates on the caller's company being `approved` (`P0007` otherwise), atomic slug generation with collision retry, `submitted_by = 'supplier'`
+   - [x] `submitProduct` server action (`lib/actions/submit-product.ts`): up to 5 images, 2 MB/JPG-PNG-WebP each, uploaded to R2 before the database write
+   - [x] `ProductSubmissionForm` (plain `onSubmit`, not `<form action={fn}>` — same fix as the business listing/buy requirement forms, so a validation error doesn't wipe what the user typed) and `/products/new`, gated on the caller's own company status (no company → list business first; pending/rejected → check status; approved → the form)
+   - [x] Live-verified directly against the RPC: happy path (real row, correct slug, correct `image_url`/`gallery_urls`), the `pending`-company gate (`P0007`), the no-images guard (`P0008`), the no-company guard (`P0004`), slug collision suffixing, and invisibility on the public anon read path; test rows cleaned up after
+- [ ] Verify it: `/check verify supplier product submission`
+- [ ] Test it: `/test supplier product submission`
+- [ ] Review it (fresh model): `/check review supplier product submission`
+- [ ] Document it: `/document supplier product submission`
+code in `supabase/migrations/20260911010000_add_create_product_submission.sql`, `lib/actions/submit-product.ts`, `components/product-submission-form.tsx`, `app/products/new/page.tsx`
 
 ## Slice 4: revenue
 

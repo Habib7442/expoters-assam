@@ -1,6 +1,64 @@
 import { supabase } from "@/lib/supabase/client";
 import { isR2Url } from "@/lib/storage/r2";
 
+export type ProductListItem = {
+  id: string;
+  slug: string;
+  name: string;
+  imageUrl: string;
+  companyName: string;
+};
+
+type GetProductsOptions = {
+  categorySlug?: string;
+  query?: string;
+  limit?: number;
+};
+
+/**
+ * Approved products from approved companies (RLS-equivalent filter applied
+ * explicitly since `companies` is joined, not the queried table itself),
+ * most recent first. `categorySlug` needs `categories!inner` to actually
+ * exclude non-matching rows — PostgREST only filters top-level rows through
+ * a left-joined embed when it's `!inner` (same reasoning as `companies` here
+ * and in getFeaturedProducts).
+ */
+export async function getProducts({
+  categorySlug,
+  query,
+  limit = 60,
+}: GetProductsOptions = {}): Promise<ProductListItem[]> {
+  const builder = categorySlug
+    ? supabase
+        .from("products")
+        .select("id, slug, name, image_url, companies!inner(name, status), categories!inner(slug)")
+        .eq("categories.slug", categorySlug)
+    : supabase.from("products").select("id, slug, name, image_url, companies!inner(name, status)");
+
+  let filtered = builder.eq("status", "approved").eq("companies.status", "approved");
+  if (query) filtered = filtered.ilike("name", `%${query}%`);
+
+  const { data, error } = await filtered
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    console.error("getProducts failed", error);
+    return [];
+  }
+
+  return (data ?? [])
+    .filter((product) => isR2Url(product.image_url))
+    .map((product) => ({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      imageUrl: product.image_url,
+      companyName: product.companies.name,
+    }));
+}
+
 export type ProductWithCompany = {
   id: string;
   slug: string;

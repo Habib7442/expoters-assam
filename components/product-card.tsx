@@ -25,7 +25,7 @@ export function ProductCard({ slug, name, imageUrl, companyName }: ProductCardPr
       </div>
       <div className="flex flex-col gap-1 p-4">
         <span className="truncate font-heading text-sm font-semibold text-green-deep">{name}</span>
-        <span className="truncate text-xs text-muted-foreground">{companyName}</span>
+        <span className="truncate text-xs text-muted-foreground">by {companyName}</span>
       </div>
     </Link>
   );

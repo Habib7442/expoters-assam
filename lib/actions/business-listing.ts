@@ -25,10 +25,23 @@ const whatsappNumber = z
 
 const baseFields = {
   name: z.string().trim().min(2, "Enter your business name").max(200),
-  location: z.string().trim().min(2, "Enter a location").max(120),
+  addressLine: z.string().trim().min(5, "Enter your business address").max(240),
+  location: z.string().trim().min(2, "Enter a city").max(120),
+  state: z.string().trim().min(2, "Enter a state").max(120),
+  postalCode: z
+    .string()
+    .trim()
+    .max(12, "Enter a valid PIN code")
+    .optional(),
+  country: z.string().trim().min(2, "Enter a country").max(120),
   about: z.string().trim().max(2000).optional(),
   email: z.string().trim().min(1, "Enter your business email").email("Enter a valid email address"),
   whatsappNumber,
+  gstNumber: z
+    .string()
+    .trim()
+    .max(20, "Enter a valid GST number")
+    .optional(),
 };
 
 const createSchema = z.object({
@@ -58,7 +71,6 @@ export type BusinessListingResult =
         | "not_signed_in"
         | "invalid_input"
         | "already_listed"
-        | "not_editable"
         | "not_found"
         | "rate_limited"
         | "upload_failed"
@@ -131,10 +143,15 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
 
   const parsed = createSchema.safeParse({
     name: formData.get("name"),
+    addressLine: formData.get("addressLine"),
     location: formData.get("location"),
+    state: formData.get("state"),
+    postalCode: formData.get("postalCode") || undefined,
+    country: formData.get("country"),
     about: formData.get("about") || undefined,
     email: formData.get("email"),
     whatsappNumber: formData.get("whatsappNumber"),
+    gstNumber: formData.get("gstNumber") || undefined,
     logo: formData.get("logo"),
   });
 
@@ -147,7 +164,19 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
     };
   }
 
-  const { name, location, about, email, whatsappNumber: phone, logo } = parsed.data;
+  const {
+    name,
+    addressLine,
+    location,
+    state,
+    postalCode,
+    country,
+    about,
+    email,
+    whatsappNumber: phone,
+    gstNumber,
+    logo,
+  } = parsed.data;
 
   let logoUrl: string;
   try {
@@ -164,6 +193,11 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
     p_whatsapp_number: phone,
     p_about: (about || null) as string,
     p_email: email,
+    p_gst_number: (gstNumber || null) as string,
+    p_state: state,
+    p_country: country,
+    p_address_line: addressLine,
+    p_postal_code: (postalCode || null) as string,
   });
 
   if (error) {
@@ -191,10 +225,15 @@ export async function updateBusinessListing(formData: FormData): Promise<Busines
 
   const parsed = updateSchema.safeParse({
     name: formData.get("name"),
+    addressLine: formData.get("addressLine"),
     location: formData.get("location"),
+    state: formData.get("state"),
+    postalCode: formData.get("postalCode") || undefined,
+    country: formData.get("country"),
     about: formData.get("about") || undefined,
     email: formData.get("email"),
     whatsappNumber: formData.get("whatsappNumber"),
+    gstNumber: formData.get("gstNumber") || undefined,
     logo: formData.get("logo"),
   });
 
@@ -207,7 +246,19 @@ export async function updateBusinessListing(formData: FormData): Promise<Busines
     };
   }
 
-  const { name, location, about, email, whatsappNumber: phone, logo } = parsed.data;
+  const {
+    name,
+    addressLine,
+    location,
+    state,
+    postalCode,
+    country,
+    about,
+    email,
+    whatsappNumber: phone,
+    gstNumber,
+    logo,
+  } = parsed.data;
 
   const { data: existing } = await supabaseAdmin
     .from("companies")
@@ -232,14 +283,16 @@ export async function updateBusinessListing(formData: FormData): Promise<Busines
     p_whatsapp_number: phone,
     p_about: (about || null) as string,
     p_email: email,
+    p_gst_number: (gstNumber || null) as string,
+    p_state: state,
+    p_country: country,
+    p_address_line: addressLine,
+    p_postal_code: (postalCode || null) as string,
   });
 
   if (error) {
     if (error.code === "P0004") {
       return { ok: false, code: "not_found", message: "No business listing found for your account." };
-    }
-    if (error.code === "P0005") {
-      return { ok: false, code: "not_editable", message: "An approved listing can't be edited here yet." };
     }
     if (error.code === "P0006") {
       return {

@@ -11,7 +11,7 @@ export type R2Config = {
   publicDomain: string;
 };
 
-export type R2Category = "products" | "logos";
+export type R2Category = "products" | "logos" | "categories";
 
 /**
  * Builds an S3 compatible client for Cloudflare R2. Takes credentials
@@ -94,7 +94,7 @@ export function parseR2Url(publicDomain: string, url: string): { category: R2Cat
 
   try {
     const category = decodeURIComponent(categoryRaw);
-    if (category !== "products" && category !== "logos") return null;
+    if (category !== "products" && category !== "logos" && category !== "categories") return null;
 
     return { category, key: keyParts.map(decodeURIComponent).join("/") };
   } catch {

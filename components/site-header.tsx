@@ -26,7 +26,7 @@ export function SiteHeader() {
   return (
     <div className="sticky top-0 z-50 w-full">
       <div className="hidden bg-green-wash sm:block">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-4 py-2 text-xs text-green-deep sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-2 text-xs text-green-deep sm:px-6 lg:px-8">
           <span className="flex items-center gap-1.5">
             <Leaf className="size-3.5" aria-hidden="true" />
             Connecting Assam to the World
@@ -39,7 +39,7 @@ export function SiteHeader() {
       </div>
 
       <header className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-2 px-3 py-3 sm:gap-6 sm:px-6 sm:py-4 lg:gap-8 lg:px-8">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2 px-3 py-3 sm:gap-6 sm:px-6 sm:py-4 lg:gap-8 lg:px-8">
           <Link href="/" className="flex shrink items-center gap-2 min-w-0">
             <Image
               src="/logo.png"
@@ -69,6 +69,11 @@ export function SiteHeader() {
                 {link.label}
               </Link>
             ))}
+            <Show when="signed-in">
+              <Link href="/list-business" className="text-foreground transition-colors hover:text-green">
+                My Business
+              </Link>
+            </Show>
           </nav>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-4">
@@ -88,6 +93,14 @@ export function SiteHeader() {
               </Button>
             </Show>
             <Show when="signed-in">
+              <Button
+                render={<Link href="/products/new" />}
+                nativeButton={false}
+                className="rounded-full h-8 px-2.5 text-xs sm:h-9 sm:px-4 sm:text-sm"
+              >
+                <span className="hidden sm:inline">Add Product</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
               <UserButton />
             </Show>
 
@@ -117,6 +130,15 @@ export function SiteHeader() {
                       {link.label}
                     </SheetClose>
                   ))}
+                  <Show when="signed-in">
+                    <SheetClose
+                      render={<Link href="/list-business" />}
+                      nativeButton={false}
+                      className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                    >
+                      My Business
+                    </SheetClose>
+                  </Show>
                   <Show when="signed-out">
                     <div className="mt-4 border-t border-border pt-4 flex flex-col gap-2">
                       <SheetClose
@@ -125,6 +147,17 @@ export function SiteHeader() {
                         className="rounded-lg px-3 py-2 text-center text-sm font-medium text-foreground hover:bg-muted"
                       >
                         Sign In
+                      </SheetClose>
+                    </div>
+                  </Show>
+                  <Show when="signed-in">
+                    <div className="mt-4 border-t border-border pt-4">
+                      <SheetClose
+                        render={<Link href="/products/new" />}
+                        nativeButton={false}
+                        className="rounded-lg px-3 py-2 text-center text-sm font-medium text-foreground hover:bg-muted"
+                      >
+                        Add Product
                       </SheetClose>
                     </div>
                   </Show>

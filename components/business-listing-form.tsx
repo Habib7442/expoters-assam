@@ -8,18 +8,25 @@ import {
   updateBusinessListing,
   type BusinessListingResult,
 } from "@/lib/actions/business-listing"
+import { COUNTRY_CODES, splitPhoneNumber } from "@/lib/country-codes"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PhoneNumberInput } from "@/components/phone-number-input"
 import { Textarea } from "@/components/ui/textarea"
 
 type BusinessListingFormProps = {
   mode: "create" | "edit"
   initialValues?: {
     name: string
+    addressLine: string | null
     location: string | null
+    state: string | null
+    postalCode: string | null
+    country: string
     about: string | null
     email: string | null
+    gstNumber: string | null
     whatsappNumber: string | null
     logoUrl: string | null
   }
@@ -38,10 +45,17 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
   // controlled value survives that reset since React re-asserts it from
   // state on the next render. The file input can't be controlled (browser
   // security), so it still clears on any submission — unavoidable.
+  const initialPhone = splitPhoneNumber(initialValues?.whatsappNumber ?? COUNTRY_CODES[0]!.dialCode)
   const [name, setName] = useState(initialValues?.name ?? "")
+  const [addressLine, setAddressLine] = useState(initialValues?.addressLine ?? "")
   const [location, setLocation] = useState(initialValues?.location ?? "")
+  const [state, setState] = useState(initialValues?.state ?? "")
+  const [postalCode, setPostalCode] = useState(initialValues?.postalCode ?? "")
+  const [country, setCountry] = useState(initialValues?.country ?? "India")
   const [email, setEmail] = useState(initialValues?.email ?? "")
-  const [whatsappNumber, setWhatsappNumber] = useState(initialValues?.whatsappNumber ?? "")
+  const [gstNumber, setGstNumber] = useState(initialValues?.gstNumber ?? "")
+  const [countryCode, setCountryCode] = useState(initialPhone.countryCode)
+  const [localNumber, setLocalNumber] = useState(initialPhone.localNumber)
   const [about, setAbout] = useState(initialValues?.about ?? "")
 
   function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
@@ -105,17 +119,77 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="listing-location">Location</Label>
-        <Input
-          id="listing-location"
-          name="location"
+        <Label htmlFor="listing-address">Business address</Label>
+        <Textarea
+          id="listing-address"
+          name="addressLine"
           required
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="City, State"
-          aria-invalid={!!fieldErrors?.location}
+          rows={2}
+          value={addressLine}
+          onChange={(e) => setAddressLine(e.target.value)}
+          placeholder="Building, street, area"
+          aria-invalid={!!fieldErrors?.addressLine}
         />
-        {fieldErrors?.location && <p className="text-xs text-destructive">{fieldErrors.location}</p>}
+        {fieldErrors?.addressLine && <p className="text-xs text-destructive">{fieldErrors.addressLine}</p>}
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="listing-location">City</Label>
+          <Input
+            id="listing-location"
+            name="location"
+            required
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="City"
+            aria-invalid={!!fieldErrors?.location}
+          />
+          {fieldErrors?.location && <p className="text-xs text-destructive">{fieldErrors.location}</p>}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="listing-state">State</Label>
+          <Input
+            id="listing-state"
+            name="state"
+            required
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            placeholder="State"
+            aria-invalid={!!fieldErrors?.state}
+          />
+          {fieldErrors?.state && <p className="text-xs text-destructive">{fieldErrors.state}</p>}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="listing-country">Country</Label>
+          <Input
+            id="listing-country"
+            name="country"
+            required
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            placeholder="Country"
+            aria-invalid={!!fieldErrors?.country}
+          />
+          {fieldErrors?.country && <p className="text-xs text-destructive">{fieldErrors.country}</p>}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5 sm:max-w-[calc((100%-1.5rem)/3)]">
+        <Label htmlFor="listing-postal-code">
+          PIN code <span className="font-normal text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
+          id="listing-postal-code"
+          name="postalCode"
+          value={postalCode}
+          onChange={(e) => setPostalCode(e.target.value)}
+          placeholder="PIN code"
+          aria-invalid={!!fieldErrors?.postalCode}
+        />
+        {fieldErrors?.postalCode && <p className="text-xs text-destructive">{fieldErrors.postalCode}</p>}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -135,19 +209,34 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="listing-whatsapp">WhatsApp number</Label>
-        <Input
+        <PhoneNumberInput
           id="listing-whatsapp"
           name="whatsappNumber"
-          type="tel"
           required
-          value={whatsappNumber}
-          onChange={(e) => setWhatsappNumber(e.target.value)}
-          placeholder="+91 98765 43210"
-          aria-invalid={!!fieldErrors?.whatsappNumber}
+          countryCode={countryCode}
+          localNumber={localNumber}
+          onCountryCodeChange={setCountryCode}
+          onLocalNumberChange={setLocalNumber}
+          ariaInvalid={!!fieldErrors?.whatsappNumber}
         />
         {fieldErrors?.whatsappNumber && (
           <p className="text-xs text-destructive">{fieldErrors.whatsappNumber}</p>
         )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="listing-gst">
+          GST number <span className="font-normal text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
+          id="listing-gst"
+          name="gstNumber"
+          value={gstNumber}
+          onChange={(e) => setGstNumber(e.target.value)}
+          placeholder="e.g. 18AABCU9603R1ZM"
+          aria-invalid={!!fieldErrors?.gstNumber}
+        />
+        {fieldErrors?.gstNumber && <p className="text-xs text-destructive">{fieldErrors.gstNumber}</p>}
       </div>
 
       <div className="flex flex-col gap-1.5">

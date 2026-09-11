@@ -134,18 +134,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string | null
           name: string
           slug: string
         }
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string | null
           name: string
           slug: string
         }
         Update: {
           created_at?: string
           id?: string
+          image_url?: string | null
           name?: string
           slug?: string
         }
@@ -154,16 +157,20 @@ export type Database = {
       companies: {
         Row: {
           about: string | null
+          address_line: string | null
           clerk_user_id: string | null
           country: string
           created_at: string
           email: string
+          gst_number: string | null
           id: string
           location: string | null
           logo_url: string | null
           name: string
+          postal_code: string | null
           rejection_reason: string | null
           slug: string
+          state: string | null
           status: string
           submitted_by: string
           updated_at: string
@@ -171,16 +178,20 @@ export type Database = {
         }
         Insert: {
           about?: string | null
+          address_line?: string | null
           clerk_user_id?: string | null
           country?: string
           created_at?: string
           email: string
+          gst_number?: string | null
           id?: string
           location?: string | null
           logo_url?: string | null
           name: string
+          postal_code?: string | null
           rejection_reason?: string | null
           slug: string
+          state?: string | null
           status?: string
           submitted_by: string
           updated_at?: string
@@ -188,16 +199,20 @@ export type Database = {
         }
         Update: {
           about?: string | null
+          address_line?: string | null
           clerk_user_id?: string | null
           country?: string
           created_at?: string
           email?: string
+          gst_number?: string | null
           id?: string
           location?: string | null
           logo_url?: string | null
           name?: string
+          postal_code?: string | null
           rejection_reason?: string | null
           slug?: string
+          state?: string | null
           status?: string
           submitted_by?: string
           updated_at?: string
@@ -503,11 +518,16 @@ export type Database = {
       create_business_listing: {
         Args: {
           p_about: string
+          p_address_line: string
           p_clerk_user_id: string
+          p_country: string
           p_email: string
+          p_gst_number: string
           p_location: string
           p_logo_url: string
           p_name: string
+          p_postal_code: string
+          p_state: string
           p_whatsapp_number: string
         }
         Returns: {
@@ -530,6 +550,13 @@ export type Database = {
         Returns: {
           buy_requirement_id: string
           rate_limited: boolean
+        }[]
+      }
+      create_category: {
+        Args: { p_image_url?: string; p_name: string }
+        Returns: {
+          category_id: string
+          slug: string
         }[]
       }
       create_company_enquiry: {
@@ -560,6 +587,19 @@ export type Database = {
           whatsapp_number: string
         }[]
       }
+      create_product_submission: {
+        Args: {
+          p_category_id: string
+          p_clerk_user_id: string
+          p_description: string
+          p_image_urls: string[]
+          p_name: string
+        }
+        Returns: {
+          product_id: string
+          status: string
+        }[]
+      }
       get_or_create_buyer: {
         Args: { p_email?: string; p_name: string; p_phone: string }
         Returns: {
@@ -581,16 +621,28 @@ export type Database = {
       update_business_listing: {
         Args: {
           p_about: string
+          p_address_line: string
           p_clerk_user_id: string
+          p_country: string
           p_email: string
+          p_gst_number: string
           p_location: string
           p_logo_url: string
           p_name: string
+          p_postal_code: string
+          p_state: string
           p_whatsapp_number: string
         }
         Returns: {
           company_id: string
           status: string
+        }[]
+      }
+      update_category: {
+        Args: { p_id: string; p_image_url?: string; p_name: string }
+        Returns: {
+          category_id: string
+          slug: string
         }[]
       }
     }

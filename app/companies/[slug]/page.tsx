@@ -38,7 +38,7 @@ export default async function CompanyPage({ params }: Props) {
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
-      <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 sm:py-12">
         <div className="flex flex-col gap-6 rounded-2xl border border-border bg-background p-6 shadow-sm sm:flex-row sm:items-center sm:gap-8">
           {company.logoUrl ? (
             <Image

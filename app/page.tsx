@@ -14,7 +14,6 @@ import {
   getFeaturedProducts,
   getFeaturedExporters,
   getLatestBuyRequirements,
-  getDirectoryStats,
 } from "@/lib/supabase/queries/home";
 
 // Placeholder chip names, used only if the real categories fail to load.
@@ -60,23 +59,13 @@ const LISTING_STEPS = [
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [categories, featuredProducts, featuredExporters, latestBuyRequirements, stats] =
+  const [categories, featuredProducts, featuredExporters, latestBuyRequirements] =
     await Promise.all([
       getCategoriesWithProductCounts(),
       getFeaturedProducts(8),
       getFeaturedExporters(6),
       getLatestBuyRequirements(5),
-      getDirectoryStats(),
     ]);
-
-  const statItems = stats
-    ? [
-        { label: "Verified Exporters", value: stats.verifiedExporters },
-        { label: "Products", value: stats.products },
-        { label: "Global Buyers", value: stats.buyers },
-        { label: "Countries", value: stats.countries },
-      ]
-    : null;
 
   const categoryChipNames =
     categories && categories.length > 0
@@ -85,7 +74,7 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft w-full overflow-x-hidden">
-      <section className="mx-auto w-full max-w-[1200px] px-4 pt-6 pb-2 sm:px-6 sm:pt-8">
+      <section className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-2 sm:px-6 sm:pt-8">
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {categoryChipNames.map((chip) => (
             <Badge
@@ -99,7 +88,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 sm:py-8">
+      <section className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8">
         <div className="grid gap-8 rounded-2xl bg-green-wash px-5 py-8 sm:rounded-[28px] sm:px-10 sm:py-14 lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:gap-y-10">
           <div className="order-1 flex min-w-0 flex-col gap-7 lg:col-start-1 lg:row-start-1">
             <div className="flex flex-col gap-3">
@@ -132,19 +121,6 @@ export default async function Home() {
                 List Your Business Free
               </Button>
             </div>
-
-            {statItems && (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                {statItems.map((stat) => (
-                  <div key={stat.label} className="flex flex-col">
-                    <span className="font-heading text-xl font-bold text-green-deep sm:text-2xl">
-                      {stat.value.toLocaleString("en-US")}
-                    </span>
-                    <span className="text-xs text-foreground/70">{stat.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="order-2 flex items-center justify-center lg:col-start-2 lg:row-start-1 lg:row-span-2">
@@ -174,7 +150,7 @@ export default async function Home() {
       </section>
 
       <section className="w-full bg-background">
-        <div className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14">
+        <div className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14">
           <h2 className="mb-8 font-heading text-2xl font-bold text-green-deep sm:mb-10 sm:text-3xl">
             Get a free listing in 3 simple steps
           </h2>
@@ -196,7 +172,7 @@ export default async function Home() {
       </section>
 
       {categories && categories.length > 0 && (
-        <section className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14">
+        <section className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14">
           <div className="mb-6 flex flex-col gap-1 sm:mb-8">
             <h2 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">
               Shop by Category
@@ -207,7 +183,13 @@ export default async function Home() {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
             {categories.map((category) => (
-              <CategoryTile key={category.id} name={category.name} count={category.productCount} />
+              <Link key={category.id} href={`/products?category=${category.slug}`}>
+                <CategoryTile
+                  name={category.name}
+                  count={category.productCount}
+                  imageUrl={category.imageUrl}
+                />
+              </Link>
             ))}
           </div>
         </section>
@@ -215,14 +197,22 @@ export default async function Home() {
 
       {featuredProducts && featuredProducts.length > 0 && (
         <section className="w-full bg-bg-soft">
-          <div className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14">
-            <div className="mb-6 flex flex-col gap-1 sm:mb-8">
-              <h2 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">
-                Featured Products
-              </h2>
-              <p className="text-sm text-muted-foreground sm:text-base">
-                Real listings from verified exporters on the directory.
-              </p>
+          <div className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14">
+            <div className="mb-6 flex flex-col items-start gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <h2 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">
+                  Featured Products
+                </h2>
+                <p className="text-sm text-muted-foreground sm:text-base">
+                  Real listings from verified exporters on the directory.
+                </p>
+              </div>
+              <Link
+                href="/products"
+                className="text-sm font-semibold text-green transition-colors hover:text-green-deep"
+              >
+                View all products &rarr;
+              </Link>
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {featuredProducts.map((product) => (
@@ -240,7 +230,7 @@ export default async function Home() {
       )}
 
       {featuredExporters && featuredExporters.length > 0 && (
-        <section className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14">
+        <section className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14">
           <div className="mb-6 flex flex-col gap-1 sm:mb-8">
             <h2 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">
               Featured Exporters
@@ -266,7 +256,7 @@ export default async function Home() {
 
       {latestBuyRequirements && latestBuyRequirements.length > 0 && (
         <section className="w-full bg-bg-soft">
-          <div className="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14">
+          <div className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14">
             <div className="mb-6 flex flex-col gap-1 sm:mb-8">
               <h2 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">
                 Latest Buy Requirements
@@ -291,7 +281,7 @@ export default async function Home() {
       )}
 
       <section className="w-full bg-green">
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-4 px-4 py-12 text-center sm:gap-5 sm:px-6 sm:py-16">
+        <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center gap-4 px-4 py-12 text-center sm:gap-5 sm:px-6 sm:py-16">
           <h2 className="font-heading text-2xl font-bold text-primary-foreground sm:text-3xl">
             Join ExportsAssam Free
           </h2>

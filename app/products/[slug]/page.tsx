@@ -8,6 +8,7 @@ import { getCurrentTier } from "@/lib/supabase/queries/company-tiers";
 import { getProductBySlug } from "@/lib/supabase/queries/products";
 import { isR2Url } from "@/lib/storage/r2";
 import { Badge } from "@/components/ui/badge";
+import { ProductGallery } from "@/components/product-gallery";
 import { SendEnquiryDialog } from "@/components/send-enquiry-dialog";
 
 type Props = {
@@ -40,44 +41,9 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
-      <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 sm:py-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-          <div className="flex flex-col gap-3">
-            <div className="overflow-hidden rounded-2xl border border-border bg-background">
-              {images[0] ? (
-                <Image
-                  src={images[0]}
-                  alt={product.name}
-                  width={800}
-                  height={800}
-                  className="h-auto w-full object-cover"
-                  priority
-                />
-              ) : (
-                <div className="flex aspect-square w-full items-center justify-center bg-green-wash text-lg font-semibold text-green-deep">
-                  {product.name.slice(0, 1)}
-                </div>
-              )}
-            </div>
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {images.slice(1).map((url, i) => (
-                  <div
-                    key={url}
-                    className="size-20 shrink-0 overflow-hidden rounded-lg border border-border bg-background"
-                  >
-                    <Image
-                      src={url}
-                      alt={`${product.name} — image ${i + 2}`}
-                      width={80}
-                      height={80}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ProductGallery images={images} productName={product.name} />
 
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">

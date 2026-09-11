@@ -5,6 +5,7 @@ export type CategoryWithCount = {
   id: string;
   name: string;
   slug: string;
+  imageUrl: string | null;
   productCount: number;
 };
 
@@ -26,7 +27,7 @@ export async function getCategoriesWithProductCounts(): Promise<CategoryWithCoun
     { data: categories, error: categoriesError },
     { data: counts, error: countsError },
   ] = await Promise.all([
-    supabase.from("categories").select("id, name, slug").order("name", { ascending: true }),
+    supabase.from("categories").select("id, name, slug, image_url").order("name", { ascending: true }),
     supabase.from("category_product_counts").select("category_id, product_count"),
   ]);
 
@@ -44,6 +45,7 @@ export async function getCategoriesWithProductCounts(): Promise<CategoryWithCoun
     id: category.id,
     name: category.name,
     slug: category.slug,
+    imageUrl: category.image_url && isR2Url(category.image_url) ? category.image_url : null,
     productCount: countByCategory.get(category.id) ?? 0,
   }));
 }

@@ -30,7 +30,7 @@ const FOOTER_LINKS = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-background">
-      <div className="mx-auto grid w-full max-w-[1200px] gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 sm:py-14 lg:grid-cols-4 lg:px-8">
+      <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 sm:py-14 lg:grid-cols-4 lg:px-8">
         <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-1">
           <span className="font-heading text-xl font-bold text-green-deep">
             Exports<span className="text-green">Assam</span>
@@ -79,7 +79,7 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-border">
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-2 px-4 py-6 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6 sm:text-left lg:px-8">
+        <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center gap-2 px-4 py-6 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6 sm:text-left lg:px-8">
           <p>
             &copy; {new Date().getFullYear()} ExportsAssam.com, a venture by
             Avadi Herbs India Pvt. Ltd. All rights reserved.

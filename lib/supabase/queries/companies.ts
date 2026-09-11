@@ -6,10 +6,15 @@ import { isR2Url } from "@/lib/storage/r2";
 export type MyCompany = {
   id: string;
   name: string;
+  addressLine: string | null;
   location: string | null;
+  state: string | null;
+  postalCode: string | null;
+  country: string;
   logoUrl: string | null;
   about: string | null;
   email: string;
+  gstNumber: string | null;
   status: string;
   rejectionReason: string | null;
   whatsappNumber: string | null;
@@ -24,7 +29,9 @@ export type MyCompany = {
 export async function getMyCompany(clerkUserId: string): Promise<MyCompany | null> {
   const { data, error } = await supabaseAdmin
     .from("companies")
-    .select("id, name, location, logo_url, about, email, status, rejection_reason, company_contacts(whatsapp_number)")
+    .select(
+      "id, name, address_line, location, state, postal_code, country, logo_url, about, email, gst_number, status, rejection_reason, company_contacts(whatsapp_number)",
+    )
     .eq("clerk_user_id", clerkUserId)
     .maybeSingle();
 
@@ -34,10 +41,15 @@ export async function getMyCompany(clerkUserId: string): Promise<MyCompany | nul
   return {
     id: data.id,
     name: data.name,
+    addressLine: data.address_line,
     location: data.location,
+    state: data.state,
+    postalCode: data.postal_code,
+    country: data.country,
     logoUrl: data.logo_url,
     about: data.about,
     email: data.email,
+    gstNumber: data.gst_number,
     status: data.status,
     rejectionReason: data.rejection_reason,
     whatsappNumber: data.company_contacts?.whatsapp_number ?? null,
