@@ -231,13 +231,21 @@ export default async function Home() {
 
       {featuredExporters && featuredExporters.length > 0 && (
         <section className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14">
-          <div className="mb-6 flex flex-col gap-1 sm:mb-8">
-            <h2 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">
-              Featured Exporters
-            </h2>
-            <p className="text-sm text-muted-foreground sm:text-base">
-              Suppliers already trading on ExportsAssam.
-            </p>
+          <div className="mb-6 flex flex-col items-start gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-1">
+              <h2 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">
+                Featured Exporters
+              </h2>
+              <p className="text-sm text-muted-foreground sm:text-base">
+                Suppliers already trading on ExportsAssam.
+              </p>
+            </div>
+            <Link
+              href="/companies"
+              className="text-sm font-semibold text-green transition-colors hover:text-green-deep"
+            >
+              View all companies &rarr;
+            </Link>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {featuredExporters.map((exporter) => (

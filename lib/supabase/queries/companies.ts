@@ -56,11 +56,57 @@ export async function getMyCompany(clerkUserId: string): Promise<MyCompany | nul
   };
 }
 
+export type CompanyListItem = {
+  id: string;
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  location: string;
+  verified: boolean;
+};
+
+/**
+ * Approved companies, most recent first, optionally filtered by name — the
+ * /companies directory page. Doesn't filter by `verified`: unlike the
+ * products/featured-products copy ("verified exporters"), this page's copy
+ * says "approved exporters" and shows the badge per-card, so an approved
+ * but not-yet-verified company still belongs here, just without the badge.
+ */
+export async function getCompanies({ query, limit = 60 }: { query?: string; limit?: number } = {}): Promise<
+  CompanyListItem[]
+> {
+  let filtered = supabase
+    .from("companies")
+    .select("id, slug, name, logo_url, location, country, verified")
+    .eq("status", "approved");
+  if (query) filtered = filtered.ilike("name", `%${query}%`);
+
+  const { data, error } = await filtered
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    console.error("getCompanies failed", error);
+    return [];
+  }
+
+  return (data ?? []).map((company) => ({
+    id: company.id,
+    slug: company.slug,
+    name: company.name,
+    logoUrl: company.logo_url && isR2Url(company.logo_url) ? company.logo_url : null,
+    location: company.location ?? company.country,
+    verified: company.verified,
+  }));
+}
+
 export type CompanyProductSummary = {
   id: string;
   slug: string;
   name: string;
   imageUrl: string | null;
+  categoryName?: string | null;
 };
 
 export type CompanyProfile = {
@@ -72,6 +118,7 @@ export type CompanyProfile = {
   location: string | null;
   country: string;
   verified: boolean;
+  createdAt?: string;
   products: CompanyProductSummary[];
 };
 
@@ -87,8 +134,8 @@ export async function getCompanyBySlug(slug: string): Promise<CompanyProfile | n
     .from("companies")
     .select(
       `
-      id, name, slug, logo_url, about, location, country, verified,
-      products ( id, slug, name, image_url )
+      id, name, slug, logo_url, about, location, country, verified, created_at,
+      products ( id, slug, name, image_url, categories ( name ) )
     `,
     )
     .eq("slug", slug)
@@ -106,11 +153,13 @@ export async function getCompanyBySlug(slug: string): Promise<CompanyProfile | n
     location: data.location,
     country: data.country,
     verified: data.verified,
+    createdAt: data.created_at,
     products: data.products.map((product) => ({
       id: product.id,
       slug: product.slug,
       name: product.name,
       imageUrl: isR2Url(product.image_url) ? product.image_url : null,
+      categoryName: (product as unknown as { categories: { name: string } | null })?.categories?.name ?? null,
     })),
   };
 }

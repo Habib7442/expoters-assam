@@ -23,9 +23,17 @@ type SendEnquiryDialogProps = {
   target:
     | { type: "product"; productId: string; productName: string }
     | { type: "company"; companyId: string; companyName: string }
+  triggerClassName?: string
+  triggerLabel?: React.ReactNode
+  triggerSize?: "default" | "xs" | "sm" | "lg" | "icon"
 }
 
-export function SendEnquiryDialog({ target }: SendEnquiryDialogProps) {
+export function SendEnquiryDialog({
+  target,
+  triggerClassName,
+  triggerLabel,
+  triggerSize,
+}: SendEnquiryDialogProps) {
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<SendEnquiryResult | null>(null)
@@ -60,8 +68,15 @@ export function SendEnquiryDialog({ target }: SendEnquiryDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button size="lg" className="rounded-full" />}>
-        Send Enquiry
+      <DialogTrigger
+        render={
+          <Button
+            size={triggerSize ?? "lg"}
+            className={triggerClassName ?? "rounded-full"}
+          />
+        }
+      >
+        {triggerLabel ?? "Send Enquiry"}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         {result?.ok ? (

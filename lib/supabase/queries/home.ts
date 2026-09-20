@@ -137,11 +137,17 @@ export type LatestBuyRequirement = {
  * Up to `limit` public buy requirements, most recent first (AC-8). Selects
  * only the public-safe columns, never `contact_name`/`contact_email`/`buyer_id`.
  */
-export async function getLatestBuyRequirements(limit: number): Promise<LatestBuyRequirement[] | null> {
-  const { data, error } = await supabase
+export async function getLatestBuyRequirements(
+  limit: number,
+  query?: string,
+): Promise<LatestBuyRequirement[] | null> {
+  let filtered = supabase
     .from("buy_requirements")
     .select("id, product_text, quantity, location, created_at")
-    .eq("is_public", true)
+    .eq("is_public", true);
+  if (query) filtered = filtered.ilike("product_text", `%${query}%`);
+
+  const { data, error } = await filtered
     .order("created_at", { ascending: false })
     .order("id", { ascending: true })
     .limit(limit);

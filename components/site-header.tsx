@@ -3,7 +3,23 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Show, SignInButton, UserButton } from "@clerk/nextjs"
-import { Globe, Leaf, Menu } from "lucide-react"
+import {
+  Building2,
+  ChevronRight,
+  ClipboardList,
+  Crown,
+  FileText,
+  Globe,
+  Leaf,
+  LogIn,
+  Mail,
+  Menu,
+  Package,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Store,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -14,12 +30,52 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 
 const NAV_LINKS = [
   { label: "Products", href: "/products" },
   { label: "Companies", href: "/companies" },
   { label: "Buy Leads", href: "/buy-requirements" },
   { label: "Membership", href: "/membership" },
+]
+
+const MOBILE_NAV_ITEMS = [
+  {
+    label: "Explore Products",
+    href: "/products",
+    description: "Agarwood, Tea, Spices & Organic",
+    icon: Package,
+    color: "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-500/25",
+    badge: null,
+    badgeClass: "",
+  },
+  {
+    label: "Exporters & Suppliers",
+    href: "/companies",
+    description: "Verified Assam manufacturers",
+    icon: Building2,
+    color: "bg-teal-500/15 text-teal-700 dark:bg-teal-950 dark:text-teal-300 ring-1 ring-teal-500/25",
+    badge: "Verified",
+    badgeClass: "bg-teal-50 text-teal-800 border-teal-200",
+  },
+  {
+    label: "Buy Leads & RFQs",
+    href: "/buy-requirements",
+    description: "Active buyer trade requests",
+    icon: ClipboardList,
+    color: "bg-amber-500/15 text-amber-700 dark:bg-amber-950 dark:text-amber-300 ring-1 ring-amber-500/25",
+    badge: "Live Leads",
+    badgeClass: "bg-amber-50 text-amber-800 border-amber-200",
+  },
+  {
+    label: "Supplier Membership",
+    href: "/membership",
+    description: "Silver & Gold export benefits",
+    icon: Crown,
+    color: "bg-yellow-500/15 text-gold dark:bg-yellow-950 dark:text-yellow-300 ring-1 ring-gold/30",
+    badge: "Plans",
+    badgeClass: "bg-gold/15 text-gold border-gold/30",
+  },
 ]
 
 export function SiteHeader() {
@@ -113,55 +169,205 @@ export function SiteHeader() {
               >
                 <Menu className="size-4 sm:size-5" />
               </SheetTrigger>
-              <SheetContent side="left" className="w-3/4 gap-0 p-0 sm:max-w-xs">
-                <SheetHeader className="border-b border-border p-4">
-                  <SheetTitle className="text-green-deep">
-                    ExportsAssam
-                  </SheetTitle>
+              <SheetContent
+                side="left"
+                className="flex h-full w-[85vw] max-w-[340px] flex-col gap-0 p-0 sm:max-w-sm"
+              >
+                {/* Header with Logo, Brand & Tagline */}
+                <SheetHeader className="border-b border-border bg-gradient-to-br from-green-wash/85 via-bg-soft to-background p-4 pr-12 text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-green/20 bg-white p-1 shadow-xs">
+                      <Image
+                        src="/logo.png"
+                        alt="ExportsAssam"
+                        width={40}
+                        height={40}
+                        className="h-full w-auto object-contain"
+                        priority
+                      />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <SheetTitle className="font-heading text-lg font-bold tracking-tight text-green-deep">
+                        Exports<span className="text-green">Assam</span>
+                      </SheetTitle>
+                      <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground truncate">
+                        <Leaf className="size-3 text-leaf shrink-0" aria-hidden="true" />
+                        B2B Trade Directory &bull; Assam
+                      </span>
+                    </div>
+                  </div>
                 </SheetHeader>
-                <nav className="flex flex-col gap-1 p-4">
-                  {NAV_LINKS.map((link) => (
-                    <SheetClose
-                      key={link.href}
-                      render={<Link href={link.href} />}
-                      nativeButton={false}
-                      className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
-                    >
-                      {link.label}
-                    </SheetClose>
-                  ))}
-                  <Show when="signed-in">
-                    <SheetClose
-                      render={<Link href="/list-business" />}
-                      nativeButton={false}
-                      className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
-                    >
-                      My Business
-                    </SheetClose>
-                  </Show>
+
+                {/* Scrollable Main Area */}
+                <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+                  {/* Highlight Banner */}
+                  <div className="rounded-xl border border-leaf/25 bg-gradient-to-r from-green-wash/70 via-emerald-50/50 to-bg-soft p-3 shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-green-deep">
+                      <Sparkles className="size-3.5 text-gold shrink-0" />
+                      <span>Assam&apos;s Global Gateway</span>
+                    </div>
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                      Direct trade with verified producers of agarwood, spices, tea &amp; herbs.
+                    </p>
+                  </div>
+
+                  {/* Navigation Links with Bright Colored Badges & Icons */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Directory
+                    </span>
+                    <nav className="flex flex-col gap-1">
+                      {MOBILE_NAV_ITEMS.map((item) => {
+                        const Icon = item.icon
+                        return (
+                          <SheetClose
+                            key={item.href}
+                            render={<Link href={item.href} />}
+                            nativeButton={false}
+                            className="group flex items-center justify-between gap-3 rounded-xl p-2.5 transition-all hover:bg-green-wash/40 active:scale-[0.99]"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div
+                                className={cn(
+                                  "flex size-9 shrink-0 items-center justify-center rounded-lg shadow-2xs transition-transform group-hover:scale-105",
+                                  item.color
+                                )}
+                              >
+                                <Icon className="size-4.5" />
+                              </div>
+                              <div className="flex flex-col min-w-0 text-left">
+                                <span className="text-sm font-semibold text-foreground group-hover:text-green-deep">
+                                  {item.label}
+                                </span>
+                                <span className="text-[11px] text-muted-foreground truncate">
+                                  {item.description}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {item.badge && (
+                                <span
+                                  className={cn(
+                                    "rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight",
+                                    item.badgeClass
+                                  )}
+                                >
+                                  {item.badge}
+                                </span>
+                              )}
+                              <ChevronRight className="size-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-green" />
+                            </div>
+                          </SheetClose>
+                        )
+                      })}
+                    </nav>
+                  </div>
+
+                  {/* Quick Action / CTA Buttons */}
                   <Show when="signed-out">
-                    <div className="mt-4 border-t border-border pt-4 flex flex-col gap-2">
+                    <div className="flex flex-col gap-2.5 pt-2 border-t border-border/80">
+                      <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Actions
+                      </span>
+                      {/* Primary CTA: List Your Business Free */}
+                      <SheetClose
+                        render={<Link href="/list-business" />}
+                        nativeButton={false}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-green/25 transition-all hover:bg-green-deep active:scale-[0.99]"
+                      >
+                        <Store className="size-4" />
+                        <span>List Your Business</span>
+                        <span className="rounded bg-white/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                          Free
+                        </span>
+                      </SheetClose>
+
+                      {/* Secondary CTA: Post Buy Requirement */}
+                      <SheetClose
+                        render={<Link href="/buy-requirements/new" />}
+                        nativeButton={false}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-green/30 bg-white px-4 py-2.5 text-sm font-semibold text-green-deep shadow-2xs transition-all hover:bg-green-wash/40 active:scale-[0.99]"
+                      >
+                        <FileText className="size-4 text-green" />
+                        <span>Post Buy Requirement</span>
+                      </SheetClose>
+
+                      {/* Sign In CTA */}
                       <SheetClose
                         render={<Link href="/sign-in" />}
                         nativeButton={false}
-                        className="rounded-lg px-3 py-2 text-center text-sm font-medium text-foreground hover:bg-muted"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted/60 px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-muted active:scale-[0.99]"
                       >
-                        Sign In
+                        <LogIn className="size-4 text-muted-foreground" />
+                        <span>Sign In</span>
                       </SheetClose>
                     </div>
                   </Show>
+
                   <Show when="signed-in">
-                    <div className="mt-4 border-t border-border pt-4">
+                    <div className="flex flex-col gap-2.5 pt-2 border-t border-border/80">
+                      <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        My Account
+                      </span>
+                      <div className="flex items-center gap-3 rounded-xl border border-green/20 bg-green-wash/40 p-2.5">
+                        <UserButton />
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-semibold text-green-deep">Signed In</span>
+                          <span className="text-[11px] text-muted-foreground truncate">
+                            Manage products &amp; leads
+                          </span>
+                        </div>
+                      </div>
+
                       <SheetClose
                         render={<Link href="/products/new" />}
                         nativeButton={false}
-                        className="rounded-lg px-3 py-2 text-center text-sm font-medium text-foreground hover:bg-muted"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-green/25 transition-all hover:bg-green-deep active:scale-[0.99]"
                       >
-                        Add Product
+                        <Plus className="size-4" />
+                        <span>Add New Product</span>
+                      </SheetClose>
+
+                      <SheetClose
+                        render={<Link href="/list-business" />}
+                        nativeButton={false}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-foreground shadow-2xs transition-all hover:bg-muted active:scale-[0.99]"
+                      >
+                        <Store className="size-4 text-green" />
+                        <span>My Business Profile</span>
+                      </SheetClose>
+
+                      <SheetClose
+                        render={<Link href="/buy-requirements/new" />}
+                        nativeButton={false}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-green/30 bg-white px-4 py-2.5 text-sm font-medium text-green-deep transition-all hover:bg-green-wash/40 active:scale-[0.99]"
+                      >
+                        <FileText className="size-4 text-green" />
+                        <span>Post Buy Requirement</span>
                       </SheetClose>
                     </div>
                   </Show>
-                </nav>
+                </div>
+
+                {/* Footer with Trust & Contact info */}
+                <div className="mt-auto border-t border-border bg-bg-soft/70 px-4 py-3 text-xs text-muted-foreground">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="flex items-center gap-1.5 font-medium text-green-deep">
+                      <ShieldCheck className="size-3.5 text-leaf shrink-0" />
+                      Verified Trade Directory
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      Avadi Herbs
+                    </span>
+                  </div>
+                  <a
+                    href="mailto:info@exportsassam.com"
+                    className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-green"
+                  >
+                    <Mail className="size-3 shrink-0" />
+                    info@exportsassam.com
+                  </a>
+                </div>
               </SheetContent>
             </Sheet>
           </div>
