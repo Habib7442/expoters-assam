@@ -6,7 +6,9 @@ import { getProducts, type ProductListItem } from "@/lib/supabase/queries/produc
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/search-bar";
+import { firstParam, type SearchParamValue } from "@/lib/search-params";
 import { ProductCard } from "@/components/product-card";
+import { LoadFailedState } from "@/components/load-failed-state";
 
 export const metadata: Metadata = {
   title: "Products | ExportsAssam",
@@ -19,7 +21,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ category?: string; q?: string }>;
+  searchParams: Promise<{ category?: SearchParamValue; q?: SearchParamValue }>;
 };
 
 function ProductGrid({ products }: { products: ProductListItem[] }) {
@@ -39,7 +41,9 @@ function ProductGrid({ products }: { products: ProductListItem[] }) {
 }
 
 export default async function ProductsPage({ searchParams }: Props) {
-  const { category, q } = await searchParams;
+  const params = await searchParams;
+  const category = firstParam(params.category);
+  const q = firstParam(params.q);
 
   const [categories, products] = await Promise.all([
     getCategoriesWithProductCounts(),
@@ -52,13 +56,22 @@ export default async function ProductsPage({ searchParams }: Props) {
   // Both filters together matched nothing: look at each one on its own, so
   // the visitor still sees any products that match either half of what
   // they asked for instead of a dead end. With only one filter active
-  // there's nothing to relax, so this stays empty.
+  // there's nothing to relax, so this stays empty. Skipped when the main
+  // query *failed* (null): that's an error to show, not an empty result to
+  // pad with suggestions. These two lookups are best-effort extras, so if
+  // one of them fails its section is simply omitted.
   const relaxed =
-    products.length === 0 && category && q
+    products !== null && products.length === 0 && category && q
       ? await Promise.all([getProducts({ query: q }), getProducts({ categorySlug: category })])
       : null;
-  const [matchingSearch, matchingCategory] = relaxed ?? [[], []];
+  const matchingSearch = relaxed?.[0] ?? [];
+  const matchingCategory = relaxed?.[1] ?? [];
   const hasFilters = Boolean(category || q);
+
+  const retryParams = new URLSearchParams();
+  if (category) retryParams.set("category", category);
+  if (q) retryParams.set("q", q);
+  const retryHref = retryParams.size > 0 ? `/products?${retryParams.toString()}` : "/products";
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
@@ -104,7 +117,9 @@ export default async function ProductsPage({ searchParams }: Props) {
           </div>
         )}
 
-        {products.length > 0 ? (
+        {products === null ? (
+          <LoadFailedState what="products" retryHref={retryHref} />
+        ) : products.length > 0 ? (
           <ProductGrid products={products} />
         ) : (
           <div className="flex flex-col gap-8">

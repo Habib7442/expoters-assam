@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { getCategoriesWithProductCounts } from "@/lib/supabase/queries/home";
 import { BuyRequirementForm } from "@/components/buy-requirement-form";
+import { firstParam, type SearchParamValue } from "@/lib/search-params";
 
 export const metadata: Metadata = {
   title: "Post a Buy Requirement | ExportsAssam",
@@ -13,8 +14,13 @@ export const metadata: Metadata = {
 // (same reasoning as app/page.tsx).
 export const dynamic = "force-dynamic";
 
-export default async function PostBuyRequirementPage() {
+type Props = {
+  searchParams: Promise<{ product?: SearchParamValue }>;
+};
+
+export default async function PostBuyRequirementPage({ searchParams }: Props) {
   const categories = await getCategoriesWithProductCounts();
+  const initialProductText = firstParam((await searchParams).product)?.trim() || undefined;
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
@@ -27,7 +33,7 @@ export default async function PostBuyRequirementPage() {
             Tell exporters what you&apos;re looking to buy. We&apos;ll help you connect with sellers.
           </p>
         </div>
-        <BuyRequirementForm categories={categories ?? []} />
+        <BuyRequirementForm categories={categories ?? []} initialProductText={initialProductText} />
       </div>
     </main>
   );

@@ -16,9 +16,11 @@ type Category = {
 
 type BuyRequirementFormProps = {
   categories: Category[]
+  /** Starting value for "What do you want to buy?", e.g. from a "post a similar requirement" link. */
+  initialProductText?: string
 }
 
-export function BuyRequirementForm({ categories }: BuyRequirementFormProps) {
+export function BuyRequirementForm({ categories, initialProductText }: BuyRequirementFormProps) {
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<PostBuyRequirementResult | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -88,6 +90,7 @@ export function BuyRequirementForm({ categories }: BuyRequirementFormProps) {
           id="req-product"
           name="productText"
           required
+          defaultValue={initialProductText}
           placeholder="e.g. Assam Agarwood Chips, Grade A"
           aria-invalid={!!fieldErrors?.productText}
         />

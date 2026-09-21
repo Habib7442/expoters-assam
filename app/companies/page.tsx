@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 
 import { getCompanies } from "@/lib/supabase/queries/companies";
 import { SearchBar } from "@/components/search-bar";
+import { firstParam, type SearchParamValue } from "@/lib/search-params";
 import { ExporterCard } from "@/components/exporter-card";
+import { LoadFailedState } from "@/components/load-failed-state";
 
 export const metadata: Metadata = {
   title: "Companies | ExportsAssam",
@@ -15,11 +17,11 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: SearchParamValue }>;
 };
 
 export default async function CompaniesPage({ searchParams }: Props) {
-  const { q } = await searchParams;
+  const q = firstParam((await searchParams).q);
 
   const companies = await getCompanies({ query: q });
 
@@ -33,7 +35,9 @@ export default async function CompaniesPage({ searchParams }: Props) {
 
         <SearchBar placeholder="Search companies..." className="mb-6 sm:mb-8" />
 
-        {companies.length > 0 ? (
+        {companies === null ? (
+          <LoadFailedState what="companies" retryHref={q ? `/companies?q=${encodeURIComponent(q)}` : "/companies"} />
+        ) : companies.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {companies.map((company) => (
               <ExporterCard

@@ -71,9 +71,13 @@ export type CompanyListItem = {
  * products/featured-products copy ("verified exporters"), this page's copy
  * says "approved exporters" and shows the badge per-card, so an approved
  * but not-yet-verified company still belongs here, just without the badge.
+ *
+ * Returns `null` when the query itself failed, never `[]`: an empty array
+ * means "the directory really has no matches," and a database failure must
+ * not be reported to a visitor as that.
  */
 export async function getCompanies({ query, limit = 60 }: { query?: string; limit?: number } = {}): Promise<
-  CompanyListItem[]
+  CompanyListItem[] | null
 > {
   let filtered = supabase
     .from("companies")
@@ -88,7 +92,7 @@ export async function getCompanies({ query, limit = 60 }: { query?: string; limi
 
   if (error) {
     console.error("getCompanies failed", error);
-    return [];
+    return null;
   }
 
   return (data ?? []).map((company) => ({

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "List Your Business | ExportsAssam",
-  description: "List your business on ExportsAssam and get discovered by verified buyers worldwide.",
+  description: "List your business on ExportsAssam and get discovered by buyers worldwide.",
 };
 
 export default async function ListBusinessPage() {

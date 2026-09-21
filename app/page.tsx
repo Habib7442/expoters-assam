@@ -294,7 +294,7 @@ export default async function Home() {
             Join ExportsAssam Free
           </h2>
           <p className="max-w-md text-sm leading-6 text-primary-foreground sm:text-base">
-            List your business, get discovered by verified buyers worldwide,
+            List your business, get discovered by buyers worldwide,
             and grow your export trade &mdash; no cost to get started.
           </p>
           <Button

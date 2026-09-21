@@ -20,6 +20,8 @@ import { getLatestBuyRequirements } from "@/lib/supabase/queries/home";
 import { Button } from "@/components/ui/button";
 import { BuyRequirementCard } from "@/components/buy-requirement-card";
 import { SearchBar } from "@/components/search-bar";
+import { LoadFailedState } from "@/components/load-failed-state";
+import { firstParam, type SearchParamValue } from "@/lib/search-params";
 
 export const metadata: Metadata = {
   title: "Buy Leads & RFQs | ExportsAssam",
@@ -33,7 +35,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: SearchParamValue }>;
 };
 
 const POPULAR_SEARCHES = [
@@ -102,7 +104,7 @@ const SOURCING_CATEGORIES = [
 ];
 
 export default async function BuyRequirementsPage({ searchParams }: Props) {
-  const { q } = await searchParams;
+  const q = firstParam((await searchParams).q);
   const buyRequirements = await getLatestBuyRequirements(100, q);
   const hasRequirements = buyRequirements && buyRequirements.length > 0;
 
@@ -123,7 +125,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
               </h1>
 
               <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Discover active sourcing requirements posted by verified buyers worldwide. Assam
+                Discover active sourcing requirements posted by buyers worldwide. Assam
                 exporters and certified producers connect directly via WhatsApp to submit bids and fulfill orders.
               </p>
 
@@ -210,8 +212,16 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
           )}
         </section>
 
-        {/* Requirements Content / Empty States */}
-        {hasRequirements ? (
+        {/* Requirements Content / Error / Empty States. getLatestBuyRequirements
+            returns null when the query itself failed, which must never fall
+            through to the empty-board copy below: that would tell buyers no
+            one has posted anything when the truth is "we couldn't load it". */}
+        {buyRequirements === null ? (
+          <LoadFailedState
+            what="buy requirements"
+            retryHref={q ? `/buy-requirements?q=${encodeURIComponent(q)}` : "/buy-requirements"}
+          />
+        ) : hasRequirements ? (
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">

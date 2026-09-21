@@ -28,12 +28,16 @@ type GetProductsOptions = {
  * rows — PostgREST only filters top-level rows through a left-joined embed
  * when it's `!inner` (same reasoning as `companies` here and in
  * getFeaturedProducts).
+ *
+ * Returns `null` when the query itself failed, never `[]`: an empty array
+ * means "no products match," and a database failure must not be reported
+ * to a visitor as that.
  */
 export async function getProducts({
   categorySlug,
   query,
   limit = 60,
-}: GetProductsOptions = {}): Promise<ProductListItem[]> {
+}: GetProductsOptions = {}): Promise<ProductListItem[] | null> {
   const builder = categorySlug
     ? supabase
         .from("products")
@@ -51,7 +55,7 @@ export async function getProducts({
 
   if (error) {
     console.error("getProducts failed", error);
-    return [];
+    return null;
   }
 
   return (data ?? [])
