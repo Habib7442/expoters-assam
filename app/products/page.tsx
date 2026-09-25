@@ -11,7 +11,7 @@ import { ProductCard } from "@/components/product-card";
 import { LoadFailedState } from "@/components/load-failed-state";
 
 export const metadata: Metadata = {
-  title: "Products | ExportsAssam",
+  title: "Products | Exporters Assam",
   description: "Browse approved products from verified Assam and Indian exporters.",
 };
 

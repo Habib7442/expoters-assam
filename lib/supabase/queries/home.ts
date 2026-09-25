@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { isR2Url } from "@/lib/storage/r2";
+import { containsPattern } from "@/lib/supabase/like-pattern";
 
 export type CategoryWithCount = {
   id: string;
@@ -145,7 +146,7 @@ export async function getLatestBuyRequirements(
     .from("buy_requirements")
     .select("id, product_text, quantity, location, created_at")
     .eq("is_public", true);
-  if (query) filtered = filtered.ilike("product_text", `%${query}%`);
+  if (query) filtered = filtered.ilike("product_text", containsPattern(query));
 
   const { data, error } = await filtered
     .order("created_at", { ascending: false })

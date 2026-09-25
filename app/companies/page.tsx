@@ -7,8 +7,8 @@ import { ExporterCard } from "@/components/exporter-card";
 import { LoadFailedState } from "@/components/load-failed-state";
 
 export const metadata: Metadata = {
-  title: "Companies | ExportsAssam",
-  description: "Browse approved exporters on the ExportsAssam directory.",
+  title: "Companies | Exporters Assam",
+  description: "Browse approved exporters on the Exporters Assam directory.",
 };
 
 // Real Supabase data, not build-time content: without a dynamic API in this

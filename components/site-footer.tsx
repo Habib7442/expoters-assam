@@ -23,6 +23,7 @@ const FOOTER_LINKS = [
     links: [
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms of Service", href: "/terms" },
+      { label: "Your Data Rights", href: "/privacy#your-rights" },
     ],
   },
 ]
@@ -33,7 +34,7 @@ export function SiteFooter() {
       <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 sm:py-14 lg:grid-cols-4 lg:px-8">
         <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-1">
           <span className="font-heading text-xl font-bold text-green-deep">
-            Exports<span className="text-green">Assam</span>
+            Exporters <span className="text-green">Assam</span>
           </span>
           <p className="max-w-xs text-sm leading-6 text-muted-foreground">
             A B2B trade directory connecting Assam and Indian exporters of
@@ -81,7 +82,7 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center gap-2 px-4 py-6 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6 sm:text-left lg:px-8">
           <p>
-            &copy; {new Date().getFullYear()} ExportsAssam.com, a venture by
+            &copy; {new Date().getFullYear()} Exporters Assam, a venture by
             Avadi Herbs India Pvt. Ltd. All rights reserved.
           </p>
           <div className="flex items-center gap-4">

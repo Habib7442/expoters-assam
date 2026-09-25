@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const buyRequirementSchema = z.object({
@@ -14,6 +15,7 @@ const buyRequirementSchema = z.object({
   location: z.string().trim().max(120).optional(),
   notes: z.string().trim().max(1000).optional(),
   isPublic: z.boolean(),
+  consent: z.boolean().refine((agreed) => agreed, "Please agree to the Privacy Policy to post your requirement"),
 });
 
 export type PostBuyRequirementInput = z.input<typeof buyRequirementSchema>;
@@ -63,9 +65,18 @@ export async function postBuyRequirement(input: PostBuyRequirementInput): Promis
     p_location: (location || null) as string,
     p_notes: (notes || null) as string,
     p_is_public: isPublic,
+    p_consent_notice_version: CONSENT_NOTICE_VERSION,
   });
 
   if (error) {
+    if (isUnknownCategoryError(error)) {
+      return {
+        ok: false,
+        code: "invalid_input",
+        message: "Please check the form and try again.",
+        fieldErrors: { categoryId: "That category is no longer available. Choose another, or leave it blank." },
+      };
+    }
     return {
       ok: false,
       code: "server_error",
@@ -96,9 +107,20 @@ export async function postBuyRequirement(input: PostBuyRequirementInput): Promis
   return { ok: true, whatsappUrl };
 }
 
+/**
+ * A well-formed category id that isn't in `categories` (deleted since the
+ * form loaded, or forged) trips the buy_requirements.category_id foreign key.
+ * That is bad input, not a server fault. Matching the FK violation (23503)
+ * rather than pre-checking with a lookup also covers a category deleted
+ * between the check and the insert.
+ */
+function isUnknownCategoryError(error: { code?: string; message?: string }): boolean {
+  return error.code === "23503" && (error.message ?? "").includes("buy_requirements_category_id_fkey");
+}
+
 function buildWhatsappUrl(platformNumber: string, productText: string, quantity: string, location?: string): string {
   const locationPart = location ? ` in ${location}` : "";
-  const text = `Hi, I just posted a buy requirement on ExportsAssam: ${productText} (qty: ${quantity})${locationPart}.`;
+  const text = `Hi, I just posted a buy requirement on Exporters Assam: ${productText} (qty: ${quantity})${locationPart}.`;
   const number = platformNumber.replace(/^\+/, "");
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }

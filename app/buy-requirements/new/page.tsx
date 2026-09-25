@@ -5,7 +5,7 @@ import { BuyRequirementForm } from "@/components/buy-requirement-form";
 import { firstParam, type SearchParamValue } from "@/lib/search-params";
 
 export const metadata: Metadata = {
-  title: "Post a Buy Requirement | ExportsAssam",
+  title: "Post a Buy Requirement | Exporters Assam",
   description: "Tell exporters what you're looking to buy, and hear back on WhatsApp.",
 };
 

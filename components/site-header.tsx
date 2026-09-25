@@ -16,7 +16,6 @@ import {
   Menu,
   Package,
   Plus,
-  ShieldCheck,
   Sparkles,
   Store,
 } from "lucide-react"
@@ -52,11 +51,11 @@ const MOBILE_NAV_ITEMS = [
   {
     label: "Exporters & Suppliers",
     href: "/companies",
-    description: "Verified Assam manufacturers",
+    description: "Approved exporters and suppliers",
     icon: Building2,
     color: "bg-teal-500/15 text-teal-700 dark:bg-teal-950 dark:text-teal-300 ring-1 ring-teal-500/25",
-    badge: "Verified",
-    badgeClass: "bg-teal-50 text-teal-800 border-teal-200",
+    badge: null,
+    badgeClass: "",
   },
   {
     label: "Buy Leads & RFQs",
@@ -107,7 +106,7 @@ export function SiteHeader() {
             />
             <span className="flex flex-col leading-tight min-w-0">
               <span className="font-heading text-base font-bold text-green-deep sm:text-xl truncate">
-                Exports<span className="text-green">Assam</span>
+                Exporters <span className="text-green">Assam</span>
               </span>
               <span className="hidden text-[11px] font-medium text-muted-foreground sm:block truncate">
                 Your Gateway to Global Trade
@@ -179,7 +178,7 @@ export function SiteHeader() {
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-green/20 bg-white p-1 shadow-xs">
                       <Image
                         src="/logo.png"
-                        alt="ExportsAssam"
+                        alt="Exporters Assam"
                         width={40}
                         height={40}
                         className="h-full w-auto object-contain"
@@ -188,7 +187,7 @@ export function SiteHeader() {
                     </div>
                     <div className="flex flex-col min-w-0">
                       <SheetTitle className="font-heading text-lg font-bold tracking-tight text-green-deep">
-                        Exports<span className="text-green">Assam</span>
+                        Exporters <span className="text-green">Assam</span>
                       </SheetTitle>
                       <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground truncate">
                         <Leaf className="size-3 text-leaf shrink-0" aria-hidden="true" />
@@ -207,7 +206,7 @@ export function SiteHeader() {
                       <span>Assam&apos;s Global Gateway</span>
                     </div>
                     <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                      Direct trade with verified producers of agarwood, spices, tea &amp; herbs.
+                      Direct trade with exporters of agarwood, spices, tea &amp; herbs.
                     </p>
                   </div>
 
@@ -353,8 +352,8 @@ export function SiteHeader() {
                 <div className="mt-auto border-t border-border bg-bg-soft/70 px-4 py-3 text-xs text-muted-foreground">
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="flex items-center gap-1.5 font-medium text-green-deep">
-                      <ShieldCheck className="size-3.5 text-leaf shrink-0" />
-                      Verified Trade Directory
+                      <Leaf className="size-3.5 text-leaf shrink-0" aria-hidden="true" />
+                      B2B Trade Directory
                     </span>
                     <span className="text-[10px] text-muted-foreground">
                       Avadi Herbs

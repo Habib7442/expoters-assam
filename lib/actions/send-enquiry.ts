@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const contactFields = {
@@ -9,6 +10,7 @@ const contactFields = {
   phone: z.string().trim().regex(/^[0-9+\-\s()]{10,20}$/, "Enter a valid phone number"),
   email: z.string().trim().email("Enter a valid email address").optional().or(z.literal("")),
   message: z.string().trim().max(2000).optional(),
+  consent: z.boolean().refine((agreed) => agreed, "Please agree to the Privacy Policy to send your enquiry"),
 };
 
 const enquirySchema = z.discriminatedUnion("targetType", [
@@ -72,6 +74,7 @@ export async function sendEnquiry(input: SendEnquiryInput): Promise<SendEnquiryR
           p_email: (email || null) as string,
           p_product_id: parsed.data.productId,
           p_message: (message || null) as string,
+          p_consent_notice_version: CONSENT_NOTICE_VERSION,
         })
       : await supabaseAdmin.rpc("create_company_enquiry", {
           p_phone: phone,
@@ -79,6 +82,7 @@ export async function sendEnquiry(input: SendEnquiryInput): Promise<SendEnquiryR
           p_email: (email || null) as string,
           p_company_id: parsed.data.companyId,
           p_message: (message || null) as string,
+          p_consent_notice_version: CONSENT_NOTICE_VERSION,
         });
 
   if (error) {
@@ -129,8 +133,8 @@ function buildWhatsappUrl(
 ): string {
   const intro =
     targetType === "product"
-      ? `Hi, I'm interested in ${targetName} on ExportsAssam.`
-      : `Hi, I'm interested in working with ${targetName} on ExportsAssam.`;
+      ? `Hi, I'm interested in ${targetName} on Exporters Assam.`
+      : `Hi, I'm interested in working with ${targetName} on Exporters Assam.`;
   const text = buyerMessage ? `${intro} ${buyerMessage}` : intro;
   const number = whatsappNumber.replace(/^\+/, "");
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;

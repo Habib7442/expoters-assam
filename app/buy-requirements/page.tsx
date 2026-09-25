@@ -24,7 +24,7 @@ import { LoadFailedState } from "@/components/load-failed-state";
 import { firstParam, type SearchParamValue } from "@/lib/search-params";
 
 export const metadata: Metadata = {
-  title: "Buy Leads & RFQs | ExportsAssam",
+  title: "Buy Leads & RFQs | Exporters Assam",
   description:
     "Discover active B2B buy requirements and sourcing requests from international and domestic buyers. Connect directly with verified Assam exporters.",
 };
@@ -117,7 +117,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
             <div className="flex max-w-2xl flex-col gap-3">
               <div className="inline-flex items-center gap-2 self-start rounded-full border border-green/20 bg-white/90 px-3.5 py-1 text-xs font-semibold text-green-deep shadow-2xs backdrop-blur-xs">
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Live B2B Sourcing Board &bull; ExportsAssam</span>
+                <span>Live B2B Sourcing Board &bull; Exporters Assam</span>
               </div>
 
               <h1 className="font-heading text-2xl font-bold tracking-tight text-green-deep sm:text-4xl">
@@ -337,7 +337,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
         <section className="flex flex-col gap-6 pt-4">
           <div className="flex flex-col gap-1 text-center sm:text-left">
             <h2 className="font-heading text-xl font-bold text-green-deep sm:text-2xl">
-              How Sourcing on ExportsAssam Works
+              How Sourcing on Exporters Assam Works
             </h2>
             <p className="text-sm text-muted-foreground">
               A straightforward, transparent pathway from your requirement to verified export delivery.

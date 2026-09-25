@@ -6,7 +6,15 @@
 
 alter table public.companies add column email text;
 
-update public.companies set email = 'demo@exportsassam.com' where email is null;
+-- Scoped to the demo company by name (scripts/seed-demo.ts): the column was
+-- just added, so *every* existing row is null here, and an unscoped update
+-- would stamp the demo address onto any real company present in an
+-- environment other than the one this was written against. Any other row
+-- is left null on purpose, so the `set not null` below fails loudly and
+-- forces a deliberate backfill instead of silently mislabelling it.
+update public.companies
+set email = 'demo@exportsassam.com'
+where email is null and name = 'Demo Assam Agarwood Co.';
 
 alter table public.companies
 add constraint companies_email_check

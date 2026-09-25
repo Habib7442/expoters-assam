@@ -48,9 +48,13 @@ function unchangedLogoFile() {
 function baseFormData() {
   const fd = new FormData();
   fd.set("name", "Demo Exporters");
-  fd.set("location", "Guwahati, Assam");
+  fd.set("addressLine", "12 GS Road, Christian Basti");
+  fd.set("location", "Guwahati");
+  fd.set("state", "Assam");
+  fd.set("country", "India");
   fd.set("email", "owner@example.com");
   fd.set("whatsappNumber", "+919812345678");
+  fd.set("consent", "on");
   return fd;
 }
 
@@ -104,6 +108,19 @@ describe("submitBusinessListing logo upload (R2)", () => {
     const result = await submitBusinessListing(fd);
 
     expect(result).toMatchObject({ ok: false, code: "upload_failed" });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a listing submitted without DPDP consent, before uploading or writing anything", async () => {
+    const fd = baseFormData();
+    fd.delete("consent");
+    fd.set("logo", makeLogoFile());
+
+    const result = await submitBusinessListing(fd);
+
+    expect(result).toMatchObject({ ok: false, code: "invalid_input" });
+    expect(result.ok === false && result.fieldErrors?.consent).toBeTruthy();
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
     expect(rpcMock).not.toHaveBeenCalled();
   });
 });

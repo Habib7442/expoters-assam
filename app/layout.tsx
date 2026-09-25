@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ExportsAssam.com — B2B Trade Directory for Assam & Indian Exporters",
+  title: "Exporters Assam — B2B Trade Directory for Assam & Indian Exporters",
   description:
     "Connect with verified exporters of agarwood, spices, tea, essential oils, and nursery plants from Assam and across India. Post buy requirements, send enquiries, and close deals directly over WhatsApp.",
   icons: {

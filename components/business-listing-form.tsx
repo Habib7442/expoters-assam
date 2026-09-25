@@ -10,6 +10,7 @@ import {
 } from "@/lib/actions/business-listing"
 import { COUNTRY_CODES, splitPhoneNumber } from "@/lib/country-codes"
 import { Button } from "@/components/ui/button"
+import { ConsentCheckbox } from "@/components/consent-checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PhoneNumberInput } from "@/components/phone-number-input"
@@ -289,6 +290,14 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
         <p className="text-xs text-muted-foreground">JPG, PNG, or WebP, up to 2 MB.</p>
         {fieldErrors?.logo && <p className="text-xs text-destructive">{fieldErrors.logo}</p>}
       </div>
+
+      {mode === "create" && (
+        <ConsentCheckbox
+          id="listing-consent"
+          purpose="review and publish my business listing, including showing my business name, logo, location, and WhatsApp number publicly once it's approved"
+          error={fieldErrors?.consent}
+        />
+      )}
 
       {topLevelError && <p className="text-sm text-destructive">{topLevelError}</p>}
 

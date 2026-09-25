@@ -157,12 +157,12 @@ export default async function Home() {
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6">
             {LISTING_STEPS.map(({ number, icon: Icon, title, description }) => (
               <div key={number} className="flex flex-col items-center gap-3 text-center">
-                <div className="relative flex size-16 items-center justify-center rounded-full bg-green-wash text-green-deep">
+                <div className="flex size-16 items-center justify-center rounded-full bg-green-wash text-green-deep">
                   <Icon className="size-7" aria-hidden="true" />
-                  <span className="absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full bg-green text-xs font-bold text-primary-foreground">
-                    {number}
-                  </span>
                 </div>
+                <span className="rounded-full bg-green px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground">
+                  Step {number}
+                </span>
                 <h3 className="font-heading text-base font-semibold text-green-deep">{title}</h3>
                 <p className="max-w-[220px] text-sm text-muted-foreground">{description}</p>
               </div>
@@ -181,9 +181,9 @@ export default async function Home() {
               Browse the directory by product category.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+          <div className="grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
             {categories.map((category) => (
-              <Link key={category.id} href={`/products?category=${category.slug}`}>
+              <Link key={category.id} href={`/products?category=${category.slug}`} className="h-full">
                 <CategoryTile
                   name={category.name}
                   count={category.productCount}
@@ -237,7 +237,7 @@ export default async function Home() {
                 Featured Exporters
               </h2>
               <p className="text-sm text-muted-foreground sm:text-base">
-                Suppliers already trading on ExportsAssam.
+                Suppliers already trading on Exporters Assam.
               </p>
             </div>
             <Link
@@ -291,7 +291,7 @@ export default async function Home() {
       <section className="w-full bg-green">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center gap-4 px-4 py-12 text-center sm:gap-5 sm:px-6 sm:py-16">
           <h2 className="font-heading text-2xl font-bold text-primary-foreground sm:text-3xl">
-            Join ExportsAssam Free
+            Join Exporters Assam Free
           </h2>
           <p className="max-w-md text-sm leading-6 text-primary-foreground sm:text-base">
             List your business, get discovered by buyers worldwide,

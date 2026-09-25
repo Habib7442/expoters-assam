@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { deleteFromR2, parseR2Url, uploadToR2 } from "@/lib/storage/r2";
 
@@ -46,6 +47,7 @@ const baseFields = {
 
 const createSchema = z.object({
   ...baseFields,
+  consent: z.literal("on", { error: "Please agree to the Privacy Policy to submit your listing" }),
   logo: z
     .instanceof(File)
     .refine((file) => file.size > 0, "Upload your business logo")
@@ -153,6 +155,7 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
     whatsappNumber: formData.get("whatsappNumber"),
     gstNumber: formData.get("gstNumber") || undefined,
     logo: formData.get("logo"),
+    consent: formData.get("consent"),
   });
 
   if (!parsed.success) {
@@ -198,6 +201,7 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
     p_country: country,
     p_address_line: addressLine,
     p_postal_code: (postalCode || null) as string,
+    p_consent_notice_version: CONSENT_NOTICE_VERSION,
   });
 
   if (error) {

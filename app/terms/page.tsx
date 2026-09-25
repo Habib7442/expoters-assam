@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | ExportsAssam",
-  description: "The terms that govern your use of ExportsAssam.com.",
+  title: "Terms of Service | Exporters Assam",
+  description: "The terms that govern your use of Exporters Assam.",
 };
 
 export default function TermsPage() {
@@ -17,17 +17,17 @@ export default function TermsPage() {
         <div className="flex flex-col gap-8 text-sm leading-7 text-foreground/80 sm:text-base">
           <section className="flex flex-col gap-2">
             <p>
-              These terms govern your use of ExportsAssam.com, operated by Avadi Herbs India Pvt. Ltd.
-              (&quot;ExportsAssam,&quot; &quot;we,&quot; &quot;us&quot;). By creating an account, listing a
+              These terms govern your use of Exporters Assam, operated by Avadi Herbs India Pvt. Ltd.
+              (&quot;Exporters Assam,&quot; &quot;we,&quot; &quot;us&quot;). By creating an account, listing a
               business, submitting a product, posting a buy requirement, or sending an enquiry, you agree to
               these terms.
             </p>
           </section>
 
           <section className="flex flex-col gap-2">
-            <h2 className="font-heading text-lg font-semibold text-green-deep">1. What ExportsAssam is</h2>
+            <h2 className="font-heading text-lg font-semibold text-green-deep">1. What Exporters Assam is</h2>
             <p>
-              ExportsAssam is a B2B trade directory connecting buyers and suppliers of Assam and Indian export
+              Exporters Assam is a B2B trade directory connecting buyers and suppliers of Assam and Indian export
               goods. <strong className="text-foreground">It is a directory, not a marketplace.</strong> We do
               not process any transaction between a buyer and a supplier, we do not hold or transfer funds
               between them, and we are not a party to any deal that results from an enquiry. Every deal is
@@ -38,7 +38,7 @@ export default function TermsPage() {
           <section className="flex flex-col gap-2">
             <h2 className="font-heading text-lg font-semibold text-green-deep">2. Eligibility and accounts</h2>
             <p>
-              You must be able to form a legally binding contract to use ExportsAssam, and you&apos;re
+              You must be able to form a legally binding contract to use Exporters Assam, and you&apos;re
               responsible for the accuracy of the information you provide and for keeping your account secure.
               One business listing per account. You&apos;re responsible for all activity under your account.
             </p>
@@ -76,7 +76,7 @@ export default function TermsPage() {
               Suppliers may purchase a paid membership tier (Basic, Silver, or Gold) for enhanced visibility and
               features on the directory. Membership payments are processed securely through Razorpay. Membership
               fees are for platform features only — they are never a fee charged on any transaction between a
-              buyer and a supplier, since no such transaction happens through ExportsAssam.
+              buyer and a supplier, since no such transaction happens through Exporters Assam.
             </p>
           </section>
 
@@ -98,7 +98,7 @@ export default function TermsPage() {
             <h2 className="font-heading text-lg font-semibold text-green-deep">7. Content you submit</h2>
             <p>
               You retain ownership of the business information, product details, and images you submit. By
-              submitting them, you grant ExportsAssam a license to display them on the directory for as long as
+              submitting them, you grant Exporters Assam a license to display them on the directory for as long as
               your listing remains active, and confirm you have the right to share them.
             </p>
           </section>
@@ -106,9 +106,9 @@ export default function TermsPage() {
           <section className="flex flex-col gap-2">
             <h2 className="font-heading text-lg font-semibold text-green-deep">8. No warranty; limitation of liability</h2>
             <p>
-              ExportsAssam is provided &quot;as is.&quot; We do not guarantee the accuracy of any listing, the
+              Exporters Assam is provided &quot;as is.&quot; We do not guarantee the accuracy of any listing, the
               conduct of any buyer or supplier, or the outcome of any deal made after an enquiry. To the fullest
-              extent permitted by law, ExportsAssam and Avadi Herbs India Pvt. Ltd. are not liable for any loss
+              extent permitted by law, Exporters Assam and Avadi Herbs India Pvt. Ltd. are not liable for any loss
               or dispute arising from a transaction, communication, or agreement between a buyer and a supplier
               — that relationship is exclusively between them.
             </p>
@@ -117,7 +117,7 @@ export default function TermsPage() {
           <section className="flex flex-col gap-2">
             <h2 className="font-heading text-lg font-semibold text-green-deep">9. Changes to these terms</h2>
             <p>
-              We may update these terms as the platform evolves. Continued use of ExportsAssam after a change
+              We may update these terms as the platform evolves. Continued use of Exporters Assam after a change
               means you accept the updated terms.
             </p>
           </section>

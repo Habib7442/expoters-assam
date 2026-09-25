@@ -22,10 +22,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const description = product.description
     ? product.description.slice(0, 155)
-    : `${product.name} from ${product.company.name} on ExportsAssam, connecting Assam and Indian exporters with buyers worldwide.`;
+    : `${product.name} from ${product.company.name} on Exporters Assam, connecting Assam and Indian exporters with buyers worldwide.`;
 
   return {
-    title: `${product.name} — ${product.company.name} | ExportsAssam`,
+    title: `${product.name} — ${product.company.name} | Exporters Assam`,
     description,
   };
 }

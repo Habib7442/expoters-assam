@@ -21,10 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const description = company.about
     ? company.about.slice(0, 155)
-    : `${company.name} on ExportsAssam, a B2B directory connecting Assam and Indian exporters with buyers worldwide.`;
+    : `${company.name} on Exporters Assam, a B2B directory connecting Assam and Indian exporters with buyers worldwide.`;
 
   return {
-    title: `${company.name} | ExportsAssam`,
+    title: `${company.name} | Exporters Assam`,
     description,
   };
 }
@@ -35,7 +35,11 @@ export default async function CompanyPage({ params }: Props) {
   if (!company) notFound();
 
   const tier = await getCurrentTier(company.id);
-  const products = company.products.filter((product) => product.imageUrl !== null);
+  // Every approved product, including any whose stored image isn't on our
+  // image host (imageUrl null): those still exist and are viewable, so the
+  // count and the empty state must include them. The card shows a
+  // placeholder for them rather than hiding the product.
+  const products = company.products;
 
   const location = [company.location, company.country].filter(Boolean).join(", ");
   // UTC, not local: a company created just before midnight on New Year's
@@ -132,7 +136,7 @@ export default async function CompanyPage({ params }: Props) {
                   key={product.id}
                   slug={product.slug}
                   name={product.name}
-                  imageUrl={product.imageUrl as string}
+                  imageUrl={product.imageUrl}
                   categoryName={product.categoryName}
                 />
               ))}

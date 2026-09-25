@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Membership | ExportsAssam",
-  description: "Membership plans for suppliers on ExportsAssam — more visibility, more buyers.",
+  title: "Membership | Exporters Assam",
+  description: "Membership plans for suppliers on Exporters Assam — more visibility, more buyers.",
 };
 
 type Tier = {

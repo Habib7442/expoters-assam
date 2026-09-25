@@ -2,6 +2,7 @@ import "server-only";
 import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isR2Url } from "@/lib/storage/r2";
+import { containsPattern } from "@/lib/supabase/like-pattern";
 
 export type MyCompany = {
   id: string;
@@ -83,7 +84,7 @@ export async function getCompanies({ query, limit = 60 }: { query?: string; limi
     .from("companies")
     .select("id, slug, name, logo_url, location, country, verified")
     .eq("status", "approved");
-  if (query) filtered = filtered.ilike("name", `%${query}%`);
+  if (query) filtered = filtered.ilike("name", containsPattern(query));
 
   const { data, error } = await filtered
     .order("created_at", { ascending: false })

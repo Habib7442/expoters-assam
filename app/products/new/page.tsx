@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ProductSubmissionForm } from "@/components/product-submission-form";
 
 export const metadata: Metadata = {
-  title: "Submit a Product | ExportsAssam",
-  description: "List a product under your approved business on ExportsAssam.",
+  title: "Submit a Product | Exporters Assam",
+  description: "List a product under your approved business on Exporters Assam.",
 };
 
 export default async function NewProductPage() {

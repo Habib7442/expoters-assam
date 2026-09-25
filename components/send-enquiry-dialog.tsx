@@ -5,6 +5,7 @@ import { useState, useTransition } from "react"
 
 import { sendEnquiry, type SendEnquiryResult } from "@/lib/actions/send-enquiry"
 import { Button } from "@/components/ui/button"
+import { ConsentCheckbox } from "@/components/consent-checkbox"
 import {
   Dialog,
   DialogClose,
@@ -48,6 +49,7 @@ export function SendEnquiryDialog({
         phone: String(formData.get("phone") ?? ""),
         email: String(formData.get("email") ?? ""),
         message: String(formData.get("message") ?? ""),
+        consent: formData.get("consent") === "on",
       }
       const response = await sendEnquiry(
         target.type === "product"
@@ -163,6 +165,12 @@ export function SendEnquiryDialog({
                   placeholder="Quantity needed, delivery location, questions..."
                 />
               </div>
+
+              <ConsentCheckbox
+                id="enquiry-consent"
+                purpose="record this enquiry and let the supplier contact me about it"
+                error={fieldErrors?.consent}
+              />
             </div>
 
             {topLevelError && <p className="text-sm text-destructive">{topLevelError}</p>}

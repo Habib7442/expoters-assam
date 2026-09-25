@@ -5,6 +5,7 @@ import { type SubmitEvent, useRef, useState, useTransition } from "react"
 
 import { postBuyRequirement, type PostBuyRequirementResult } from "@/lib/actions/post-buy-requirement"
 import { Button } from "@/components/ui/button"
+import { ConsentCheckbox } from "@/components/consent-checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -46,6 +47,7 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
         location: String(formData.get("location") ?? ""),
         notes: String(formData.get("notes") ?? ""),
         isPublic: formData.get("isPublic") === "on",
+        consent: formData.get("consent") === "on",
       })
       setResult(response)
       if (response.ok) formRef.current?.reset()
@@ -106,6 +108,7 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
             id="req-category"
             name="categoryId"
             defaultValue=""
+            aria-invalid={!!fieldErrors?.categoryId}
             className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
             <option value="">Select a category</option>
@@ -115,6 +118,7 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
               </option>
             ))}
           </select>
+          {fieldErrors?.categoryId && <p className="text-xs text-destructive">{fieldErrors.categoryId}</p>}
         </div>
       )}
 
@@ -171,9 +175,17 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
       </div>
 
       <label htmlFor="req-public" className="flex items-start gap-2 text-sm text-muted-foreground">
-        <input id="req-public" name="isPublic" type="checkbox" defaultChecked className="mt-0.5 size-4" />
-        Show this publicly under Latest Buy Requirements, so sellers can find it
+        {/* Unticked by default: under the DPDP Act a pre-ticked box is not valid consent. */}
+        <input id="req-public" name="isPublic" type="checkbox" className="mt-0.5 size-4 shrink-0" />
+        Show this requirement publicly under Latest Buy Requirements, so sellers can find it (your name,
+        phone, and email are never shown)
       </label>
+
+      <ConsentCheckbox
+        id="req-consent"
+        purpose="record my requirement and contact me about it"
+        error={fieldErrors?.consent}
+      />
 
       {topLevelError && <p className="text-sm text-destructive">{topLevelError}</p>}
 

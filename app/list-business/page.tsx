@@ -8,8 +8,8 @@ import { BusinessListingForm } from "@/components/business-listing-form";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "List Your Business | ExportsAssam",
-  description: "List your business on ExportsAssam and get discovered by buyers worldwide.",
+  title: "List Your Business | Exporters Assam",
+  description: "List your business on Exporters Assam and get discovered by buyers worldwide.",
 };
 
 export default async function ListBusinessPage() {
@@ -41,7 +41,7 @@ export default async function ListBusinessPage() {
             </span>
             <h2 className="font-heading text-xl font-semibold text-green-deep">Your business is live</h2>
             <p className="text-sm text-muted-foreground">
-              {company.name} is approved and visible on ExportsAssam.
+              {company.name} is approved and visible on Exporters Assam.
             </p>
             <Button size="lg" className="rounded-full" render={<Link href="/products/new" />} nativeButton={false}>
               Add a Product
