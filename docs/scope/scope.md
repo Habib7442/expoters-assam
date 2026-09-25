@@ -16,7 +16,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 1 | Stack, tooling, auth & Supabase connection | Foundation | existing |
 | 2 | Database schema & access model | Foundation | done |
 | 3 | Design system tokens | Foundation | done |
-| 4 | Product page & Send Enquiry (core loop) | Skeleton | in-progress |
+| 4 | Product page & Send Enquiry (core loop) | Skeleton | done |
 | 5 | Company profile pages | Slice 2 | in-progress |
 | 6 | Listings, categories & country filters | Slice 2 | in-progress · needs a decision |
 | 7 | Home page | Slice 2 | in-progress |
@@ -62,7 +62,7 @@ code in `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `.claude/skills/dev
 
 ## Skeleton: core loop
 
-### 4. Product page & Send Enquiry (core loop) · in-progress
+### 4. Product page & Send Enquiry (core loop) · done
 The walking skeleton: a buyer opens one real product and sends an enquiry that writes to Supabase, then continues the conversation on WhatsApp themselves via a pre-filled `wa.me` link (no WhatsApp API, no credentials, no external approval). Real auth, real schema, real UI, deliberately narrow, proves the whole pipe end to end before anything else is built.
 **Done when:** a buyer can open a product page backed by real Supabase data and send an enquiry; it lands in `enquiries` and the buyer is handed a working WhatsApp link to the supplier.
 - [x] Design it (spec): `/architect product page & send enquiry`
@@ -71,10 +71,10 @@ The walking skeleton: a buyer opens one real product and sends an enquiry that w
    - [x] Query helpers + demo seed data so the page has something real to render (AC-1, AC-7, AC-8)
    - [x] Product page (`/products/[slug]`), metadata, image config (AC-1)
    - [x] Send Enquiry dialog, form, and the `sendEnquiry` server action with rate limiting, dedup, and the `wa.me` link (AC-2, AC-3, AC-4, AC-5, AC-8)
-- [ ] Verify it: `/check verify product page & send enquiry`
-- [ ] Test it: `/test product page & send enquiry`
-- [ ] Review it (fresh model): `/check review product page & send enquiry`
-- [ ] Document it: `/document product page & send enquiry`
+- [x] Verify it: `/check verify product page & send enquiry`
+- [x] Test it: `/test product page & send enquiry`
+- [x] Review it (fresh model): `/check review product page & send enquiry`
+- [x] Document it: `/document product page & send enquiry`
 spec [0003](../specs/0003-product-page-send-enquiry/index.md) · code in `supabase/migrations/20260827080000_add_company_contacts_and_product_slug.sql`, `lib/supabase/queries/products.ts`, `lib/actions/send-enquiry.ts`, `app/products/[slug]/`, `components/send-enquiry-dialog.tsx`, `scripts/seed-demo.ts`
 
 ## Slice 2: browse the directory

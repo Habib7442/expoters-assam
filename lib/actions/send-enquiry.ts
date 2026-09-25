@@ -101,6 +101,8 @@ export async function sendEnquiry(input: SendEnquiryInput): Promise<SendEnquiryR
           : "This company is no longer available.";
       return { ok: false, code: "not_found", message: notFoundMessage };
     }
+    // Code and message only: never the buyer's name, phone, or email.
+    console.error("sendEnquiry failed", { code: error.code, message: error.message });
     return {
       ok: false,
       code: "server_error",
@@ -110,6 +112,7 @@ export async function sendEnquiry(input: SendEnquiryInput): Promise<SendEnquiryR
 
   const row = data?.[0];
   if (!row) {
+    console.error("sendEnquiry failed: the database returned no row");
     return {
       ok: false,
       code: "server_error",

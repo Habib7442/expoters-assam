@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useRef, useState, useTransition } from "react"
+import { type SubmitEvent, useRef, useState, useTransition } from "react"
 
 import { sendEnquiry, type SendEnquiryResult } from "@/lib/actions/send-enquiry"
 import { Button } from "@/components/ui/button"
@@ -44,7 +44,13 @@ export function SendEnquiryDialog({
 
   const targetName = target.type === "product" ? target.productName : target.companyName
 
-  function handleSubmit(formData: FormData) {
+  // A plain onSubmit handler, not <form action={fn}>: React resets every
+  // uncontrolled field when a form action starts, which would wipe what the
+  // buyer typed on any rejection (validation, bot check, rate limit). On
+  // success the form unmounts for the success panel, so no manual reset.
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
     setResult(null)
     startTransition(async () => {
       const contact = {
@@ -112,7 +118,7 @@ export function SendEnquiryDialog({
             </DialogClose>
           </div>
         ) : (
-          <form action={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <DialogHeader>
               <DialogTitle>Send an enquiry</DialogTitle>
               <DialogDescription className="line-clamp-2">
