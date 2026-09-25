@@ -125,7 +125,7 @@ begin
 end;
 $$;
 
-revoke execute on function public.create_enquiry(text, text, text, uuid, text, text) from public;
+revoke execute on function public.create_enquiry(text, text, text, uuid, text, text) from public, anon, authenticated;
 grant execute on function public.create_enquiry(text, text, text, uuid, text, text) to service_role;
 
 -- ============================================================================
@@ -207,7 +207,7 @@ begin
 end;
 $$;
 
-revoke execute on function public.create_company_enquiry(text, text, text, uuid, text, text) from public;
+revoke execute on function public.create_company_enquiry(text, text, text, uuid, text, text) from public, anon, authenticated;
 grant execute on function public.create_company_enquiry(text, text, text, uuid, text, text) to service_role;
 
 -- ============================================================================
@@ -268,7 +268,7 @@ begin
 end;
 $$;
 
-revoke execute on function public.create_buy_requirement(text, text, text, uuid, text, text, text, text, boolean, text) from public;
+revoke execute on function public.create_buy_requirement(text, text, text, uuid, text, text, text, text, boolean, text) from public, anon, authenticated;
 grant execute on function public.create_buy_requirement(text, text, text, uuid, text, text, text, text, boolean, text) to service_role;
 
 -- ============================================================================
@@ -330,5 +330,5 @@ begin
 end;
 $$;
 
-revoke execute on function public.create_business_listing(text, text, text, text, text, text, text, text, text, text, text, text, text) from public;
+revoke execute on function public.create_business_listing(text, text, text, text, text, text, text, text, text, text, text, text, text) from public, anon, authenticated;
 grant execute on function public.create_business_listing(text, text, text, text, text, text, text, text, text, text, text, text, text) to service_role;

@@ -111,6 +111,32 @@ describe("submitBusinessListing logo upload (R2)", () => {
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
+  it("maps a duplicate clerk_user_id to already_listed", async () => {
+    uploadToR2Mock.mockResolvedValue("https://images.exportersasssm.com/logos/user_123/uuid.webp");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { code: "23505", message: 'duplicate key value violates unique constraint "companies_clerk_user_id_key"' },
+    });
+
+    const fd = baseFormData();
+    fd.set("logo", makeLogoFile());
+
+    expect(await submitBusinessListing(fd)).toMatchObject({ ok: false, code: "already_listed" });
+  });
+
+  it("does not report a slug collision as already_listed", async () => {
+    uploadToR2Mock.mockResolvedValue("https://images.exportersasssm.com/logos/user_123/uuid.webp");
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { code: "23505", message: 'duplicate key value violates unique constraint "companies_slug_key"' },
+    });
+
+    const fd = baseFormData();
+    fd.set("logo", makeLogoFile());
+
+    expect(await submitBusinessListing(fd)).toMatchObject({ ok: false, code: "server_error" });
+  });
+
   it("rejects a listing submitted without DPDP consent, before uploading or writing anything", async () => {
     const fd = baseFormData();
     fd.delete("consent");

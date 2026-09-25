@@ -114,6 +114,11 @@ const GENERIC_ERROR: BusinessListingResult = {
   message: "Something went wrong on our end. Please try again in a moment.",
 };
 
+/** Only the one-company-per-user constraint means "already listed"; any other 23505 (e.g. a slug) does not. */
+function isAlreadyListedViolation(error: { code?: string; message?: string }): boolean {
+  return error.code === "23505" && !!error.message?.includes("companies_clerk_user_id_key");
+}
+
 function isWhatsappCheckViolation(error: { code?: string; message?: string }): boolean {
   return error.code === "23514" && !!error.message?.includes("whatsapp_number");
 }
@@ -205,7 +210,7 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
   });
 
   if (error) {
-    if (error.code === "23505") {
+    if (isAlreadyListedViolation(error)) {
       return { ok: false, code: "already_listed", message: "You already have a business listed." };
     }
     if (isWhatsappCheckViolation(error)) return WHATSAPP_FIELD_ERROR;
