@@ -2,23 +2,23 @@
 _Steps derived from spec 0003 acceptance criteria. `/check verify` runs these; `/test` locks the durable ones._
 
 ## UI / manual
-- [ ] Visit `/products/assam-agarwood-chips-grade-a` → see name, images, description, category badge, company card (name, logo/initial, location, Verified badge) → AC-1
-- [ ] Visit `/products/does-not-exist` → 404 page, not a blank page or a leaked error → AC-1
-- [ ] A product whose company is `pending` (not `approved`) → visiting its slug → 404, not a page with an empty company card → AC-1
-- [ ] Click "Send Enquiry" → dialog opens with name/phone required, email/message optional → AC-2
-- [ ] Submit with only name + phone filled → success panel shown, dialog does not navigate away → AC-2
-- [ ] Double-click submit → button disabled while pending, no duplicate row → AC-2, AC-5
-- [ ] On a product whose company has a `company_contacts` row → success panel shows "Continue on WhatsApp" → clicking opens `wa.me/<number>?text=...` with the correct number and a readable pre-filled message → AC-3
-- [ ] On a product whose company has no `company_contacts` row → success panel shows a plain "we've received your enquiry" message, no WhatsApp button → AC-4
-- [ ] Submit the same phone + same product twice within 10 minutes → second submission returns success but no second row in `enquiries` → AC-5
-- [ ] Submit a 6th enquiry from the same phone within an hour → rejected with a clear rate limit message, no new row → AC-5
+- [x] Visit `/products/assam-agarwood-chips-grade-a` → see name, images, description, category badge, company card (name, logo/initial, location, Verified badge) → AC-1
+- [x] Visit `/products/does-not-exist` → 404 page, not a blank page or a leaked error → AC-1
+- [x] A product whose company is `pending` (not `approved`) → visiting its slug → 404, not a page with an empty company card → AC-1
+- [x] Click "Send Enquiry" → dialog opens with name/phone required, email/message optional → AC-2
+- [x] Submit with only name + phone filled → success panel shown, dialog does not navigate away → AC-2
+- [x] Double-click submit → button disabled while pending, no duplicate row → AC-2, AC-5
+- [x] On a product whose company has a `company_contacts` row → success panel shows "Continue on WhatsApp" → clicking opens `wa.me/<number>?text=...` with the correct number and a readable pre-filled message → AC-3
+- [x] On a product whose company has no `company_contacts` row → success panel shows a plain "we've received your enquiry" message, no WhatsApp button → AC-4
+- [x] Submit the same phone + same product twice within 10 minutes → second submission returns success but no second row in `enquiries` → AC-5
+- [x] Submit a 6th enquiry from the same phone within an hour → rejected with a clear rate limit message, no new row → AC-5
 
 ## Commands
-- [ ] `npm run build` → passes, `/products/[slug]` listed as a dynamic route → AC-1
-- [ ] `npm run lint` → clean
+- [x] `npm run build` → passes, `/products/[slug]` listed as a dynamic route → AC-1
+- [x] `npm run lint` → clean
 - [ ] `npm run seed:demo` → creates/reuses the demo category, company, `company_contacts` row, and product idempotently → AC-1, AC-7
-- [ ] Anon Supabase client: `select * from company_contacts` → permission denied (42501), not empty rows → AC-6
-- [ ] `supabaseAdmin.rpc('create_enquiry', { p_product_id: <a pending or nonexistent product id>, ... })` → a `product_not_found` error, no row written → AC-8
+- [x] Anon Supabase client: `select * from company_contacts` → permission denied (42501), not empty rows → AC-6
+- [x] `supabaseAdmin.rpc('create_enquiry', { p_product_id: <a pending or nonexistent product id>, ... })` → a `product_not_found` error, no row written → AC-8
 - [ ] Two products created with the same name in the same window both get unique slugs, neither insert fails → AC-7
 
 ## Acceptance-criteria coverage
