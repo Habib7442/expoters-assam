@@ -23,8 +23,12 @@ export function readTurnstileToken(value: unknown): string | undefined {
  */
 export async function verifyTurnstile(token: string | undefined): Promise<TurnstileOutcome> {
   const secret = process.env.TURNSTILE_SECRET_KEY;
-  if (!secret) {
-    console.error("[turnstile] TURNSTILE_SECRET_KEY is not set; bot check skipped");
+  // Without the site key the forms render no widget and can never send a
+  // token, so a set secret alone would reject every submission (AC-4).
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  if (!secret || !siteKey) {
+    const missing = [!secret && "TURNSTILE_SECRET_KEY", !siteKey && "NEXT_PUBLIC_TURNSTILE_SITE_KEY"].filter(Boolean);
+    console.error(`[turnstile] ${missing.join(" and ")} not set; bot check skipped`);
     return "not_configured";
   }
 

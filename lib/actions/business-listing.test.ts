@@ -1,4 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import sharp from "sharp";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 
 // This suite covers only the R2 storage surface of business-listing.ts (the
 // spec 0004 migration off Supabase Storage): upload key/category shape, the
@@ -37,9 +40,15 @@ vi.mock("@/lib/storage/r2", () => ({
 
 import { submitBusinessListing, updateBusinessListing } from "./business-listing";
 
-// A real WebP header ("RIFF" <size> "WEBP"): the action verifies magic bytes,
-// not the browser-claimed type.
-const WEBP_BYTES = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0x24, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20]);
+// A real, decodable WebP: the action verifies magic bytes and fully decodes
+// the image, never trusting the browser-claimed type.
+let WEBP_BYTES: Uint8Array<ArrayBuffer>;
+beforeAll(async () => {
+  const buffer = await sharp({ create: { width: 4, height: 4, channels: 3, background: "#2e7d32" } })
+    .webp()
+    .toBuffer();
+  WEBP_BYTES = new Uint8Array(buffer);
+});
 
 function makeLogoFile(type = "image/webp") {
   return new File([WEBP_BYTES], "logo.webp", { type });

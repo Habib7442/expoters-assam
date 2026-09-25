@@ -106,6 +106,9 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
       cancelled = true
       if (widgetIdRef.current && window.turnstile) window.turnstile.remove(widgetIdRef.current)
       widgetIdRef.current = null
+      // The parent's token must never outlive the widget that issued it:
+      // a reopened dialog would otherwise resend an already used token.
+      onTokenRef.current(null)
     }
   }, [siteKey])
 

@@ -10,6 +10,7 @@ describe("verifyTurnstile", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("TURNSTILE_SECRET_KEY", "test-secret");
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "test-site-key");
     vi.spyOn(console, "error").mockImplementation(() => {});
     fetchMock.mockReset();
   });
@@ -51,6 +52,12 @@ describe("verifyTurnstile", () => {
   it("is not_configured, and never calls Cloudflare, when the secret is missing", async () => {
     vi.stubEnv("TURNSTILE_SECRET_KEY", "");
     expect(await verifyTurnstile("token")).toBe("not_configured");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("is not_configured when only the site key is missing, instead of failing every tokenless submit", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "");
+    expect(await verifyTurnstile(undefined)).toBe("not_configured");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

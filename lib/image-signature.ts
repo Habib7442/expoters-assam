@@ -1,3 +1,7 @@
+import "server-only";
+
+import sharp from "sharp";
+
 export type AllowedImageType = "image/jpeg" | "image/png" | "image/webp";
 
 export const IMAGE_EXTENSIONS: Record<AllowedImageType, string> = {
@@ -34,9 +38,43 @@ export function detectImageType(bytes: Uint8Array): AllowedImageType | null {
 
 export type VerifiedImage = { buffer: Buffer; type: AllowedImageType; ext: string };
 
-/** Reads an uploaded file and returns it only if its bytes really are an allowed image. */
+/** Longest side, in pixels, of any stored upload. */
+const MAX_DIMENSION = 2000;
+/** Refuse to decode anything bigger (a "decompression bomb": tiny file, huge pixel count). */
+const MAX_INPUT_PIXELS = 40_000_000;
+
+/**
+ * Reads an uploaded file and returns it only if it really is an allowed
+ * image. Two gates: the magic bytes must match (cheap, rejects obvious
+ * non images before any decoding), then sharp must fully decode it
+ * (rejects truncated or corrupt files that merely start right).
+ *
+ * The stored bytes are always sharp's re-encode, never the original: that
+ * drops all metadata (EXIF, including phone GPS location, a DPDP privacy
+ * concern for supplier photos), applies the EXIF rotation first so photos
+ * aren't stored sideways, and caps the size at MAX_DIMENSION. The format is
+ * kept (JPEG stays JPEG, and so on); animated WebP keeps its first frame.
+ */
 export async function readVerifiedImage(file: File): Promise<VerifiedImage | null> {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const type = detectImageType(buffer);
-  return type ? { buffer, type, ext: IMAGE_EXTENSIONS[type] } : null;
+  const original = Buffer.from(await file.arrayBuffer());
+  const type = detectImageType(original);
+  if (!type) return null;
+
+  try {
+    const pipeline = sharp(original, { failOn: "warning", limitInputPixels: MAX_INPUT_PIXELS })
+      .rotate()
+      .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true });
+
+    const encoded =
+      type === "image/jpeg"
+        ? pipeline.jpeg({ quality: 85, mozjpeg: true })
+        : type === "image/png"
+          ? pipeline.png({ compressionLevel: 9 })
+          : pipeline.webp({ quality: 85 });
+
+    const buffer = await encoded.toBuffer();
+    return { buffer, type, ext: IMAGE_EXTENSIONS[type] };
+  } catch {
+    return null;
+  }
 }
