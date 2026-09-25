@@ -17,18 +17,21 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 2 | Database schema & access model | Foundation | done |
 | 3 | Design system tokens | Foundation | done |
 | 4 | Product page & Send Enquiry (core loop) | Skeleton | in-progress |
-| 5 | Company profile pages | Slice 2 | planned · needs a decision |
-| 6 | Listings, categories & country filters | Slice 2 | planned · needs a decision |
+| 5 | Company profile pages | Slice 2 | in-progress |
+| 6 | Listings, categories & country filters | Slice 2 | in-progress · needs a decision |
 | 7 | Home page | Slice 2 | in-progress |
-| 8 | Post Buy Requirement | Slice 3 | planned · needs a decision |
-| 9 | Enquiries on companies & buy requirements | Slice 3 | planned |
+| 8 | Post Buy Requirement | Slice 3 | in-progress |
+| 9 | Enquiries on companies & buy requirements | Slice 3 | in-progress |
 | 10 | Supplier business listing | Slice 3 | in-progress |
-| 11 | Membership plans & Razorpay | Slice 4 | planned · needs a decision |
+| 11 | Membership plans & Razorpay | Slice 4 | planned · deferred |
 | 12 | AI-powered / semantic search | Slice 5 | planned · needs a decision |
 | 13 | SEO & GEO | Slice 5 | planned |
 | 14 | PostHog analytics | Slice 5 | planned |
 | 15 | Cloudflare R2 image storage | Infrastructure | in-progress |
-| 16 | Supplier product submission | Slice 3 | planned · needs a decision |
+| 16 | Supplier product submission | Slice 3 | in-progress |
+| 17 | Form abuse protection | Infrastructure | in-progress |
+| 18 | Legal pages & DPDP compliance | Infrastructure | in-progress |
+| 19 | Go live configuration | Infrastructure | planned |
 
 ## Foundations
 
@@ -90,10 +93,12 @@ Each supplier's profile page: logo, about, location, product range, verified bad
 - [ ] Document it: `/document company profile pages`
 code in `supabase/migrations/20260909033000_add_company_slug.sql`, `lib/supabase/queries/companies.ts`, `app/companies/[slug]/page.tsx`, `components/exporter-card.tsx`, `app/products/[slug]/page.tsx`, `lib/supabase/queries/home.ts`, `lib/supabase/queries/products.ts`, `scripts/seed-demo.ts`
 
-### 6. Listings, categories & country filters · needs a decision
+### 6. Listings, categories & country filters · in-progress · needs a decision
 Browse products or companies by category, or by supplier location/country.
+Partly shipped without a spec: `/products` filters by category and a name search (both in the URL), and `/companies` and `/buy-requirements` have a name search. Still missing: any country/location filter, and a category filter on `/companies`. Companies now store state and country (migration `20260911060000`), so the remaining decision may be small enough to settle inline rather than in a full spec.
 **Done when:** a visitor can filter the product or company list by category and by country, and the URL reflects the active filter.
 - [ ] Design it (spec): `/architect listings, categories & country filters`
+code in `app/products/page.tsx`, `app/companies/page.tsx`, `app/buy-requirements/page.tsx`, `lib/supabase/queries/products.ts`, `lib/supabase/queries/companies.ts`, `lib/search-params.ts`
 
 ### 7. Home page · in-progress
 Hero with search bar, quick stats (verified exporters, products, buyers, countries connected), featured products/exporters, latest buy requirements, and entry actions ("List Your Business Free", "Post Buy Requirement").
@@ -172,6 +177,7 @@ code in `supabase/migrations/20260911010000_add_create_product_submission.sql`, 
 
 ### 11. Membership plans & Razorpay · needs a decision
 Basic/Silver/Gold tiers; a supplier upgrades and pays via Razorpay; a successful payment auto-upgrades the account (badge, ranking boost, featured placement).
+**Deferred by you (2026-09-25):** not the next build; pick it back up later. Silver and Gold prices are still unconfirmed by the client. A static `/membership` plans page already exists; its checkout button is not wired yet (code in `app/membership/page.tsx`).
 **Done when:** a supplier can choose Silver or Gold, pay via Razorpay, and their membership tier updates automatically on successful payment, with the payment logged.
 - [ ] Design it (spec): `/architect membership plans & razorpay`
 
@@ -179,6 +185,7 @@ Basic/Silver/Gold tiers; a supplier upgrades and pays via Razorpay; a successful
 
 ### 12. AI-powered / semantic search · needs a decision
 Fast product/company search with spelling tolerance and instant suggestions, built on Supabase semantic matching, not a third party search SaaS.
+A basic stand in already works: the header and hero search do a plain name match (`ilike`) on products, companies, and buy requirements. No typo tolerance or semantic matching yet; that is what this feature still owes.
 **Done when:** search returns relevant results tolerant of common typos and updates as the user types.
 - [ ] Design it (spec): `/architect ai-powered search`
 
@@ -209,6 +216,39 @@ Moves where product and company images live, from the Supabase Storage buckets s
 - [x] Review it (fresh model): `/check review cloudflare r2 image storage`
 - [ ] Document it: `/document cloudflare r2 image storage`
 spec [0004](../specs/0004-cloudflare-r2-image-storage/index.md) · code in `lib/storage/r2-client.ts`, `lib/storage/r2.ts`, `scripts/seed-demo.ts`, `next.config.ts`, `lib/actions/business-listing.ts`, `supabase/migrations/20260903140000_revoke_supabase_storage_public_read.sql`, `supabase/migrations/20260909020000_disable_supabase_storage_public_buckets.sql`
+
+### 17. Form abuse protection · in-progress
+An invisible Cloudflare Turnstile bot check on the two anonymous forms (Send Enquiry, Post Buy Requirement), a per company hourly cap on product submission, and uploaded images decoded with sharp to reject files that are not real images. No IP address is stored. Enrolled after the fact from spec 0006 and the security hardening commits.
+**Done when:** a missing or rejected Turnstile token blocks the write with a friendly retry, an unreachable Cloudflare fails open and logs, and a supplier past 30 products an hour gets `rate_limited` before any image uploads.
+- [x] Design it (spec): `/architect form abuse protection`
+- [x] Build it: `/develop form abuse protection`
+   - [x] `verifyTurnstile` helper and `TurnstileWidget`, wired into both anonymous forms (AC-1 to AC-4)
+   - [x] Per company product cap in `create_product_submission` plus the pre check in `submitProduct` (AC-5, AC-6)
+   - [x] Privacy Policy names Cloudflare; image signature check via sharp (AC-7)
+- [ ] Verify it: `/check verify form abuse protection`
+- [x] Test it: `/test form abuse protection` (unit tests written with the build: `lib/security/turnstile.test.ts`, `lib/image-signature.test.ts`, action mapping tests)
+- [ ] Review it (fresh model): `/check review form abuse protection`
+- [ ] Document it: `/document form abuse protection`
+spec [0006](../specs/0006-form-abuse-protection.md) · code in `lib/security/turnstile.ts`, `components/turnstile-widget.tsx`, `lib/image-signature.ts`, `lib/actions/send-enquiry.ts`, `lib/actions/post-buy-requirement.ts`, `lib/actions/submit-product.ts`, `supabase/migrations/20260925050000_add_product_submission_rate_limit.sql`
+
+### 18. Legal pages & DPDP compliance · in-progress
+Privacy Policy and Terms pages, an explicit consent checkbox on every form that collects personal data (recorded in the database), and a nightly job that deletes buyer personal data past its retention window, so the promises in the Privacy Policy are actually kept. Built inline without a spec; enrolled after the fact.
+**Done when:** every form that collects personal data requires and stores consent, the database refuses writes without it, the retention job runs nightly, and the privacy and terms pages accurately describe what suppliers see over WhatsApp.
+- [x] Design it (spec): decided inline, no `docs/specs/` entry
+- [x] Build it: `/develop legal pages & dpdp compliance`
+   - [x] `/privacy` and `/terms` pages, WhatsApp data sharing wording clarified
+   - [x] `ConsentCheckbox` on enquiry, buy requirement, and business listing forms; consent recorded by the `create_*` functions, consent less overloads dropped
+   - [x] Nightly personal data retention job (pg_cron)
+- [ ] Verify it: `/check verify legal pages & dpdp compliance`
+- [ ] Test it: `/test legal pages & dpdp compliance`
+- [ ] Review it (fresh model): `/check review legal pages & dpdp compliance`
+- [ ] Document it: `/document legal pages & dpdp compliance`
+code in `app/privacy/page.tsx`, `app/terms/page.tsx`, `components/consent-checkbox.tsx`, `supabase/migrations/20260925010000_record_dpdp_consent.sql`, `supabase/migrations/20260925020000_add_personal_data_retention_job.sql`, `supabase/migrations/20260925060000_drop_consentless_create_overloads.sql`
+
+### 19. Go live configuration · planned
+The production settings that have piled up as follow ups across specs, collected in one place so nothing is missed at launch: Clerk production instance, real Turnstile keys in Vercel (spec 0006), a Content Security Policy that allows `challenges.cloudflare.com` (spec 0006), the client's real platform WhatsApp number replacing the placeholder (feature 8), and all env vars set in Vercel.
+**Done when:** a Vercel production build runs against production Clerk, real Turnstile keys, and the real WhatsApp number, with every form working end to end on the live domain.
+- [ ] Build it: `/develop go live configuration`
 
 ## Legend
 
