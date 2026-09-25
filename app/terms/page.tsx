@@ -63,10 +63,13 @@ export default function TermsPage() {
           <section className="flex flex-col gap-2">
             <h2 className="font-heading text-lg font-semibold text-green-deep">4. Buy requirements and enquiries</h2>
             <p>
-              Posting a buy requirement makes your stated need (product, quantity, location) visible to
-              suppliers browsing the directory. Sending an enquiry about a product or company shares your
-              contact details and message with that supplier directly over WhatsApp. You&apos;re responsible for
-              what you post and for any conversation that follows.
+              If you choose to show a buy requirement publicly, your stated need (product, quantity, location) is
+              visible to suppliers browsing the directory; your name, phone number, and email are never shown.
+              Sending an enquiry saves it with us and offers you a WhatsApp link to the supplier, pre-filled with
+              the product or company name and your message. The name, phone number, and email you entered on our
+              form are not included. If you open the link and send the message, the supplier sees it along with
+              your WhatsApp number and profile name. You&apos;re responsible for what you post and for any
+              conversation that follows.
             </p>
           </section>
 

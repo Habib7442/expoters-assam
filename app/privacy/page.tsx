@@ -112,9 +112,14 @@ export default function PrivacyPage() {
             <p>
               Exporters Assam is a directory, not a marketplace — deals happen directly between buyers and
               suppliers, off-platform. When you send an enquiry, we save it and then offer you a WhatsApp link to
-              the supplier with a pre-filled message. Nothing is sent on WhatsApp unless you open that link and
-              send the message yourself. Once you do, that conversation happens on WhatsApp, outside our
-              systems, and is governed by WhatsApp&apos;s own privacy practices.
+              the supplier with a pre-filled message (the product or company name, plus your message if you wrote
+              one). Nothing is sent on WhatsApp unless you open that link and send the message yourself.
+            </p>
+            <p>
+              If you do, the supplier receives that message along with your WhatsApp phone number and WhatsApp
+              profile name — WhatsApp shows these to anyone you message. We don&apos;t pass on the name or email
+              you typed into our form. From then on, the conversation happens on WhatsApp, outside our systems,
+              and is governed by WhatsApp&apos;s own privacy practices.
             </p>
           </section>
 
@@ -122,7 +127,10 @@ export default function PrivacyPage() {
             <h2 className="font-heading text-lg font-semibold text-green-deep">5. Who we share information with</h2>
             <p>We never sell your information. We share it only with:</p>
             <ul className="list-disc pl-5 [&>li]:mt-1">
-              <li>The supplier you contact, when you send them an enquiry</li>
+              <li>
+                The supplier you contact, only if you send them the WhatsApp message: they see that message and
+                your WhatsApp number and profile name (see section 4)
+              </li>
               <li>
                 Service providers who process data on our behalf, under contract: Clerk (authentication),
                 Supabase (database), Cloudflare (image storage), Razorpay (payments), and PostHog (analytics)
@@ -135,8 +143,11 @@ export default function PrivacyPage() {
               of India has not restricted under the DPDP Act.
             </p>
             <p>
-              A business&apos;s email address and GST number, and a buyer&apos;s name, phone number, and email,
-              are never shown on public pages — they&apos;re only visible to our admin team.
+              A business&apos;s email address and GST number are never shown on public pages and are visible only
+              to our admin team. The name, phone number, and email you enter on an enquiry or buy requirement
+              form are stored by us and visible only to our admin team — we never show them on public pages or
+              share them with suppliers. A supplier only sees your WhatsApp number and profile name if you choose
+              to message them on WhatsApp.
             </p>
           </section>
 
