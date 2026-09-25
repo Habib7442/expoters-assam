@@ -533,84 +533,45 @@ export type Database = {
       }
     }
     Functions: {
-      create_business_listing:
-        | {
-            Args: {
-              p_about: string
-              p_address_line: string
-              p_clerk_user_id: string
-              p_country: string
-              p_email: string
-              p_gst_number: string
-              p_location: string
-              p_logo_url: string
-              p_name: string
-              p_postal_code: string
-              p_state: string
-              p_whatsapp_number: string
-            }
-            Returns: {
-              company_id: string
-              status: string
-            }[]
-          }
-        | {
-            Args: {
-              p_about: string
-              p_address_line: string
-              p_clerk_user_id: string
-              p_consent_notice_version: string
-              p_country: string
-              p_email: string
-              p_gst_number: string
-              p_location: string
-              p_logo_url: string
-              p_name: string
-              p_postal_code: string
-              p_state: string
-              p_whatsapp_number: string
-            }
-            Returns: {
-              company_id: string
-              status: string
-            }[]
-          }
-      create_buy_requirement:
-        | {
-            Args: {
-              p_category_id: string
-              p_email: string
-              p_is_public: boolean
-              p_location: string
-              p_name: string
-              p_notes: string
-              p_phone: string
-              p_product_text: string
-              p_quantity: string
-            }
-            Returns: {
-              buy_requirement_id: string
-              rate_limited: boolean
-            }[]
-          }
-        | {
-            Args: {
-              p_category_id: string
-              p_consent_notice_version: string
-              p_email: string
-              p_is_public: boolean
-              p_location: string
-              p_name: string
-              p_notes: string
-              p_phone: string
-              p_product_text: string
-              p_quantity: string
-            }
-            Returns: {
-              buy_requirement_id: string
-              rate_limited: boolean
-            }[]
-          }
+      create_business_listing: {
+        Args: {
+          p_about: string
+          p_address_line: string
+          p_clerk_user_id: string
+          p_consent_notice_version: string
+          p_country: string
+          p_email: string
+          p_gst_number: string
+          p_location: string
+          p_logo_url: string
+          p_name: string
+          p_postal_code: string
+          p_state: string
+          p_whatsapp_number: string
+        }
+        Returns: {
+          company_id: string
+          status: string
+        }[]
+      }
+      create_buy_requirement: {
+        Args: {
+          p_category_id: string
+          p_consent_notice_version: string
+          p_email: string
+          p_is_public: boolean
+          p_location: string
+          p_name: string
+          p_notes: string
+          p_phone: string
+          p_product_text: string
+          p_quantity: string
+        }
+        Returns: {
+          buy_requirement_id: string
+          rate_limited: boolean
+        }[]
+      }
       create_category: {
         Args: { p_image_url?: string; p_name: string }
         Returns: {
@@ -618,66 +579,36 @@ export type Database = {
           slug: string
         }[]
       }
-      create_company_enquiry:
-        | {
-            Args: {
-              p_company_id: string
-              p_email: string
-              p_message: string
-              p_name: string
-              p_phone: string
-            }
-            Returns: {
-              enquiry_id: string
-              rate_limited: boolean
-              whatsapp_number: string
-            }[]
-          }
-        | {
-            Args: {
-              p_company_id: string
-              p_consent_notice_version: string
-              p_email: string
-              p_message: string
-              p_name: string
-              p_phone: string
-            }
-            Returns: {
-              enquiry_id: string
-              rate_limited: boolean
-              whatsapp_number: string
-            }[]
-          }
-      create_enquiry:
-        | {
-            Args: {
-              p_email: string
-              p_message: string
-              p_name: string
-              p_phone: string
-              p_product_id: string
-            }
-            Returns: {
-              enquiry_id: string
-              rate_limited: boolean
-              whatsapp_number: string
-            }[]
-          }
-        | {
-            Args: {
-              p_consent_notice_version: string
-              p_email: string
-              p_message: string
-              p_name: string
-              p_phone: string
-              p_product_id: string
-            }
-            Returns: {
-              enquiry_id: string
-              rate_limited: boolean
-              whatsapp_number: string
-            }[]
-          }
+      create_company_enquiry: {
+        Args: {
+          p_company_id: string
+          p_consent_notice_version: string
+          p_email: string
+          p_message: string
+          p_name: string
+          p_phone: string
+        }
+        Returns: {
+          enquiry_id: string
+          rate_limited: boolean
+          whatsapp_number: string
+        }[]
+      }
+      create_enquiry: {
+        Args: {
+          p_consent_notice_version: string
+          p_email: string
+          p_message: string
+          p_name: string
+          p_phone: string
+          p_product_id: string
+        }
+        Returns: {
+          enquiry_id: string
+          rate_limited: boolean
+          whatsapp_number: string
+        }[]
+      }
       create_product_submission: {
         Args: {
           p_category_id: string
