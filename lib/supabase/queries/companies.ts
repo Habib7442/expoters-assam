@@ -128,11 +128,13 @@ export type CompanyProfile = {
 };
 
 /**
- * A company's public profile page by slug: only an `approved` company (the
- * anon client's RLS policy filters this automatically), with its own
- * `approved` products (the `products` table's separate policy does the
- * same). A stray non-R2 image/logo URL is treated as "no image" rather than
- * handed to `next/image`, same guard as the product page and home page.
+ * A company's public profile page by slug: only an `approved` company, with
+ * its own `approved` products, newest first. RLS already enforces both
+ * (`companies` and `products` each have an approved only policy); the
+ * explicit filters are a second layer, same as every sibling read path, so
+ * this stays safe if the query is ever moved to another client. A stray
+ * non-R2 image/logo URL is treated as "no image" rather than handed to
+ * `next/image`, same guard as the product page and home page.
  */
 export async function getCompanyBySlug(slug: string): Promise<CompanyProfile | null> {
   const { data, error } = await supabase
@@ -144,6 +146,10 @@ export async function getCompanyBySlug(slug: string): Promise<CompanyProfile | n
     `,
     )
     .eq("slug", slug)
+    .eq("status", "approved")
+    .eq("products.status", "approved")
+    .order("created_at", { referencedTable: "products", ascending: false })
+    .order("id", { referencedTable: "products", ascending: true })
     .maybeSingle();
 
   if (error) throw error;
@@ -164,7 +170,7 @@ export async function getCompanyBySlug(slug: string): Promise<CompanyProfile | n
       slug: product.slug,
       name: product.name,
       imageUrl: isR2Url(product.image_url) ? product.image_url : null,
-      categoryName: (product as unknown as { categories: { name: string } | null })?.categories?.name ?? null,
+      categoryName: product.categories?.name ?? null,
     })),
   };
 }

@@ -2,7 +2,8 @@
 
 **Reviewed by**: Claude Sonnet 5 (author on Claude Sonnet 5)
 **Scope**: 7 files, feature review at HEAD (spec 0003, scope feature 4) plus 3 uncommitted test files
-**Verdict**: Changes requested
+**Verdict**: Changes requested → both Majors resolved in `c7595a0`; no open merge blockers
+**Follow-up (2026-09-25)**: The two Major findings below are kept for the record and marked **Resolved**. The Minor finding and the nits were not part of that fix and are still open.
 
 ## Summary
 
@@ -14,11 +15,13 @@ This is the buyer-facing core loop: an approved product's page, the Send Enquiry
 **Problem**: When the RPC returns any error other than `P0002` (e.g. a `23514` check-constraint violation from `buyers_phone_check` when the loose phone regex lets through a string that the DB's normalization can't turn into a valid number, a `42501` permission error if a future migration mis-grants `service_role`, or any transient Postgres/network failure), the code returns a generic `server_error` to the caller and does nothing else. The same is true when `data?.[0]` is empty. No `console.error`, no structured log, nothing.
 **Why it matters**: Every other Supabase query helper in this codebase (`lib/supabase/queries/products.ts:58`, `home.ts`, `companies.ts:95`) logs `"<fnName> failed", error` on exactly this kind of failure; `send-enquiry.ts` is the one outlier. Per the spec's own user story, "every enquiry [should be] recorded even if the buyer never completes the WhatsApp step, so no lead is ever silently lost" — but a genuinely lost write here (the one case that most needs a paper trail) leaves zero signal in the logs. A buyer sees "something went wrong," and there is no way for the team to know it happened, let alone why, short of the buyer complaining. This is also the code path a slightly-too-permissive phone regex (`/^[0-9+\-\s()]{10,20}$/`, documented in the spec as deliberately not validating) is most likely to hit.
 **Suggested fix**: Log on both the `if (error)` and `if (!row)` branches, the way the rest of the codebase already does (`console.error("sendEnquiry failed", { code: error.code, message: error.message, targetType: parsed.data.targetType })`). Log the error code/message only, not the full Postgres error object — a unique-violation `DETAIL` can echo back the offending value (e.g. a phone number), and buyer PII must not land in logs per AGENTS.md.
+**Resolved** (`c7595a0`): `lib/actions/send-enquiry.ts:105` logs `{ code, message }` only (no full error object, so no `DETAIL` PII) on the RPC error branch, and `:115` logs the no-row branch.
 
 ### 🟠 Any rejected submission clears the buyer's typed name, phone, email, message and consent, `components/send-enquiry-dialog.tsx:47-67,115`
 **Problem**: The form's inputs are uncontrolled and the form's `action` is wired directly to `handleSubmit` (`<form action={handleSubmit} ...>`, line 115). React 19 automatically resets an uncontrolled form's fields once the action function returns, regardless of whether the *business* result was success or failure — only a thrown exception would suppress it, and `handleSubmit` never throws. So a validation error (a malformed phone), a `rate_limited` rejection, a `bot_check_failed`, or a `not_found` all silently wipe every field the buyer just typed, not only the rate-limited case verify.md's manual run happened to notice.
 **Why it matters**: The spec's own design intent (Build plan step 6) was for the form to reset "on reopen" after a successful close, not after a failed attempt — the point of showing a field-level error (`aria-invalid`, the red text under the phone input) is so the buyer can see and fix what they typed, not retype the whole form from scratch. For the one page this entire spec exists to prove out, losing a buyer's name and message because they mistyped a phone number is a real, avoidable drop-off in the core conversion loop.
 **Suggested fix**: Keep the values across a failed submission — either make the inputs controlled and repopulate them from state after a non-ok result, or call the DOM form's own reset only in the success branch (e.g. via a form ref, only when `result.ok` is true) instead of relying on React's blanket post-action reset. Confirm the fix manually in a real browser; the project's vitest setup has no DOM/Testing Library, so this class of bug cannot be caught by the current test suite (noted below, not a new gap to add tests for per this review's test-signal guidance).
+**Resolved** (`c7595a0`): `components/send-enquiry-dialog.tsx:121` now uses `<form onSubmit={handleSubmit}>` with `event.preventDefault()`, not `<form action={fn}>`, so React no longer resets the fields after a rejected submission.
 
 ## Minor
 

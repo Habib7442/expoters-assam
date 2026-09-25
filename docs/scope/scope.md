@@ -87,9 +87,9 @@ Each supplier's profile page: logo, about, location, product range, verified bad
    - [x] Migration: `companies.slug` (nullable, backfilled, then `not null unique`), `slugify()` helper, `create_business_listing` assigns a slug at insert
    - [x] Data layer: `getCompanyBySlug` in `lib/supabase/queries/companies.ts`, sanitizing `logo_url`/product `image_url` through the same `isR2Url` guard as the product page and home page
    - [x] `/companies/[slug]` page; `ExporterCard` (home page) and the product page's company block now link to it
-- [ ] Verify it: `/check verify company profile pages`
-- [ ] Test it: `/test company profile pages`
-- [ ] Review it (fresh model): `/check review company profile pages`
+- [x] Verify it: `/check verify company profile pages`
+- [x] Test it: `/test company profile pages`
+- [x] Review it (fresh model): `/check review company profile pages`
 - [ ] Document it: `/document company profile pages`
 code in `supabase/migrations/20260909033000_add_company_slug.sql`, `lib/supabase/queries/companies.ts`, `app/companies/[slug]/page.tsx`, `components/exporter-card.tsx`, `app/products/[slug]/page.tsx`, `lib/supabase/queries/home.ts`, `lib/supabase/queries/products.ts`, `scripts/seed-demo.ts`
 
