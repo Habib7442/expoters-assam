@@ -6,6 +6,7 @@ import { type SubmitEvent, useRef, useState, useTransition } from "react"
 import { postBuyRequirement, type PostBuyRequirementResult } from "@/lib/actions/post-buy-requirement"
 import { Button } from "@/components/ui/button"
 import { ConsentCheckbox } from "@/components/consent-checkbox"
+import { TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -25,6 +26,8 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<PostBuyRequirementResult | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null)
 
   // A plain onSubmit handler, not <form action={fn}>: React resets every
   // uncontrolled field the instant a form action starts (before the action
@@ -48,9 +51,12 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
         notes: String(formData.get("notes") ?? ""),
         isPublic: formData.get("isPublic") === "on",
         consent: formData.get("consent") === "on",
+        turnstileToken: turnstileToken ?? undefined,
       })
       setResult(response)
       if (response.ok) formRef.current?.reset()
+      // The token was consumed by this attempt; get a fresh one for a retry.
+      else turnstileRef.current?.reset()
     })
   }
 
@@ -186,6 +192,8 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
         purpose="record my requirement and contact me about it"
         error={fieldErrors?.consent}
       />
+
+      <TurnstileWidget ref={turnstileRef} onToken={setTurnstileToken} />
 
       {topLevelError && <p className="text-sm text-destructive">{topLevelError}</p>}
 

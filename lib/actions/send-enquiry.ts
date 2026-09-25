@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
+import { BOT_CHECK_FAILED_MESSAGE, readTurnstileToken, verifyTurnstile } from "@/lib/security/turnstile";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const contactFields = {
@@ -11,6 +12,7 @@ const contactFields = {
   email: z.string().trim().email("Enter a valid email address").optional().or(z.literal("")),
   message: z.string().trim().max(2000).optional(),
   consent: z.boolean().refine((agreed) => agreed, "Please agree to the Privacy Policy to send your enquiry"),
+  turnstileToken: z.string().optional(),
 };
 
 const enquirySchema = z.discriminatedUnion("targetType", [
@@ -34,7 +36,7 @@ export type SendEnquiryResult =
   | { ok: true; whatsappUrl: string | null }
   | {
       ok: false;
-      code: "invalid_input" | "rate_limited" | "not_found" | "server_error";
+      code: "invalid_input" | "bot_check_failed" | "rate_limited" | "not_found" | "server_error";
       message: string;
       fieldErrors?: Record<string, string>;
     };
@@ -49,6 +51,12 @@ export type SendEnquiryResult =
  * call.
  */
 export async function sendEnquiry(input: SendEnquiryInput): Promise<SendEnquiryResult> {
+  // Bot check first (spec 0006): before validation or any write. Only a
+  // definite "failed" blocks; an unreachable Cloudflare fails open.
+  if ((await verifyTurnstile(readTurnstileToken(input?.turnstileToken))) === "failed") {
+    return { ok: false, code: "bot_check_failed", message: BOT_CHECK_FAILED_MESSAGE };
+  }
+
   const parsed = enquirySchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
+import { readVerifiedImage, type VerifiedImage } from "@/lib/image-signature";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { deleteFromR2, parseR2Url, uploadToR2 } from "@/lib/storage/r2";
 
@@ -90,11 +91,17 @@ function collectFieldErrors(error: z.ZodError): Record<string, string> {
   return fieldErrors;
 }
 
-async function uploadLogo(clerkUserId: string, file: File): Promise<string> {
-  const ext = ALLOWED_LOGO_TYPES[file.type];
-  const key = `${clerkUserId}/${crypto.randomUUID()}.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  return uploadToR2("logos", key, buffer, file.type);
+const INVALID_LOGO_RESULT: BusinessListingResult = {
+  ok: false,
+  code: "invalid_input",
+  message: "Please check the form and try again.",
+  fieldErrors: { logo: "Logo must be a JPG, PNG, or WebP image" },
+};
+
+/** Stores the verified bytes under their detected type, never the browser-claimed one. */
+async function uploadLogo(clerkUserId: string, image: VerifiedImage): Promise<string> {
+  const key = `${clerkUserId}/${crypto.randomUUID()}.${image.ext}`;
+  return uploadToR2("logos", key, image.buffer, image.type);
 }
 
 /** Best effort only: an orphaned R2 object is an accepted, low cost tradeoff (spec 0005). */
@@ -186,9 +193,12 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
     logo,
   } = parsed.data;
 
+  const logoImage = await readVerifiedImage(logo);
+  if (!logoImage) return INVALID_LOGO_RESULT;
+
   let logoUrl: string;
   try {
-    logoUrl = await uploadLogo(userId, logo);
+    logoUrl = await uploadLogo(userId, logoImage);
   } catch {
     return { ok: false, code: "upload_failed", message: "Could not upload your logo. Please try again." };
   }
@@ -277,8 +287,10 @@ export async function updateBusinessListing(formData: FormData): Promise<Busines
 
   let logoUrl: string | null = null;
   if (logo) {
+    const logoImage = await readVerifiedImage(logo);
+    if (!logoImage) return INVALID_LOGO_RESULT;
     try {
-      logoUrl = await uploadLogo(userId, logo);
+      logoUrl = await uploadLogo(userId, logoImage);
     } catch {
       return { ok: false, code: "upload_failed", message: "Could not upload your logo. Please try again." };
     }

@@ -116,8 +116,10 @@ export default function PrivacyPage() {
               one). Nothing is sent on WhatsApp unless you open that link and send the message yourself.
             </p>
             <p>
-              If you do, the supplier receives that message along with your WhatsApp phone number and WhatsApp
-              profile name — WhatsApp shows these to anyone you message. We don&apos;t pass on the name or email
+              If you do, the supplier receives that message along with whatever WhatsApp shows them about you —
+              typically your WhatsApp profile name, and your phone number unless your WhatsApp settings (for
+              example, a username with your number hidden) keep it from them. What WhatsApp reveals is controlled
+              by WhatsApp and your own settings, not by us. We don&apos;t pass on the name, phone number, or email
               you typed into our form. From then on, the conversation happens on WhatsApp, outside our systems,
               and is governed by WhatsApp&apos;s own privacy practices.
             </p>
@@ -129,11 +131,13 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 [&>li]:mt-1">
               <li>
                 The supplier you contact, only if you send them the WhatsApp message: they see that message and
-                your WhatsApp number and profile name (see section 4)
+                whatever WhatsApp shows them about you (see section 4)
               </li>
               <li>
                 Service providers who process data on our behalf, under contract: Clerk (authentication),
-                Supabase (database), Cloudflare (image storage), Razorpay (payments), and PostHog (analytics)
+                Supabase (database), Cloudflare (image storage, and Turnstile bot protection on our enquiry and
+                buy requirement forms, which checks technical signals from your browser to tell people from
+                automated spam — we don&apos;t store any of it), Razorpay (payments), and PostHog (analytics)
               </li>
               <li>Law enforcement or regulators, only when legally required to</li>
             </ul>
@@ -146,8 +150,8 @@ export default function PrivacyPage() {
               A business&apos;s email address and GST number are never shown on public pages and are visible only
               to our admin team. The name, phone number, and email you enter on an enquiry or buy requirement
               form are stored by us and visible only to our admin team — we never show them on public pages or
-              share them with suppliers. A supplier only sees your WhatsApp number and profile name if you choose
-              to message them on WhatsApp.
+              share them with suppliers. A supplier only sees your WhatsApp details if you choose to message them
+              on WhatsApp, and then only what WhatsApp shows them (see section 4).
             </p>
           </section>
 

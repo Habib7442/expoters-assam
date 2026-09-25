@@ -37,8 +37,12 @@ vi.mock("@/lib/storage/r2", () => ({
 
 import { submitBusinessListing, updateBusinessListing } from "./business-listing";
 
+// A real WebP header ("RIFF" <size> "WEBP"): the action verifies magic bytes,
+// not the browser-claimed type.
+const WEBP_BYTES = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0x24, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20]);
+
 function makeLogoFile(type = "image/webp") {
-  return new File([new Uint8Array([1, 2, 3])], "logo.webp", { type });
+  return new File([WEBP_BYTES], "logo.webp", { type });
 }
 
 function unchangedLogoFile() {
@@ -109,6 +113,32 @@ describe("submitBusinessListing logo upload (R2)", () => {
 
     expect(result).toMatchObject({ ok: false, code: "upload_failed" });
     expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-image disguised as image/png, before uploading anything", async () => {
+    const fd = baseFormData();
+    fd.set("logo", new File(["<html><script>alert(1)</script></html>"], "logo.png", { type: "image/png" }));
+
+    const result = await submitBusinessListing(fd);
+
+    expect(result).toMatchObject({ ok: false, code: "invalid_input" });
+    expect(result.ok === false && result.fieldErrors?.logo).toBeTruthy();
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("stores the logo under its detected type, not the browser-claimed one", async () => {
+    uploadToR2Mock.mockResolvedValue("https://images.exportersasssm.com/logos/user_123/uuid.webp");
+    rpcMock.mockResolvedValue({ data: [{ company_id: "c1", status: "pending" }], error: null });
+
+    const fd = baseFormData();
+    fd.set("logo", makeLogoFile("image/jpeg"));
+
+    await submitBusinessListing(fd);
+
+    const [, key, , contentType] = uploadToR2Mock.mock.calls[0]!;
+    expect(key).toMatch(/\.webp$/);
+    expect(contentType).toBe("image/webp");
   });
 
   it("maps a duplicate clerk_user_id to already_listed", async () => {

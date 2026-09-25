@@ -68,7 +68,8 @@ export default function TermsPage() {
               Sending an enquiry saves it with us and offers you a WhatsApp link to the supplier, pre-filled with
               the product or company name and your message. The name, phone number, and email you entered on our
               form are not included. If you open the link and send the message, the supplier sees it along with
-              your WhatsApp number and profile name. You&apos;re responsible for what you post and for any
+              whatever WhatsApp shows them about you — typically your profile name, and your phone number unless
+              your WhatsApp settings hide it (see our Privacy Policy). You&apos;re responsible for what you post and for any
               conversation that follows.
             </p>
           </section>

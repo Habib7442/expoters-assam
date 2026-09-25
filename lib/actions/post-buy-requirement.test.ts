@@ -5,6 +5,13 @@ vi.mock("@/lib/supabase/admin", () => ({
   supabaseAdmin: { rpc: (...args: unknown[]) => rpcMock(...args) },
 }));
 
+const verifyTurnstileMock = vi.fn();
+vi.mock("@/lib/security/turnstile", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/security/turnstile")>("@/lib/security/turnstile");
+  return { ...actual, verifyTurnstile: (...args: unknown[]) => verifyTurnstileMock(...args) };
+});
+vi.mock("server-only", () => ({}));
+
 import { postBuyRequirement, type PostBuyRequirementInput } from "./post-buy-requirement";
 
 const validInput: PostBuyRequirementInput = {
@@ -23,6 +30,27 @@ const validInput: PostBuyRequirementInput = {
 describe("postBuyRequirement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    verifyTurnstileMock.mockResolvedValue("passed");
+  });
+
+  it("blocks a failed bot check before validating or writing anything", async () => {
+    verifyTurnstileMock.mockResolvedValue("failed");
+
+    const result = await postBuyRequirement({ ...validInput, turnstileToken: "forged" });
+
+    expect(result).toMatchObject({ ok: false, code: "bot_check_failed" });
+    expect(verifyTurnstileMock).toHaveBeenCalledWith("forged");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("lets the submission through when Cloudflare is unreachable (fails open)", async () => {
+    verifyTurnstileMock.mockResolvedValue("unavailable");
+    rpcMock.mockResolvedValue({ data: [{ buy_requirement_id: "r1", rate_limited: false }], error: null });
+
+    const result = await postBuyRequirement(validInput);
+
+    expect(rpcMock).toHaveBeenCalledWith("create_buy_requirement", expect.anything());
+    expect(result.ok).toBe(true);
   });
 
   it("maps an unknown category (FK violation) to a categoryId field error, not a server error", async () => {

@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { readVerifiedImage, type VerifiedImage } from "@/lib/image-signature";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { deleteFromR2, uploadToR2 } from "@/lib/storage/r2";
 
@@ -39,7 +40,13 @@ export type SubmitProductResult =
   | { ok: true; productId: string; status: string }
   | {
       ok: false;
-      code: "not_signed_in" | "invalid_input" | "company_not_approved" | "upload_failed" | "server_error";
+      code:
+        | "not_signed_in"
+        | "invalid_input"
+        | "company_not_approved"
+        | "rate_limited"
+        | "upload_failed"
+        | "server_error";
       message: string;
       fieldErrors?: Record<string, string>;
     };
@@ -48,6 +55,15 @@ const NOT_APPROVED_RESULT: SubmitProductResult = {
   ok: false,
   code: "company_not_approved",
   message: "Your business needs to be approved before you can submit products.",
+};
+
+/** Must match create_product_submission's P0010 cap (20260925050000). */
+const PRODUCTS_PER_HOUR = 30;
+
+const RATE_LIMITED_RESULT: SubmitProductResult = {
+  ok: false,
+  code: "rate_limited",
+  message: `You've submitted ${PRODUCTS_PER_HOUR} products in the last hour. Please wait a little before adding more.`,
 };
 
 const SERVER_ERROR_RESULT: SubmitProductResult = {
@@ -107,22 +123,43 @@ export async function submitProduct(input: SubmitProductInput): Promise<SubmitPr
 
   const { data: company, error: companyError } = await supabaseAdmin
     .from("companies")
-    .select("status")
+    .select("id, status")
     .eq("clerk_user_id", userId)
     .maybeSingle();
 
   if (companyError) return SERVER_ERROR_RESULT;
   if (!company || company.status !== "approved") return NOT_APPROVED_RESULT;
 
+  // Early exit before any R2 upload (spec 0006, AC-6). Only a preflight:
+  // create_product_submission's own locked count (P0010) is authoritative.
+  const { count: recentCount, error: countError } = await supabaseAdmin
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", company.id)
+    .gt("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+
+  if (countError) return SERVER_ERROR_RESULT;
+  if ((recentCount ?? 0) >= PRODUCTS_PER_HOUR) return RATE_LIMITED_RESULT;
+
+  // Verify every file's real bytes before uploading any, so one disguised
+  // non-image never leaves the others orphaned in R2.
+  const verifiedImages = await Promise.all(images.map(readVerifiedImage));
+  if (verifiedImages.some((image) => image === null)) {
+    return {
+      ok: false,
+      code: "invalid_input",
+      message: "Please check the form and try again.",
+      fieldErrors: { images: "Images must be JPG, PNG, or WebP" },
+    };
+  }
+
   const uploadedKeys: string[] = [];
   let imageUrls: string[];
   try {
     imageUrls = await Promise.all(
-      images.map(async (file) => {
-        const ext = ALLOWED_IMAGE_TYPES[file.type];
-        const key = `${userId}/${crypto.randomUUID()}.${ext}`;
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const url = await uploadToR2("products", key, buffer, file.type);
+      (verifiedImages as VerifiedImage[]).map(async (image) => {
+        const key = `${userId}/${crypto.randomUUID()}.${image.ext}`;
+        const url = await uploadToR2("products", key, image.buffer, image.type);
         uploadedKeys.push(key);
         return url;
       }),
@@ -143,6 +180,7 @@ export async function submitProduct(input: SubmitProductInput): Promise<SubmitPr
   if (error) {
     await cleanupUploadedImages(uploadedKeys);
     if (error.code === "P0007") return NOT_APPROVED_RESULT;
+    if (error.code === "P0010") return RATE_LIMITED_RESULT;
     return SERVER_ERROR_RESULT;
   }
 

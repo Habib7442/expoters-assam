@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
+import { BOT_CHECK_FAILED_MESSAGE, readTurnstileToken, verifyTurnstile } from "@/lib/security/turnstile";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const buyRequirementSchema = z.object({
@@ -16,6 +17,7 @@ const buyRequirementSchema = z.object({
   notes: z.string().trim().max(1000).optional(),
   isPublic: z.boolean(),
   consent: z.boolean().refine((agreed) => agreed, "Please agree to the Privacy Policy to post your requirement"),
+  turnstileToken: z.string().optional(),
 });
 
 export type PostBuyRequirementInput = z.input<typeof buyRequirementSchema>;
@@ -24,7 +26,7 @@ export type PostBuyRequirementResult =
   | { ok: true; whatsappUrl: string | null }
   | {
       ok: false;
-      code: "invalid_input" | "rate_limited" | "server_error";
+      code: "invalid_input" | "bot_check_failed" | "rate_limited" | "server_error";
       message: string;
       fieldErrors?: Record<string, string>;
     };
@@ -38,6 +40,11 @@ export type PostBuyRequirementResult =
  * `sendEnquiry`, not a real outbound WhatsApp send.
  */
 export async function postBuyRequirement(input: PostBuyRequirementInput): Promise<PostBuyRequirementResult> {
+  // Bot check first (spec 0006): before validation or any write.
+  if ((await verifyTurnstile(readTurnstileToken(input?.turnstileToken))) === "failed") {
+    return { ok: false, code: "bot_check_failed", message: BOT_CHECK_FAILED_MESSAGE };
+  }
+
   const parsed = buyRequirementSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};

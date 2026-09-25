@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 
 import { sendEnquiry, type SendEnquiryResult } from "@/lib/actions/send-enquiry"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
 
 type SendEnquiryDialogProps = {
   target:
@@ -38,6 +39,8 @@ export function SendEnquiryDialog({
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<SendEnquiryResult | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null)
 
   const targetName = target.type === "product" ? target.productName : target.companyName
 
@@ -50,6 +53,7 @@ export function SendEnquiryDialog({
         email: String(formData.get("email") ?? ""),
         message: String(formData.get("message") ?? ""),
         consent: formData.get("consent") === "on",
+        turnstileToken: turnstileToken ?? undefined,
       }
       const response = await sendEnquiry(
         target.type === "product"
@@ -57,6 +61,8 @@ export function SendEnquiryDialog({
           : { targetType: "company", companyId: target.companyId, companyName: target.companyName, ...contact },
       )
       setResult(response)
+      // The token was consumed by this attempt; get a fresh one for a retry.
+      if (!response.ok) turnstileRef.current?.reset()
     })
   }
 
@@ -171,6 +177,8 @@ export function SendEnquiryDialog({
                 purpose="record this enquiry and let the supplier contact me about it"
                 error={fieldErrors?.consent}
               />
+
+              <TurnstileWidget ref={turnstileRef} onToken={setTurnstileToken} />
             </div>
 
             {topLevelError && <p className="text-sm text-destructive">{topLevelError}</p>}
