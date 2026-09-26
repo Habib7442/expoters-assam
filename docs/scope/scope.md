@@ -195,10 +195,10 @@ A basic stand in already works: the header and hero search do a plain name match
 **Done when:** search returns relevant results tolerant of common typos and updates as the user types.
 **Decided 2026-09-26 by the engineer:** typo tolerant search via Postgres trigram matching (`pg_trgm`), with suggestions as you type. No embeddings or semantic matching for now; that stays a possible later add on.
 - [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
-- [ ] Build it: `/develop ai-powered search` (code written 2026-09-26; waiting on `supabase db push` for migration `20260926030000_add_trigram_search.sql`)
+- [x] Build it: `/develop ai-powered search` (2026-09-26, migration `20260926030000_add_trigram_search.sql` applied)
   - [x] Ranked typo tolerant search on /products, /companies, /buy-requirements (code in `lib/supabase/queries/search.ts`)
   - [x] Suggestions as you type under the home page search (code in `app/api/search/suggest/route.ts`, `components/hero-search.tsx`)
-  - [ ] Migration applied to the live database and checked
+  - [x] Migration applied to the live database and checked as the anon role ("DELA" finds DELTA X500, "Locllify" finds Locallify, `%` and blank match nothing; no public buy requirements yet to match)
 
 ### 13. SEO & GEO · done
 Sitemap, per-page metadata and structured data, clean URLs, and AI-crawler readiness, per PRD Sections 8 to 9 and the installed `seo-aeo-best-practices` skill.
