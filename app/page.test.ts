@@ -29,6 +29,11 @@ vi.mock("next/link", () => ({
     createElement("a", { href, ...rest }, children),
 }));
 // A client component that needs the router; its own behavior is not under test here.
+// Imports a server action (and so the service role client); the dialog's own
+// behavior is covered by the send enquiry tests, not here.
+vi.mock("@/components/send-enquiry-dialog", () => ({
+  SendEnquiryDialog: () => createElement("button", { "data-send-enquiry": true }, "Respond"),
+}));
 vi.mock("@/components/hero-search", () => ({
   HeroSearch: () => createElement("div", { "data-hero-search": true }),
 }));

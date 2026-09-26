@@ -134,6 +134,12 @@ export default function PrivacyPage() {
               publicly, only the product, quantity, location, and date appear on the site; your name, phone
               number, and email never do.
             </p>
+            <p>
+              When a supplier responds to a public buy requirement, we save the response and offer a WhatsApp
+              link to our own team&apos;s number, pre-filled with the requirement&apos;s reference and product.
+              Our team then introduces the supplier and the buyer. The buyer&apos;s contact details are never
+              shown on the site or handed to the supplier automatically.
+            </p>
           </section>
 
           <section className="flex flex-col gap-2">

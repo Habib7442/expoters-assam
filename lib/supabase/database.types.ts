@@ -572,6 +572,20 @@ export type Database = {
           rate_limited: boolean
         }[]
       }
+      create_buy_requirement_enquiry: {
+        Args: {
+          p_buy_requirement_id: string
+          p_consent_notice_version: string
+          p_email: string
+          p_message: string
+          p_name: string
+          p_phone: string
+        }
+        Returns: {
+          enquiry_id: string
+          rate_limited: boolean
+        }[]
+      }
       create_category: {
         Args: { p_image_url?: string; p_name: string }
         Returns: {

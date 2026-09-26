@@ -25,6 +25,7 @@ type SendEnquiryDialogProps = {
   target:
     | { type: "product"; productId: string; productName: string }
     | { type: "company"; companyId: string; companyName: string }
+    | { type: "buy_requirement"; buyRequirementId: string; productText: string }
   triggerClassName?: string
   triggerLabel?: React.ReactNode
   triggerSize?: "default" | "xs" | "sm" | "lg" | "icon"
@@ -42,7 +43,11 @@ export function SendEnquiryDialog({
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const turnstileRef = useRef<TurnstileWidgetHandle>(null)
 
-  const targetName = target.type === "product" ? target.productName : target.companyName
+  const targetName =
+    target.type === "product" ? target.productName : target.type === "company" ? target.companyName : target.productText
+  // A reply to a buy requirement goes to the platform team, who introduce
+  // the two sides; the buyer's own contact details are never shown.
+  const isReply = target.type === "buy_requirement"
 
   // A plain onSubmit handler, not <form action={fn}>: React resets every
   // uncontrolled field when a form action starts, which would wipe what the
@@ -64,7 +69,14 @@ export function SendEnquiryDialog({
       const response = await sendEnquiry(
         target.type === "product"
           ? { targetType: "product", productId: target.productId, productName: target.productName, ...contact }
-          : { targetType: "company", companyId: target.companyId, companyName: target.companyName, ...contact },
+          : target.type === "company"
+            ? { targetType: "company", companyId: target.companyId, companyName: target.companyName, ...contact }
+            : {
+                targetType: "buy_requirement",
+                buyRequirementId: target.buyRequirementId,
+                productText: target.productText,
+                ...contact,
+              },
       )
       setResult(response)
       // The token was consumed by this attempt; get a fresh one for a retry.
@@ -96,11 +108,15 @@ export function SendEnquiryDialog({
         {result?.ok ? (
           <div className="flex flex-col gap-4">
             <DialogHeader>
-              <DialogTitle>Enquiry sent</DialogTitle>
+              <DialogTitle>{isReply ? "Response sent" : "Enquiry sent"}</DialogTitle>
               <DialogDescription>
-                {result.whatsappUrl
-                  ? "We've received your enquiry. Continue on WhatsApp to hear back fastest."
-                  : "We've received your enquiry. The supplier will get in touch soon."}
+                {isReply
+                  ? result.whatsappUrl
+                    ? "We've received your response. Continue on WhatsApp and our team will introduce you to the buyer."
+                    : "We've received your response. Our team will introduce you to the buyer soon."
+                  : result.whatsappUrl
+                    ? "We've received your enquiry. Continue on WhatsApp to hear back fastest."
+                    : "We've received your enquiry. The supplier will get in touch soon."}
               </DialogDescription>
             </DialogHeader>
             {result.whatsappUrl && (
@@ -120,9 +136,9 @@ export function SendEnquiryDialog({
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <DialogHeader>
-              <DialogTitle>Send an enquiry</DialogTitle>
+              <DialogTitle>{isReply ? "Respond to this requirement" : "Send an enquiry"}</DialogTitle>
               <DialogDescription className="line-clamp-2">
-                About &quot;{targetName}&quot;
+                {isReply ? "Buyer is looking for" : "About"} &quot;{targetName}&quot;
               </DialogDescription>
             </DialogHeader>
 
@@ -174,13 +190,21 @@ export function SendEnquiryDialog({
                   id="enquiry-message"
                   name="message"
                   rows={3}
-                  placeholder="Quantity needed, delivery location, questions..."
+                  placeholder={
+                    isReply
+                      ? "Your company, what you can supply, price range, lead time..."
+                      : "Quantity needed, delivery location, questions..."
+                  }
                 />
               </div>
 
               <ConsentCheckbox
                 id="enquiry-consent"
-                purpose="record this enquiry and help me contact the supplier on WhatsApp"
+                purpose={
+                  isReply
+                    ? "record this response and help the Exporters Assam team connect me with the buyer on WhatsApp"
+                    : "record this enquiry and help me contact the supplier on WhatsApp"
+                }
                 error={fieldErrors?.consent}
               />
 
@@ -191,7 +215,7 @@ export function SendEnquiryDialog({
 
             <DialogFooter>
               <Button type="submit" disabled={pending || (TURNSTILE_ENABLED && !turnstileToken)} className="w-full rounded-full sm:w-auto">
-                {pending ? "Sending..." : "Send Enquiry"}
+                {pending ? "Sending..." : isReply ? "Send Response" : "Send Enquiry"}
               </Button>
             </DialogFooter>
           </form>

@@ -306,6 +306,7 @@ export default async function Home() {
               {latestBuyRequirements.map((requirement) => (
                 <BuyRequirementCard
                   key={requirement.id}
+                  id={requirement.id}
                   productText={requirement.productText}
                   quantity={requirement.quantity}
                   location={requirement.location}

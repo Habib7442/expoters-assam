@@ -239,6 +239,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
               {buyRequirements.map((requirement) => (
                 <BuyRequirementCard
                   key={requirement.id}
+                  id={requirement.id}
                   productText={requirement.productText}
                   quantity={requirement.quantity}
                   location={requirement.location}

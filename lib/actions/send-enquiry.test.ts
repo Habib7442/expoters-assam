@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const rpcMock = vi.fn();
 vi.mock("@/lib/supabase/admin", () => ({
@@ -213,6 +213,91 @@ describe("sendEnquiry", () => {
       expect(url.searchParams.get("text")).toBe(
         "Hi, I'm interested in working with Avadi Herbs India Pvt Ltd on Exporters Assam.",
       );
+    });
+  });
+
+  // Feature 9, buy requirement half: a reply goes to the platform's own
+  // number (PLATFORM_WHATSAPP_NUMBER), never to the posting buyer.
+  describe("reply to a buy requirement", () => {
+    const BUY_REQUIREMENT_ID = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
+    const replyInput: SendEnquiryInput = {
+      targetType: "buy_requirement",
+      buyRequirementId: BUY_REQUIREMENT_ID,
+      productText: "Assam CTC Tea, 5 MT",
+      name: "Ravi Supplier",
+      phone: "+91 98765 43210",
+      consent: true,
+    };
+
+    function rpcReturnsReplyRow(row: { rate_limited: boolean }) {
+      // create_buy_requirement_enquiry returns no whatsapp_number column.
+      rpcMock.mockResolvedValue({ data: [{ enquiry_id: "e1", ...row }], error: null });
+    }
+
+    beforeEach(() => {
+      vi.stubEnv("PLATFORM_WHATSAPP_NUMBER", "+919577772757");
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it("writes through create_buy_requirement_enquiry with the requirement id and consent version", async () => {
+      rpcReturnsReplyRow({ rate_limited: false });
+
+      await sendEnquiry(replyInput);
+
+      expect(rpcMock).toHaveBeenCalledWith("create_buy_requirement_enquiry", {
+        p_phone: expect.any(String),
+        p_name: "Ravi Supplier",
+        p_email: null,
+        p_message: null,
+        p_consent_notice_version: CONSENT_NOTICE_VERSION,
+        p_buy_requirement_id: BUY_REQUIREMENT_ID,
+      });
+    });
+
+    it("links to the platform's number with the BR reference and the product, never a buyer's number", async () => {
+      rpcReturnsReplyRow({ rate_limited: false });
+
+      const result = await sendEnquiry({ ...replyInput, message: "We can ship in 2 weeks & quote FOB." });
+
+      const url = new URL(result.ok ? (result.whatsappUrl ?? "") : "");
+      expect(url.origin + url.pathname).toBe("https://wa.me/919577772757");
+      expect(url.searchParams.get("text")).toBe(
+        "Hi, I'd like to respond to buy requirement BR-1A2B3C4D on Exporters Assam: Assam CTC Tea, 5 MT. " +
+          "We can ship in 2 weeks & quote FOB.",
+      );
+    });
+
+    it("still succeeds, with no link, when the platform number is not configured", async () => {
+      vi.stubEnv("PLATFORM_WHATSAPP_NUMBER", "");
+      rpcReturnsReplyRow({ rate_limited: false });
+
+      await expect(sendEnquiry(replyInput)).resolves.toEqual({ ok: true, whatsappUrl: null });
+    });
+
+    it("maps P0002 (a private or deleted requirement) to the buy requirement wording", async () => {
+      rpcMock.mockResolvedValue({ data: null, error: { code: "P0002", message: "buy_requirement_not_found" } });
+
+      await expect(sendEnquiry(replyInput)).resolves.toEqual({
+        ok: false,
+        code: "not_found",
+        message: "This buy requirement is no longer open.",
+      });
+    });
+
+    it("reports a rate limited reply with no link", async () => {
+      rpcReturnsReplyRow({ rate_limited: true });
+
+      await expect(sendEnquiry(replyInput)).resolves.toMatchObject({ ok: false, code: "rate_limited" });
+    });
+
+    it("rejects a requirement id that is not a uuid before calling the database", async () => {
+      const result = await sendEnquiry({ ...replyInput, buyRequirementId: "not-a-uuid" });
+
+      expect(result).toMatchObject({ ok: false, code: "invalid_input" });
+      expect(rpcMock).not.toHaveBeenCalled();
     });
   });
 

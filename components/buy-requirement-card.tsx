@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Clock, MapPin, Package, ArrowRight } from "lucide-react";
 
+import { SendEnquiryDialog } from "@/components/send-enquiry-dialog";
+
 type BuyRequirementCardProps = {
+  id: string;
   productText: string;
   quantity: string;
   location: string | null;
@@ -9,6 +12,7 @@ type BuyRequirementCardProps = {
 };
 
 export function BuyRequirementCard({
+  id,
   productText,
   quantity,
   location,
@@ -55,17 +59,22 @@ export function BuyRequirementCard({
         </div>
       </div>
 
-      {/* This starts a *new* buyer requirement, prefilled with this one's
-          product. There is no supplier-to-buyer quote flow (buyer contact
-          details are private by design), so the label says what actually
-          happens rather than implying the visitor is quoting this lead. */}
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/60 pt-3 text-xs">
-        <span className="min-w-0 truncate text-[11px] text-muted-foreground">Assam Trade Enquiry</span>
+      {/* "Respond" sends a supplier's reply to the platform team, who
+          introduce the two sides (feature 9); the buyer's contact details
+          stay private. "Post similar" starts a *new* requirement, prefilled
+          with this one's product. */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border/60 pt-3 text-xs">
+        <SendEnquiryDialog
+          target={{ type: "buy_requirement", buyRequirementId: id, productText }}
+          triggerLabel="Respond"
+          triggerSize="sm"
+          triggerClassName="rounded-full px-4"
+        />
         <Link
           href={`/buy-requirements/new?product=${encodeURIComponent(productText)}`}
           className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap font-semibold text-green transition-colors hover:text-green-deep"
         >
-          <span>Post similar requirement</span>
+          <span>Post similar</span>
           <ArrowRight className="size-3" />
         </Link>
       </div>
