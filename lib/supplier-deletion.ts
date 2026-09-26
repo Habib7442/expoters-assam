@@ -11,8 +11,13 @@ export type SupplierDeletionResult = { companyDeleted: boolean; imagesDeleted: n
  * outlive the account. Deleting the company cascades to its products,
  * WhatsApp contact and memberships; enquiries keep their own row with the
  * company link set to null (they are the buyer's data, on their own
- * retention clock). Images are deleted from R2 after the rows, best effort:
- * a leftover image is unreachable once nothing links to it.
+ * retention clock).
+ *
+ * Images are deleted from R2 *before* the rows, and any failure throws: an
+ * image outlives its row at a still-public URL, and once the row is gone a
+ * retried webhook can no longer find its key. Throwing leaves the row in
+ * place, so the webhook answers 5xx, Clerk retries, and the retry deletes
+ * whatever is left (deleting an already-deleted R2 key succeeds).
  *
  * Idempotent: a user with no company, or a retried webhook, is a no-op.
  */
@@ -32,22 +37,15 @@ export async function deleteSupplierData(clerkUserId: string): Promise<SupplierD
     for (const url of product.gallery_urls ?? []) imageUrls.add(url);
   }
 
+  const keys = [...imageUrls].map(parseR2Url).filter((parsed) => parsed !== null);
+  const deletions = await Promise.allSettled(keys.map(({ category, key }) => deleteFromR2(category, key)));
+  const failed = deletions.filter((deletion) => deletion.status === "rejected").length;
+  if (failed > 0) {
+    throw new Error(`${failed} of ${keys.length} images could not be deleted; keeping the listing so a retry can finish`);
+  }
+
   const { error: deleteError } = await supabaseAdmin.from("companies").delete().eq("id", company.id);
   if (deleteError) throw deleteError;
 
-  let imagesDeleted = 0;
-  await Promise.all(
-    [...imageUrls].map(async (url) => {
-      const parsed = parseR2Url(url);
-      if (!parsed) return;
-      try {
-        await deleteFromR2(parsed.category, parsed.key);
-        imagesDeleted++;
-      } catch {
-        // best effort only
-      }
-    }),
-  );
-
-  return { companyDeleted: true, imagesDeleted };
+  return { companyDeleted: true, imagesDeleted: keys.length };
 }

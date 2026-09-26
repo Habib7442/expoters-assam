@@ -41,7 +41,7 @@ describe("deleteSupplierData", () => {
     expect(deleteFromR2Mock).not.toHaveBeenCalled();
   });
 
-  it("deletes the company row, then every logo and product image once", async () => {
+  it("deletes every logo and product image once, then the company row", async () => {
     lookupMock.mockResolvedValue({
       data: {
         id: "c1",
@@ -76,19 +76,40 @@ describe("deleteSupplierData", () => {
     expect(result).toEqual({ companyDeleted: true, imagesDeleted: 0 });
   });
 
-  it("still reports the company deleted when an image delete fails (best effort)", async () => {
+  it("deletes the images before the row, so a failed row delete never strands an image", async () => {
+    const order: string[] = [];
     lookupMock.mockResolvedValue({ data: { id: "c1", logo_url: `${R2}/logos/user_1/logo.png`, products: [] }, error: null });
-    deleteFromR2Mock.mockRejectedValue(new Error("network"));
+    deleteFromR2Mock.mockImplementation(async () => void order.push("image"));
+    deleteEqMock.mockImplementation(async () => {
+      order.push("row");
+      return { error: null };
+    });
 
-    await expect(deleteSupplierData("user_1")).resolves.toEqual({ companyDeleted: true, imagesDeleted: 0 });
+    await deleteSupplierData("user_1");
+
+    expect(order).toEqual(["image", "row"]);
   });
 
-  it("throws, deleting no images, when the company delete fails, so the webhook is retried", async () => {
+  it("keeps the company row and throws when any image delete fails, so the retried webhook can still find the images", async () => {
+    lookupMock.mockResolvedValue({
+      data: {
+        id: "c1",
+        logo_url: `${R2}/logos/user_1/logo.png`,
+        products: [{ image_url: `${R2}/products/user_1/a.png`, gallery_urls: [] }],
+      },
+      error: null,
+    });
+    deleteFromR2Mock.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("network"));
+
+    await expect(deleteSupplierData("user_1")).rejects.toThrow("1 of 2 images could not be deleted");
+    expect(deleteEqMock).not.toHaveBeenCalled();
+  });
+
+  it("throws when the company delete fails, so the webhook is retried", async () => {
     lookupMock.mockResolvedValue({ data: { id: "c1", logo_url: `${R2}/logos/user_1/logo.png`, products: [] }, error: null });
     deleteEqMock.mockResolvedValue({ error: { message: "boom" } });
 
     await expect(deleteSupplierData("user_1")).rejects.toEqual({ message: "boom" });
-    expect(deleteFromR2Mock).not.toHaveBeenCalled();
   });
 
   it("throws when the lookup fails", async () => {
