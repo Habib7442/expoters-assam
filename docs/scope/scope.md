@@ -24,7 +24,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 9 | Enquiries on companies & buy requirements | Slice 3 | in-progress |
 | 10 | Supplier business listing | Slice 3 | in-progress |
 | 11 | Membership plans & Razorpay | Slice 4 | planned · deferred |
-| 12 | AI-powered / semantic search | Slice 5 | planned · needs a decision |
+| 12 | AI-powered / semantic search | Slice 5 | planned |
 | 13 | SEO & GEO | Slice 5 | planned |
 | 14 | PostHog analytics | Slice 5 | planned |
 | 15 | Cloudflare R2 image storage | Infrastructure | in-progress |
@@ -32,6 +32,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 17 | Form abuse protection | Infrastructure | in-progress |
 | 18 | Legal pages & DPDP compliance | Infrastructure | in-progress |
 | 19 | Go live configuration | Infrastructure | planned |
+| 20 | About, Contact & FAQ pages | Infrastructure | planned |
 
 ## Foundations
 
@@ -90,7 +91,7 @@ Each supplier's profile page: logo, about, location, product range, verified bad
 - [x] Verify it: `/check verify company profile pages`
 - [x] Test it: `/test company profile pages`
 - [x] Review it (fresh model): `/check review company profile pages`
-- [ ] Document it: `/document company profile pages`
+- [x] Document it: `/document company profile pages`
 code in `supabase/migrations/20260909033000_add_company_slug.sql`, `lib/supabase/queries/companies.ts`, `app/companies/[slug]/page.tsx`, `components/exporter-card.tsx`, `app/products/[slug]/page.tsx`, `lib/supabase/queries/home.ts`, `lib/supabase/queries/products.ts`, `scripts/seed-demo.ts`
 
 ### 6. Listings, categories & country filters · in-progress · needs a decision
@@ -102,7 +103,7 @@ code in `app/products/page.tsx`, `app/companies/page.tsx`, `app/buy-requirements
 
 ### 7. Home page · in-progress
 Hero with search bar, quick stats (verified exporters, products, buyers, countries connected), featured products/exporters, latest buy requirements, and entry actions ("List Your Business Free", "Post Buy Requirement").
-**Done when:** the home page shows real counts and real featured content pulled from Supabase, not placeholders.
+**Done when:** the home page shows real featured content pulled from Supabase, not placeholders. The stats strip (AC-9) was dropped on 2026-09-26 by the engineer; see spec 0002.
 - [x] Design it (spec): `/architect home page`
 - [x] Build it: `/develop home page`
    - [x] Navbar (top bar + sticky header) and hero section, static/placeholder data (AC-1, AC-2, AC-3, AC-4)
@@ -112,10 +113,10 @@ Hero with search bar, quick stats (verified exporters, products, buyers, countri
    - [x] Category tile, product card, exporter card, buy requirement card components (AC-5, AC-6, AC-7, AC-8, AC-10)
    - [x] Wire category grid, featured products, featured exporters, latest buy requirements into `app/page.tsx`, parallel fetched, each section omitted on its own failure (AC-5, AC-6, AC-7, AC-8, AC-11)
    - [x] Real stats strip numbers from `directory_stats` (AC-9) — strip markup didn't exist yet, built it as part of this task
-- [ ] Verify it: `/check verify home page`
-- [ ] Test it: `/test home page`
-- [ ] Review it (fresh model): `/check review home page`
-- [ ] Document it: `/document home page`
+- [x] Verify it: `/check verify home page` (2026-09-26: AC-9 dropped by the engineer; AC-11 proven by tests rather than a live forced error; the 8 and 6 caps untested live, too few rows)
+- [x] Test it: `/test home page`
+- [x] Review it (fresh model): `/check review home page`
+- [x] Document it: `/document home page`
 spec [0002](../specs/0002-home-page-navbar-hero/index.md) · code in `app/layout.tsx`, `components/site-header.tsx`, `components/site-footer.tsx`, `app/page.tsx`, `lib/supabase/queries/home.ts`, `components/category-tile.tsx`, `components/product-card.tsx`, `components/exporter-card.tsx`, `components/buy-requirement-card.tsx`
 
 ## Slice 3: capture more leads
@@ -140,7 +141,8 @@ Extend the Send Enquiry action already proven in the core loop (feature 4) to co
    - [x] `create_company_enquiry` RPC, mirroring `create_enquiry`'s rate limit/dedup/buyer-resolution shape
    - [x] `sendEnquiry`/`SendEnquiryDialog` generalized to a product/company target union
    - [x] Wired onto `/companies/[slug]`; live-verified via the RPC directly (dedup returns the same `enquiry_id`) and via the running dev server (button renders on both pages)
-- [ ] Build it (buy requirement half): needs a decision, not just a build — feature 8 now exists, but a buy requirement has no public company-style WhatsApp contact to route to; the only recipient is the posting buyer's own phone number, which is private PII (`buyers` has no RLS policy at all, unlike a company's public contact). Handing that number to any anonymous visitor who clicks "enquire," or exposing it via a wa.me link, is a materially different privacy posture than the product/company cases and isn't specified in AGENTS.md/PRD. Route to `/architect` before building: who actually receives this enquiry, and how.
+- [x] Design it (spec): decided 2026-09-26 by the engineer, no `docs/specs/` entry: a supplier's reply to a buy requirement goes to the platform's own WhatsApp number (`PLATFORM_WHATSAPP_NUMBER`) with the requirement reference, and the client's team introduces the two sides. The buyer's phone is never shown to anyone.
+- [ ] Build it (buy requirement half): `/develop enquiries on buy requirements`. Original blocker, kept for history: needs a decision, not just a build — feature 8 now exists, but a buy requirement has no public company-style WhatsApp contact to route to; the only recipient is the posting buyer's own phone number, which is private PII (`buyers` has no RLS policy at all, unlike a company's public contact). Handing that number to any anonymous visitor who clicks "enquire," or exposing it via a wa.me link, is a materially different privacy posture than the product/company cases and isn't specified in AGENTS.md/PRD. Route to `/architect` before building: who actually receives this enquiry, and how.
 code in `supabase/migrations/20260909040000_add_company_enquiry.sql`, `lib/actions/send-enquiry.ts`, `components/send-enquiry-dialog.tsx`, `app/companies/[slug]/page.tsx`, `app/products/[slug]/page.tsx`
 
 ### 10. Supplier business listing · in-progress
@@ -183,11 +185,13 @@ Basic/Silver/Gold tiers; a supplier upgrades and pays via Razorpay; a successful
 
 ## Slice 5: findability
 
-### 12. AI-powered / semantic search · needs a decision
+### 12. AI-powered / semantic search · planned
 Fast product/company search with spelling tolerance and instant suggestions, built on Supabase semantic matching, not a third party search SaaS.
 A basic stand in already works: the header and hero search do a plain name match (`ilike`) on products, companies, and buy requirements. No typo tolerance or semantic matching yet; that is what this feature still owes.
 **Done when:** search returns relevant results tolerant of common typos and updates as the user types.
-- [ ] Design it (spec): `/architect ai-powered search`
+**Decided 2026-09-26 by the engineer:** typo tolerant search via Postgres trigram matching (`pg_trgm`), with suggestions as you type. No embeddings or semantic matching for now; that stays a possible later add on.
+- [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
+- [ ] Build it: `/develop ai-powered search`
 
 ### 13. SEO & GEO · planned
 Sitemap, per-page metadata and structured data, clean URLs, and AI-crawler readiness, per PRD Sections 8 to 9 and the installed `seo-aeo-best-practices` skill.
@@ -246,9 +250,14 @@ Privacy Policy and Terms pages, an explicit consent checkbox on every form that 
 code in `app/privacy/page.tsx`, `app/terms/page.tsx`, `components/consent-checkbox.tsx`, `supabase/migrations/20260925010000_record_dpdp_consent.sql`, `supabase/migrations/20260925020000_add_personal_data_retention_job.sql`, `supabase/migrations/20260925060000_drop_consentless_create_overloads.sql`
 
 ### 19. Go live configuration · planned
-The production settings that have piled up as follow ups across specs, collected in one place so nothing is missed at launch: Clerk production instance, real Turnstile keys in Vercel (spec 0006), a Content Security Policy that allows `challenges.cloudflare.com` (spec 0006), the client's real platform WhatsApp number replacing the placeholder (feature 8), and all env vars set in Vercel.
+The production settings that have piled up as follow ups across specs, collected in one place so nothing is missed at launch: Clerk production instance, real Turnstile keys in Vercel (spec 0006), a Content Security Policy that allows `challenges.cloudflare.com` (spec 0006), the client's real platform WhatsApp number replacing the placeholder (feature 8; done 2026-09-26, `+919577772757` set in `.env.local` and locked, still to be copied into Vercel), and all env vars set in Vercel. Domains (`exportersasssm.com` for images) and the contact email `info@exportsassam.com` were confirmed correct and locked by the engineer on 2026-09-26; no change needed. The Turnstile site key rejects `localhost` (error 110200 in the dev log), so the production domain must be on its allowed hostnames list.
 **Done when:** a Vercel production build runs against production Clerk, real Turnstile keys, and the real WhatsApp number, with every form working end to end on the live domain.
 - [ ] Build it: `/develop go live configuration`
+
+### 20. About, Contact & FAQ pages · planned
+The footer links to `/about`, `/contact`, and `/faq`, and all three return 404 (found by `/check verify home page`, 2026-09-26). Build them from facts already on record (PRD, the company details in the footer, the enquiry and listing flows), never invented claims; anything only the client can supply (team, history, phone) is left as a clearly marked gap for them to fill.
+**Done when:** every footer link resolves to a real page with accurate content.
+- [ ] Build it: `/develop about, contact & faq pages`
 
 ## Legend
 

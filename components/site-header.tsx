@@ -44,7 +44,7 @@ const MOBILE_NAV_ITEMS = [
     href: "/products",
     description: "Agarwood, Tea, Spices & Organic",
     icon: Package,
-    color: "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-500/25",
+    color: "bg-green/15 text-green ring-1 ring-green/25",
     badge: null,
     badgeClass: "",
   },
@@ -53,7 +53,7 @@ const MOBILE_NAV_ITEMS = [
     href: "/companies",
     description: "Approved exporters and suppliers",
     icon: Building2,
-    color: "bg-teal-500/15 text-teal-700 dark:bg-teal-950 dark:text-teal-300 ring-1 ring-teal-500/25",
+    color: "bg-green-deep/10 text-green-deep ring-1 ring-green-deep/20",
     badge: null,
     badgeClass: "",
   },
@@ -62,16 +62,16 @@ const MOBILE_NAV_ITEMS = [
     href: "/buy-requirements",
     description: "Active buyer trade requests",
     icon: ClipboardList,
-    color: "bg-amber-500/15 text-amber-700 dark:bg-amber-950 dark:text-amber-300 ring-1 ring-amber-500/25",
+    color: "bg-gold/15 text-gold ring-1 ring-gold/30",
     badge: "Live Leads",
-    badgeClass: "bg-amber-50 text-amber-800 border-amber-200",
+    badgeClass: "bg-gold/10 text-gold border-gold/30",
   },
   {
     label: "Supplier Membership",
     href: "/membership",
     description: "Silver & Gold export benefits",
     icon: Crown,
-    color: "bg-yellow-500/15 text-gold dark:bg-yellow-950 dark:text-yellow-300 ring-1 ring-gold/30",
+    color: "bg-leaf/20 text-green-deep ring-1 ring-leaf/30",
     badge: "Plans",
     badgeClass: "bg-gold/15 text-gold border-gold/30",
   },
@@ -175,7 +175,7 @@ export function SiteHeader() {
                 {/* Header with Logo, Brand & Tagline */}
                 <SheetHeader className="border-b border-border bg-gradient-to-br from-green-wash/85 via-bg-soft to-background p-4 pr-12 text-left">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-green/20 bg-white p-1 shadow-xs">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-green/20 bg-background p-1 shadow-xs">
                       <Image
                         src="/logo.png"
                         alt="Exporters Assam"
@@ -200,7 +200,7 @@ export function SiteHeader() {
                 {/* Scrollable Main Area */}
                 <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
                   {/* Highlight Banner */}
-                  <div className="rounded-xl border border-leaf/25 bg-gradient-to-r from-green-wash/70 via-emerald-50/50 to-bg-soft p-3 shadow-2xs">
+                  <div className="rounded-xl border border-leaf/25 bg-gradient-to-r from-green-wash/70 via-green-wash/40 to-bg-soft p-3 shadow-2xs">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-green-deep">
                       <Sparkles className="size-3.5 text-gold shrink-0" />
                       <span>Assam&apos;s Global Gateway</span>
@@ -272,11 +272,11 @@ export function SiteHeader() {
                       <SheetClose
                         render={<Link href="/list-business" />}
                         nativeButton={false}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-green/25 transition-all hover:bg-green-deep active:scale-[0.99]"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm shadow-green/25 transition-all hover:bg-green-deep active:scale-[0.99]"
                       >
                         <Store className="size-4" />
                         <span>List Your Business</span>
-                        <span className="rounded bg-white/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                        <span className="rounded bg-primary-foreground/25 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
                           Free
                         </span>
                       </SheetClose>
@@ -285,7 +285,7 @@ export function SiteHeader() {
                       <SheetClose
                         render={<Link href="/buy-requirements/new" />}
                         nativeButton={false}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-green/30 bg-white px-4 py-2.5 text-sm font-semibold text-green-deep shadow-2xs transition-all hover:bg-green-wash/40 active:scale-[0.99]"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-green/30 bg-background px-4 py-2.5 text-sm font-semibold text-green-deep shadow-2xs transition-all hover:bg-green-wash/40 active:scale-[0.99]"
                       >
                         <FileText className="size-4 text-green" />
                         <span>Post Buy Requirement</span>
@@ -321,7 +321,7 @@ export function SiteHeader() {
                       <SheetClose
                         render={<Link href="/products/new" />}
                         nativeButton={false}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-green/25 transition-all hover:bg-green-deep active:scale-[0.99]"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm shadow-green/25 transition-all hover:bg-green-deep active:scale-[0.99]"
                       >
                         <Plus className="size-4" />
                         <span>Add New Product</span>
@@ -330,7 +330,7 @@ export function SiteHeader() {
                       <SheetClose
                         render={<Link href="/list-business" />}
                         nativeButton={false}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-foreground shadow-2xs transition-all hover:bg-muted active:scale-[0.99]"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground shadow-2xs transition-all hover:bg-muted active:scale-[0.99]"
                       >
                         <Store className="size-4 text-green" />
                         <span>My Business Profile</span>
@@ -339,7 +339,7 @@ export function SiteHeader() {
                       <SheetClose
                         render={<Link href="/buy-requirements/new" />}
                         nativeButton={false}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-green/30 bg-white px-4 py-2.5 text-sm font-medium text-green-deep transition-all hover:bg-green-wash/40 active:scale-[0.99]"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-green/30 bg-background px-4 py-2.5 text-sm font-medium text-green-deep transition-all hover:bg-green-wash/40 active:scale-[0.99]"
                       >
                         <FileText className="size-4 text-green" />
                         <span>Post Buy Requirement</span>

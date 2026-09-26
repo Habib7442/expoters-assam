@@ -16,16 +16,6 @@ import {
   getLatestBuyRequirements,
 } from "@/lib/supabase/queries/home";
 
-// Placeholder chip names, used only if the real categories fail to load.
-const FALLBACK_CATEGORY_CHIPS = [
-  "Agarwood Inoculation",
-  "Live Plants",
-  "Spices",
-  "Essential Oils",
-  "Tea",
-  "Handicrafts",
-];
-
 const VALUE_PROPS = [
   { icon: Globe, label: "Global Reach" },
   { icon: ShieldCheck, label: "Verified Businesses" },
@@ -67,26 +57,27 @@ export default async function Home() {
       getLatestBuyRequirements(5),
     ]);
 
-  const categoryChipNames =
-    categories && categories.length > 0
-      ? categories.map((category) => category.name)
-      : FALLBACK_CATEGORY_CHIPS;
-
   return (
     <main className="flex flex-1 flex-col bg-bg-soft w-full overflow-x-hidden">
-      <section className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-2 sm:px-6 sm:pt-8">
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {categoryChipNames.map((chip) => (
-            <Badge
-              key={chip}
-              variant="secondary"
-              className="h-auto shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium sm:px-3 sm:py-1.5 sm:text-xs"
-            >
-              {chip}
-            </Badge>
-          ))}
-        </div>
-      </section>
+      {categories && categories.length > 0 && (
+        <nav
+          aria-label="Categories"
+          className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-2 sm:px-6 sm:pt-8"
+        >
+          <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {categories.map((category) => (
+              <Link key={category.id} href={`/products?category=${category.slug}`} className="shrink-0">
+                <Badge
+                  variant="secondary"
+                  className="h-auto rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors hover:bg-green-wash sm:px-3 sm:py-1.5 sm:text-xs"
+                >
+                  {category.name}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
 
       <section className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8">
         <div className="grid gap-8 rounded-2xl bg-green-wash px-5 py-8 sm:rounded-[28px] sm:px-10 sm:py-14 lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:gap-y-10">

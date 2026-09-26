@@ -18,6 +18,9 @@ export function BuyRequirementCard({
     year: "numeric",
     month: "short",
     day: "numeric",
+    // The directory is India based; pin the zone so a requirement posted
+    // just after midnight IST isn't dated the day before on a UTC server.
+    timeZone: "Asia/Kolkata",
   });
 
   return (

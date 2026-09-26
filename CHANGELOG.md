@@ -18,11 +18,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the `company_contacts` table, which holds each supplier's WhatsApp number. It is never readable by the public role; only the server side enquiry function reads it (spec 0003).
 - Added a demo seed script (`npm run seed:demo`) that creates one approved company, contact, category, and product so the product page has real data to render in development.
 - Added tests for the enquiry action, the product query, and the product page (38 tests), each traced to spec 0003's acceptance criteria.
+- Added company profile pages at `/companies/[slug]`: logo (or the name's first letter), about text, location, product count, "Member since" year, Verified badge, Silver/Gold member badge, a grid of the company's approved products (newest first), and a Send Enquiry button aimed at the company. A company with no products yet gets an empty state with its own enquiry button. A missing or not yet approved company shows the 404 page. Home page exporter cards and the company block on product pages now link here.
+- Added a unique, URL safe `slug` to every company. Existing companies were backfilled without collisions, a new business listing gets its slug when it is created (a numeric suffix if the name is taken), and a rename never changes it.
+- Added tests for the company query helpers, the company profile page and its metadata, and the exporter card (43 tests).
+- Added tests for the home page and its query helpers (40 tests), including proof that one failing section never breaks the rest of the page (spec 0002).
+
+### Changed
+- The company profile query now filters for approved companies and approved products explicitly, as a second layer on top of Row Level Security, matching every other public read path.
+- The header now uses the design system colors throughout, replacing the default Tailwind palette in the mobile menu.
+
+### Removed
+- Removed two plain indexes on `companies.slug` and `products.slug` that duplicated the unique index each table already has, cutting write and storage cost with no effect on lookups.
+- Removed the home page stats strip (verified exporters, products, buyers, countries) and its query; with launch numbers this small it made the directory look empty (spec 0002, AC-9 dropped).
 
 ### Fixed
 - Fixed the Send Enquiry dialog wiping everything the buyer typed whenever a submission was rejected (a mistyped phone, a failed bot check, the rate limit); the form now keeps its values until the enquiry succeeds.
 - Fixed failed enquiry writes leaving no trace: a database error while saving an enquiry is now logged on the server (error code and message only, never the buyer's details), so a lost lead can be investigated.
 - Fixed buyer phone numbers typed with a leading `0` (the common Indian STD-prefixed form) or the international `00` dialing prefix being rejected outright instead of normalized, which previously failed the enquiry or buy-requirement submission that triggered it.
+- Fixed Featured Products on the home page showing fewer than 8 cards when some products had images outside the image host; the image check now happens in the query, before the limit (spec 0002).
+- Fixed home page category tiles counting products from approved but unverified companies, so a tile could promise more products than the category page it links to shows.
+- Fixed buy requirement dates following the server clock (UTC on Vercel); a requirement posted just after midnight in India now shows that day, not the day before.
+- Fixed the home page showing made up category names when categories failed to load; the chip row is now left out like every other section, and each chip links to its category.
 
 ### Security
 - Hardened the database privilege model so a table added by a future migration no longer inherits public write access by default; previously only tables that existed at the time of the initial migration were covered by the explicit privilege revoke.

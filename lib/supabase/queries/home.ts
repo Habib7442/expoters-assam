@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { isR2Url } from "@/lib/storage/r2";
+import { isR2Url, R2_PUBLIC_DOMAIN } from "@/lib/storage/r2";
 import { containsPattern } from "@/lib/supabase/like-pattern";
 
 export type CategoryWithCount = {
@@ -72,6 +72,9 @@ export async function getFeaturedProducts(limit: number): Promise<FeaturedProduc
     .eq("status", "approved")
     .eq("companies.status", "approved")
     .eq("companies.verified", true)
+    // Filter to our image host here, not only after the fetch, so the limit
+    // counts only products that can actually be shown (AC-6).
+    .like("image_url", `https://${R2_PUBLIC_DOMAIN}/products/%`)
     .order("created_at", { ascending: false })
     .order("id", { ascending: true })
     .limit(limit);
@@ -165,38 +168,4 @@ export async function getLatestBuyRequirements(
     location: row.location,
     createdAt: row.created_at,
   }));
-}
-
-export type DirectoryStats = {
-  verifiedExporters: number;
-  products: number;
-  buyers: number;
-  countries: number;
-};
-
-/** The hero's stats strip counts, read from the `directory_stats` view (AC-9). */
-export async function getDirectoryStats(): Promise<DirectoryStats | null> {
-  const { data, error } = await supabase
-    .from("directory_stats")
-    .select("verified_exporters, products, buyers, countries")
-    .maybeSingle();
-
-  if (error) {
-    console.error("getDirectoryStats failed", error);
-    return null;
-  }
-
-  // directory_stats is four independent scalar count() subqueries with no
-  // base FROM/GROUP BY, so it always returns exactly one row today (verified
-  // live) — this guard is for if that ever changes, not a currently
-  // reachable case. Same contract as every sibling function here: null
-  // means "hide the section," never a strip of real-looking zeros.
-  if (!data) return null;
-
-  return {
-    verifiedExporters: data.verified_exporters ?? 0,
-    products: data.products ?? 0,
-    buyers: data.buyers ?? 0,
-    countries: data.countries ?? 0,
-  };
 }
