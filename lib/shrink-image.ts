@@ -6,40 +6,40 @@
  * (`lib/image-signature.ts`); this only makes the upload small enough to
  * arrive.
  *
- * Returns the original file when it is already small, or when the browser
- * can't decode it (the server then rejects it with a proper field error).
+ * Never rejects: it returns the original file when it is already small, or
+ * when the browser can't decode or re-encode it (a canvas too large for a
+ * low memory phone, for one). The server then accepts it or rejects it with
+ * a proper field error, so a caller never has to guard this call.
  */
 export async function shrinkImage(file: File, maxDimension = 1600, quality = 0.82): Promise<File> {
   if (file.size <= 600 * 1024) return file;
 
-  let bitmap: ImageBitmap;
+  let bitmap: ImageBitmap | undefined;
   try {
     bitmap = await createImageBitmap(file);
+
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    // JPEG, not WebP: every browser can encode it (Safari's canvas can't
+    // encode WebP), and product photos don't need transparency.
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+    if (!blob || blob.size >= file.size) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], name, { type: "image/jpeg" });
   } catch {
     return file;
+  } finally {
+    bitmap?.close();
   }
-
-  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    bitmap.close();
-    return file;
-  }
-  context.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
-
-  // JPEG, not WebP: every browser can encode it (Safari's canvas can't
-  // encode WebP), and product photos don't need transparency.
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-  if (!blob || blob.size >= file.size) return file;
-
-  const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
-  return new File([blob], name, { type: "image/jpeg" });
 }
 
 /** Total request budget for one product submission's images, under the server action limit. */
