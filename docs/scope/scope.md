@@ -18,7 +18,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 3 | Design system tokens | Foundation | done |
 | 4 | Product page & Send Enquiry (core loop) | Skeleton | done |
 | 5 | Company profile pages | Slice 2 | done |
-| 6 | Listings, categories & country filters | Slice 2 | in-progress · needs a decision |
+| 6 | Listings, categories & country filters | Slice 2 | done |
 | 7 | Home page | Slice 2 | done |
 | 8 | Post Buy Requirement | Slice 3 | done |
 | 9 | Enquiries on companies & buy requirements | Slice 3 | in-progress |
@@ -94,12 +94,16 @@ Each supplier's profile page: logo, about, location, product range, verified bad
 - [x] Document it: `/document company profile pages`
 code in `supabase/migrations/20260909033000_add_company_slug.sql`, `lib/supabase/queries/companies.ts`, `app/companies/[slug]/page.tsx`, `components/exporter-card.tsx`, `app/products/[slug]/page.tsx`, `lib/supabase/queries/home.ts`, `lib/supabase/queries/products.ts`, `scripts/seed-demo.ts`
 
-### 6. Listings, categories & country filters · in-progress · needs a decision
+### 6. Listings, categories & country filters · done
 Browse products or companies by category, or by supplier location/country.
 Partly shipped without a spec: `/products` filters by category and a name search (both in the URL), and `/companies` and `/buy-requirements` have a name search. Still missing: any country/location filter, and a category filter on `/companies`. Companies now store state and country (migration `20260911060000`), so the remaining decision may be small enough to settle inline rather than in a full spec.
 **Done when:** a visitor can filter the product or company list by category and by country, and the URL reflects the active filter.
-- [ ] Design it (spec): `/architect listings, categories & country filters`
-code in `app/products/page.tsx`, `app/companies/page.tsx`, `app/buy-requirements/page.tsx`, `lib/supabase/queries/products.ts`, `lib/supabase/queries/companies.ts`, `lib/search-params.ts`
+- [x] Design it (spec): decided inline 2026-09-26, no `docs/specs/` entry: a `country` URL param on `/products` (the supplier's country) and `/companies`, a `category` param on `/companies` (has at least one approved product in it), chips shared via `FilterChips`, the country row shown only once two countries exist, countries normalized on save
+- [x] Build it: `/develop listings, categories & country filters`
+- [x] Verify it: live against the real data (category on companies returns only the company with products in it; country India and Bhutan; empty states and chip rows)
+- [x] Test it: query filters, both pages, chips, country normalization
+- [x] Review it (fresh model): approve with nits, fixes applied (`docs/reviews/2026-09-26-main-listing-filters.md`)
+code in `app/products/page.tsx`, `app/companies/page.tsx`, `components/filter-chips.tsx`, `lib/supabase/queries/products.ts`, `lib/supabase/queries/companies.ts`, `lib/country-codes.ts`, `lib/actions/business-listing.ts`
 
 ### 7. Home page · done
 Hero with search bar, quick stats (verified exporters, products, buyers, countries connected), featured products/exporters, latest buy requirements, and entry actions ("List Your Business Free", "Post Buy Requirement").
@@ -252,7 +256,7 @@ Privacy Policy and Terms pages, an explicit consent checkbox on every form that 
 code in `app/privacy/page.tsx`, `app/terms/page.tsx`, `components/consent-checkbox.tsx`, `supabase/migrations/20260925010000_record_dpdp_consent.sql`, `supabase/migrations/20260925020000_add_personal_data_retention_job.sql`, `supabase/migrations/20260925060000_drop_consentless_create_overloads.sql`
 
 ### 19. Go live configuration · planned
-The production settings that have piled up as follow ups across specs, collected in one place so nothing is missed at launch: Clerk production instance, real Turnstile keys in Vercel (spec 0006), a Content Security Policy that allows `challenges.cloudflare.com` (spec 0006), the client's real platform WhatsApp number replacing the placeholder (feature 8; done 2026-09-26, `+919577772757` set in `.env.local` and locked, still to be copied into Vercel), and all env vars set in Vercel. Domains (`exportersasssm.com` for images) and the contact email `info@exportsassam.com` were confirmed correct and locked by the engineer on 2026-09-26; no change needed. The Turnstile site key rejects `localhost` (error 110200 in the dev log), so the production domain must be on its allowed hostnames list. Also from the 2026-09-26 reviews: add a Clerk webhook endpoint `https://<domain>/api/webhooks/clerk` subscribed to `user.deleted` and put its signing secret in Vercel as `CLERK_WEBHOOK_SIGNING_SECRET` (without it, account deletion leaves the listing up); switch on Clerk's legal consent setting (Privacy Policy and Terms URLs) so sign up records agreement, as the Privacy Policy now says; and get the client to confirm the retention periods in `app/privacy/page.tsx` (marked `TODO(client)`, the 12 months is also in the purge SQL).
+The production settings that have piled up as follow ups across specs, collected in one place so nothing is missed at launch: Clerk production instance, real Turnstile keys in Vercel (spec 0006), a Content Security Policy that allows `challenges.cloudflare.com` (spec 0006), the client's real platform WhatsApp number replacing the placeholder (feature 8; done 2026-09-26, `+919577772757` set in `.env.local` and locked, still to be copied into Vercel), and all env vars set in Vercel. The live site is `https://www.exportersasssm.com` (locked 2026-09-26). Domains (`exportersasssm.com` for images) and the contact email `info@exportsassam.com` were confirmed correct and locked by the engineer on 2026-09-26; no change needed. The Turnstile site key rejects `localhost` (error 110200 in the dev log), so the production domain must be on its allowed hostnames list. Also from the 2026-09-26 reviews: add a Clerk webhook endpoint `https://www.exportersasssm.com/api/webhooks/clerk` subscribed to `user.deleted` and put its signing secret in Vercel as `CLERK_WEBHOOK_SIGNING_SECRET` (without it, account deletion leaves the listing up); switch on Clerk's legal consent setting (Privacy Policy and Terms URLs) so sign up records agreement, as the Privacy Policy now says; and get the client to confirm the retention periods in `app/privacy/page.tsx` (marked `TODO(client)`, the 12 months is also in the purge SQL).
 **Done when:** a Vercel production build runs against production Clerk, real Turnstile keys, and the real WhatsApp number, with every form working end to end on the live domain.
 - [ ] Build it: `/develop go live configuration`
 

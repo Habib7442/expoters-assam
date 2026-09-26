@@ -105,3 +105,14 @@ export function splitPhoneNumber(value: string): { countryCode: string; countryI
     localNumber: trimmed.replace(/^\+/, ""),
   };
 }
+
+/**
+ * The listing form's country is free text, but the directory's country filter
+ * matches it exactly, so "india" and "India" would otherwise become two
+ * filter chips. A case-insensitive match to a known country returns its
+ * canonical name; anything else is kept as typed, with spacing tidied.
+ */
+export function canonicalCountryName(value: string): string {
+  const tidy = value.trim().replace(/\s+/g, " ");
+  return COUNTRY_CODES.find((country) => country.name.toLowerCase() === tidy.toLowerCase())?.name ?? tidy;
+}

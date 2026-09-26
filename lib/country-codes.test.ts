@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { flagEmoji, splitPhoneNumber } from "./country-codes";
+import { canonicalCountryName, flagEmoji, splitPhoneNumber } from "./country-codes";
 
 describe("flagEmoji", () => {
   // Verified against the actual known flag glyphs, not just internal consistency.
@@ -56,5 +56,19 @@ describe("splitPhoneNumber", () => {
     const combined = "+919876543210";
     const { countryCode, localNumber } = splitPhoneNumber(combined);
     expect(`${countryCode}${localNumber}`).toBe(combined);
+  });
+});
+
+describe("canonicalCountryName", () => {
+  it.each([
+    ["india", "India"],
+    ["  INDIA ", "India"],
+    ["united   arab emirates", "United Arab Emirates"],
+  ])("maps %j to the known country %j", (typed, expected) => {
+    expect(canonicalCountryName(typed)).toBe(expected);
+  });
+
+  it("keeps an unknown country as typed, with spacing tidied", () => {
+    expect(canonicalCountryName("  Atlantis   Isles ")).toBe("Atlantis Isles");
   });
 });

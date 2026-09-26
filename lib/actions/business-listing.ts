@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { canonicalCountryName } from "@/lib/country-codes";
 import { hasValidPhoneDigitCount } from "@/lib/phone";
 import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
 import { readVerifiedImage, type VerifiedImage } from "@/lib/image-signature";
@@ -33,7 +34,7 @@ const baseFields = {
     .trim()
     .max(12, "Enter a valid PIN code")
     .optional(),
-  country: z.string().trim().min(2, "Enter a country").max(120),
+  country: z.string().trim().min(2, "Enter a country").max(120).transform(canonicalCountryName),
   about: z.string().trim().max(2000).optional(),
   email: z.string().trim().min(1, "Enter your business email").email("Enter a valid email address"),
   whatsappNumber,

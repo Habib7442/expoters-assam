@@ -66,8 +66,16 @@ export type CompanyListItem = {
   verified: boolean;
 };
 
+type GetCompaniesOptions = {
+  query?: string;
+  /** Only companies with at least one approved product in this category. */
+  categorySlug?: string;
+  country?: string;
+  limit?: number;
+};
+
 /**
- * Approved companies, most recent first, optionally filtered by name — the
+ * Approved companies, most recent first, optionally filtered by name, category and country: the
  * /companies directory page. Doesn't filter by `verified`: unlike the
  * products/featured-products copy ("verified exporters"), this page's copy
  * says "approved exporters" and shows the badge per-card, so an approved
@@ -77,13 +85,21 @@ export type CompanyListItem = {
  * means "the directory really has no matches," and a database failure must
  * not be reported to a visitor as that.
  */
-export async function getCompanies({ query, limit = 60 }: { query?: string; limit?: number } = {}): Promise<
+export async function getCompanies({ query, categorySlug, country, limit = 60 }: GetCompaniesOptions = {}): Promise<
   CompanyListItem[] | null
 > {
-  let filtered = supabase
-    .from("companies")
-    .select("id, slug, name, logo_url, location, country, verified")
-    .eq("status", "approved");
+  // A category filter needs the products embed as !inner so companies with
+  // no matching approved product drop out (same reasoning as getProducts);
+  // PostgREST still returns each company once.
+  let filtered = categorySlug
+    ? supabase
+        .from("companies")
+        .select("id, slug, name, logo_url, location, country, verified, products!inner(status, categories!inner(slug))")
+        .eq("status", "approved")
+        .eq("products.status", "approved")
+        .eq("products.categories.slug", categorySlug)
+    : supabase.from("companies").select("id, slug, name, logo_url, location, country, verified").eq("status", "approved");
+  if (country) filtered = filtered.eq("country", country);
   if (query) filtered = filtered.ilike("name", containsPattern(query));
 
   const { data, error } = await filtered
@@ -104,6 +120,27 @@ export async function getCompanies({ query, limit = 60 }: { query?: string; limi
     location: company.location ?? company.country,
     verified: company.verified,
   }));
+}
+
+/**
+ * The distinct countries of approved companies, alphabetical, for the
+ * country filter. Returns `null` on failure (the filter row is then just
+ * left out). Read through the anon client, so it only ever sees approved
+ * rows; fine while the directory has under 1000 approved companies
+ * (PostgREST max_rows), after which a grouped view would be the fix.
+ */
+export async function getCompanyCountries({ verifiedOnly = false }: { verifiedOnly?: boolean } = {}): Promise<
+  string[] | null
+> {
+  let filtered = supabase.from("companies").select("country").eq("status", "approved");
+  // /products only lists verified suppliers, so its chips must too, or a chip could lead to an empty page.
+  if (verifiedOnly) filtered = filtered.eq("verified", true);
+  const { data, error } = await filtered;
+  if (error) {
+    console.error("getCompanyCountries failed", error);
+    return null;
+  }
+  return [...new Set((data ?? []).map((row) => row.country).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 }
 
 export type CompanyProductSummary = {

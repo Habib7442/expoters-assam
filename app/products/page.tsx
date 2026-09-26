@@ -3,7 +3,8 @@ import Link from "next/link";
 
 import { getCategoriesWithProductCounts } from "@/lib/supabase/queries/home";
 import { getProducts, type ProductListItem } from "@/lib/supabase/queries/products";
-import { Badge } from "@/components/ui/badge";
+import { getCompanyCountries } from "@/lib/supabase/queries/companies";
+import { FilterChips } from "@/components/filter-chips";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/search-bar";
 import { firstParam, type SearchParamValue } from "@/lib/search-params";
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 type Props = {
-  searchParams: Promise<{ category?: SearchParamValue; q?: SearchParamValue }>;
+  searchParams: Promise<{ category?: SearchParamValue; country?: SearchParamValue; q?: SearchParamValue }>;
 };
 
 function ProductGrid({ products }: { products: ProductListItem[] }) {
@@ -43,11 +44,13 @@ function ProductGrid({ products }: { products: ProductListItem[] }) {
 export default async function ProductsPage({ searchParams }: Props) {
   const params = await searchParams;
   const category = firstParam(params.category);
+  const country = firstParam(params.country);
   const q = firstParam(params.q);
 
-  const [categories, products] = await Promise.all([
+  const [categories, countries, products] = await Promise.all([
     getCategoriesWithProductCounts(),
-    getProducts({ categorySlug: category, query: q }),
+    getCompanyCountries({ verifiedOnly: true }),
+    getProducts({ categorySlug: category, country, query: q }),
   ]);
 
   const activeCategory = category ? (categories ?? []).find((c) => c.slug === category) : null;
@@ -62,14 +65,23 @@ export default async function ProductsPage({ searchParams }: Props) {
   // one of them fails its section is simply omitted.
   const relaxed =
     products !== null && products.length === 0 && category && q
-      ? await Promise.all([getProducts({ query: q }), getProducts({ categorySlug: category })])
+      ? await Promise.all([getProducts({ query: q, country }), getProducts({ categorySlug: category, country })])
       : null;
   const matchingSearch = relaxed?.[0] ?? [];
   const matchingCategory = relaxed?.[1] ?? [];
-  const hasFilters = Boolean(category || q);
+  const hasFilters = Boolean(category || country || q);
+  // Same wording as /companies: every active filter is named, so the message never hides one.
+  const filterSummary = [
+    category && `in “${categoryLabel}”`,
+    country && `from ${country}`,
+    q && `matching “${q}”`,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const retryParams = new URLSearchParams();
   if (category) retryParams.set("category", category);
+  if (country) retryParams.set("country", country);
   if (q) retryParams.set("q", q);
   const retryHref = retryParams.size > 0 ? `/products?${retryParams.toString()}` : "/products";
 
@@ -87,35 +99,29 @@ export default async function ProductsPage({ searchParams }: Props) {
 
         <SearchBar placeholder="Search products..." className="mb-6 sm:mb-8" />
 
-        {categories && categories.length > 0 && (
-          <div className="mb-8 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link href={q ? `/products?q=${encodeURIComponent(q)}` : "/products"}>
-              <Badge
-                variant={!category ? "default" : "secondary"}
-                className="h-auto shrink-0 rounded-full px-3 py-1.5 text-xs font-medium"
-              >
-                All
-              </Badge>
-            </Link>
-            {categories.map((c) => (
-              <Link
-                key={c.id}
-                href={
-                  q
-                    ? `/products?category=${c.slug}&q=${encodeURIComponent(q)}`
-                    : `/products?category=${c.slug}`
-                }
-              >
-                <Badge
-                  variant={category === c.slug ? "default" : "secondary"}
-                  className="h-auto shrink-0 rounded-full px-3 py-1.5 text-xs font-medium"
-                >
-                  {c.name}
-                </Badge>
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="mb-8 flex flex-col gap-3">
+          {categories && categories.length > 0 && (
+            <FilterChips
+              basePath="/products"
+              param="category"
+              label="Category"
+              options={categories.map((c) => ({ value: c.slug, label: c.name }))}
+              active={category}
+              otherParams={{ country, q }}
+            />
+          )}
+          {/* One country is not a choice: the row appears once a second exists (or one is already picked). */}
+          {countries && (countries.length > 1 || country) && (
+            <FilterChips
+              basePath="/products"
+              param="country"
+              label="Country"
+              options={countries.map((c) => ({ value: c, label: c }))}
+              active={country}
+              otherParams={{ category, q }}
+            />
+          )}
+        </div>
 
         {products === null ? (
           <LoadFailedState what="products" retryHref={retryHref} />
@@ -125,13 +131,7 @@ export default async function ProductsPage({ searchParams }: Props) {
           <div className="flex flex-col gap-8">
             <div className="flex flex-col items-start gap-3">
               <p className="text-sm text-muted-foreground sm:text-base">
-                {category && q
-                  ? `No products in “${categoryLabel}” match “${q}”.`
-                  : q
-                    ? `No products match “${q}”.`
-                    : category
-                      ? `No products in “${categoryLabel}” yet.`
-                      : "No products found."}
+                {filterSummary ? `No products ${filterSummary}.` : "No products found."}
               </p>
               {hasFilters && (
                 <Button variant="outline" className="rounded-full" render={<Link href="/products" />} nativeButton={false}>
@@ -143,7 +143,7 @@ export default async function ProductsPage({ searchParams }: Props) {
             {matchingSearch.length > 0 && (
               <section className="flex flex-col gap-4">
                 <h2 className="font-heading text-lg font-semibold text-green-deep">
-                  Matching “{q}” in all categories
+                  Matching “{q}” in all categories{country ? ` from ${country}` : ""}
                 </h2>
                 <ProductGrid products={matchingSearch} />
               </section>
@@ -152,7 +152,7 @@ export default async function ProductsPage({ searchParams }: Props) {
             {matchingCategory.length > 0 && (
               <section className="flex flex-col gap-4">
                 <h2 className="font-heading text-lg font-semibold text-green-deep">
-                  All products in {categoryLabel}
+                  All products in {categoryLabel}{country ? ` from ${country}` : ""}
                 </h2>
                 <ProductGrid products={matchingCategory} />
               </section>

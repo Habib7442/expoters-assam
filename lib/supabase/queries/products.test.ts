@@ -172,3 +172,29 @@ describe("getProducts", () => {
     await expect(getProducts()).resolves.toBeNull();
   });
 });
+
+describe("getProducts country filter", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("filters on the supplier company's country, alongside the category and name filters", async () => {
+    const builder = builderResolvingTo({ data: [], error: null });
+    fromMock.mockReturnValue(builder);
+
+    await getProducts({ categorySlug: "tea", country: "India", query: "green" });
+
+    expect(builder.eq).toHaveBeenCalledWith("companies.country", "India");
+    expect(builder.eq).toHaveBeenCalledWith("categories.slug", "tea");
+    expect(builder.ilike).toHaveBeenCalledWith("name", "%green%");
+  });
+
+  it("applies no country filter when none is picked", async () => {
+    const builder = builderResolvingTo({ data: [], error: null });
+    fromMock.mockReturnValue(builder);
+
+    await getProducts({ categorySlug: "tea" });
+
+    expect(builder.eq).not.toHaveBeenCalledWith("companies.country", expect.anything());
+  });
+});

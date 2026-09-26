@@ -15,7 +15,7 @@ vi.mock("@/lib/storage/r2", () => ({
   isR2Url: (url: string) => url.startsWith("https://images.exportersasssm.com/"),
 }));
 
-import { getCompanies, getCompanyBySlug, getMyCompany } from "./companies";
+import { getCompanies, getCompanyBySlug, getCompanyCountries, getMyCompany } from "./companies";
 
 type Result = { data: unknown; error: { message: string } | null };
 
@@ -308,5 +308,67 @@ describe("getMyCompany", () => {
     adminFromMock.mockReturnValue(builderResolvingTo({ data: null, error }));
 
     await expect(getMyCompany("user_123")).rejects.toBe(error);
+  });
+});
+
+describe("getCompanies filters", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("filters by country on the company itself", async () => {
+    const builder = builderResolvingTo({ data: [], error: null });
+    fromMock.mockReturnValue(builder);
+
+    await getCompanies({ country: "India" });
+
+    expect(builder.eq).toHaveBeenCalledWith("status", "approved");
+    expect(builder.eq).toHaveBeenCalledWith("country", "India");
+  });
+
+  it("filters by category through an inner join on approved products only", async () => {
+    const builder = builderResolvingTo({ data: [], error: null });
+    fromMock.mockReturnValue(builder);
+
+    await getCompanies({ categorySlug: "tea" });
+
+    const [columns] = builder.select.mock.calls[0] as [string];
+    expect(columns).toContain("products!inner(status, categories!inner(slug))");
+    expect(builder.eq).toHaveBeenCalledWith("products.status", "approved");
+    expect(builder.eq).toHaveBeenCalledWith("products.categories.slug", "tea");
+  });
+
+  it("does not join products at all without a category filter", async () => {
+    const builder = builderResolvingTo({ data: [], error: null });
+    fromMock.mockReturnValue(builder);
+
+    await getCompanies({ country: "India" });
+
+    const [columns] = builder.select.mock.calls[0] as [string];
+    expect(columns).not.toContain("products");
+  });
+});
+
+describe("getCompanyCountries", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns each approved company's country once, alphabetically", async () => {
+    const builder = builderResolvingTo({
+      data: [{ country: "India" }, { country: "Bhutan" }, { country: "India" }],
+      error: null,
+    });
+    fromMock.mockReturnValue(builder);
+
+    await expect(getCompanyCountries()).resolves.toEqual(["Bhutan", "India"]);
+    expect(builder.eq).toHaveBeenCalledWith("status", "approved");
+  });
+
+  it("returns null on a database error, so the filter row is simply left out", async () => {
+    fromMock.mockReturnValue(builderResolvingTo({ data: null, error: { message: "boom" } }));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(getCompanyCountries()).resolves.toBeNull();
   });
 });

@@ -12,6 +12,8 @@ export type ProductListItem = {
 
 type GetProductsOptions = {
   categorySlug?: string;
+  /** The supplier's country, as stored on the company (e.g. "India"). */
+  country?: string;
   query?: string;
   limit?: number;
 };
@@ -36,6 +38,7 @@ type GetProductsOptions = {
  */
 export async function getProducts({
   categorySlug,
+  country,
   query,
   limit = 60,
 }: GetProductsOptions = {}): Promise<ProductListItem[] | null> {
@@ -47,6 +50,7 @@ export async function getProducts({
     : supabase.from("products").select("id, slug, name, image_url, companies!inner(name, status, verified)");
 
   let filtered = builder.eq("status", "approved").eq("companies.status", "approved").eq("companies.verified", true);
+  if (country) filtered = filtered.eq("companies.country", country);
   if (query) filtered = filtered.ilike("name", containsPattern(query));
 
   const { data, error } = await filtered
