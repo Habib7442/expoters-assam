@@ -6,7 +6,7 @@ import { type SubmitEvent, useRef, useState, useTransition } from "react"
 import { postBuyRequirement, type PostBuyRequirementResult } from "@/lib/actions/post-buy-requirement"
 import { Button } from "@/components/ui/button"
 import { ConsentCheckbox } from "@/components/consent-checkbox"
-import { TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
+import { TURNSTILE_ENABLED, TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -197,7 +197,7 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
 
       {topLevelError && <p className="text-sm text-destructive">{topLevelError}</p>}
 
-      <Button type="submit" size="lg" disabled={pending} className="w-full rounded-full sm:w-auto">
+      <Button type="submit" size="lg" disabled={pending || (TURNSTILE_ENABLED && !turnstileToken)} className="w-full rounded-full sm:w-auto">
         {pending ? "Posting..." : "Post requirement"}
       </Button>
     </form>

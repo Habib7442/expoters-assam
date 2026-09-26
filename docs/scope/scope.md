@@ -17,20 +17,20 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 2 | Database schema & access model | Foundation | done |
 | 3 | Design system tokens | Foundation | done |
 | 4 | Product page & Send Enquiry (core loop) | Skeleton | done |
-| 5 | Company profile pages | Slice 2 | in-progress |
+| 5 | Company profile pages | Slice 2 | done |
 | 6 | Listings, categories & country filters | Slice 2 | in-progress · needs a decision |
-| 7 | Home page | Slice 2 | in-progress |
-| 8 | Post Buy Requirement | Slice 3 | in-progress |
+| 7 | Home page | Slice 2 | done |
+| 8 | Post Buy Requirement | Slice 3 | done |
 | 9 | Enquiries on companies & buy requirements | Slice 3 | in-progress |
-| 10 | Supplier business listing | Slice 3 | in-progress |
+| 10 | Supplier business listing | Slice 3 | done |
 | 11 | Membership plans & Razorpay | Slice 4 | planned · deferred |
 | 12 | AI-powered / semantic search | Slice 5 | planned |
 | 13 | SEO & GEO | Slice 5 | planned |
 | 14 | PostHog analytics | Slice 5 | planned · deferred |
 | 15 | Cloudflare R2 image storage | Infrastructure | in-progress |
-| 16 | Supplier product submission | Slice 3 | in-progress |
-| 17 | Form abuse protection | Infrastructure | in-progress |
-| 18 | Legal pages & DPDP compliance | Infrastructure | in-progress |
+| 16 | Supplier product submission | Slice 3 | done |
+| 17 | Form abuse protection | Infrastructure | done |
+| 18 | Legal pages & DPDP compliance | Infrastructure | done |
 | 19 | Go live configuration | Infrastructure | planned |
 | 20 | About, Contact & FAQ pages | Infrastructure | planned |
 
@@ -80,7 +80,7 @@ spec [0003](../specs/0003-product-page-send-enquiry/index.md) · code in `supaba
 
 ## Slice 2: browse the directory
 
-### 5. Company profile pages · in-progress
+### 5. Company profile pages · done
 Each supplier's profile page: logo, about, location, product range, verified badge, and membership tier badge (reusing the product page's `getCurrentTier` pattern). Routed by a new `companies.slug` column, mirroring `products.slug` (spec 0003): nullable-add, backfilled, then `not null unique`, since companies already had rows when this was added (unlike products). `create_business_listing` now assigns a slug at insert time (slugified name, deduplicated with a numeric suffix on collision); a rename never changes the slug. Decided and built inline with the engineer, no separate spec: a direct extension of an already-established pattern, not a new product decision.
 **Done when:** a company page renders real Supabase data, including the products it lists.
 - [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
@@ -101,7 +101,7 @@ Partly shipped without a spec: `/products` filters by category and a name search
 - [ ] Design it (spec): `/architect listings, categories & country filters`
 code in `app/products/page.tsx`, `app/companies/page.tsx`, `app/buy-requirements/page.tsx`, `lib/supabase/queries/products.ts`, `lib/supabase/queries/companies.ts`, `lib/search-params.ts`
 
-### 7. Home page · in-progress
+### 7. Home page · done
 Hero with search bar, quick stats (verified exporters, products, buyers, countries connected), featured products/exporters, latest buy requirements, and entry actions ("List Your Business Free", "Post Buy Requirement").
 **Done when:** the home page shows real featured content pulled from Supabase, not placeholders. The stats strip (AC-9) was dropped on 2026-09-26 by the engineer; see spec 0002.
 - [x] Design it (spec): `/architect home page`
@@ -121,7 +121,7 @@ spec [0002](../specs/0002-home-page-navbar-hero/index.md) · code in `app/layout
 
 ## Slice 3: capture more leads
 
-### 8. Post Buy Requirement · in-progress
+### 8. Post Buy Requirement · done
 A buyer posts what they want to buy (product, quantity, location, notes); it is saved, optionally shown publicly under Latest Buy Requirements, and forwarded to WhatsApp. The "forwarded to WhatsApp" open question (a buy requirement has no single supplier to route a wa.me link to, unlike an enquiry) was decided inline with the engineer: hand the buyer a wa.me link to the platform's own WhatsApp number (`PLATFORM_WHATSAPP_NUMBER`, a placeholder for now per AGENTS.md Section 6 — TBD real number from the client), the same no-API pattern already used for enquiries, not the real WhatsApp API/BSP integration AGENTS.md flags as a separate open decision.
 **Done when:** a buyer can submit a requirement, it appears in the public list when marked visible, and the WhatsApp message is received.
 - [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
@@ -145,7 +145,7 @@ Extend the Send Enquiry action already proven in the core loop (feature 4) to co
 - [ ] Build it (buy requirement half): `/develop enquiries on buy requirements`. Original blocker, kept for history: needs a decision, not just a build — feature 8 now exists, but a buy requirement has no public company-style WhatsApp contact to route to; the only recipient is the posting buyer's own phone number, which is private PII (`buyers` has no RLS policy at all, unlike a company's public contact). Handing that number to any anonymous visitor who clicks "enquire," or exposing it via a wa.me link, is a materially different privacy posture than the product/company cases and isn't specified in AGENTS.md/PRD. Route to `/architect` before building: who actually receives this enquiry, and how.
 code in `supabase/migrations/20260909040000_add_company_enquiry.sql`, `lib/actions/send-enquiry.ts`, `components/send-enquiry-dialog.tsx`, `app/companies/[slug]/page.tsx`, `app/products/[slug]/page.tsx`
 
-### 10. Supplier business listing · in-progress
+### 10. Supplier business listing · done
 A supplier turns their Clerk account into a real, pending business listing: name, location, logo, business email, and a WhatsApp contact number, created together as one atomic step. It stays `pending` until an admin approves it in the separate admin app; a rejected listing shows why and can be edited and resubmitted. (The approval action itself lives in the separate admin app; this feature is only the supplier-facing listing side.) This is the first half of what was originally scoped as supplier self-service submission; submitting products under an approved company is its own follow-on feature (16), deferred until a real approved company exists to design and build against.
 **Done when:** a supplier can submit their business listing (name, location, logo, business email, WhatsApp number), it is stored `pending` with its WhatsApp contact created atomically, it never appears on any public read path until approved, and a rejected listing shows the reason and can be fixed and resubmitted.
 - [x] Design it (spec): `/architect supplier business listing`
@@ -160,7 +160,7 @@ A supplier turns their Clerk account into a real, pending business listing: name
 - [x] Document it: `/document supplier business listing`
 spec [0005](../specs/0005-supplier-business-listing/index.md) · code in `supabase/migrations/20260903120000_add_business_listing.sql`, `supabase/migrations/20260903120500_add_business_listing_rate_limit.sql`, `supabase/migrations/20260903121000_fix_update_business_listing_conflict_target.sql`, `supabase/migrations/20260903130000_add_business_listing_email.sql`, `lib/supabase/queries/companies.ts`, `lib/actions/business-listing.ts`, `app/list-business/page.tsx`, `components/business-listing-form.tsx`
 
-### 16. Supplier product submission · in-progress · from spec 0005
+### 16. Supplier product submission · done · from spec 0005
 An approved supplier submits their own product (name, category, images) from their own dashboard; it stays `pending` until an admin approves it in the separate admin app. Deferred out of feature 10 (spec 0005's Follow-up) until a real approved company existed to design and build against; that gate has since shipped. Decided and built inline with the engineer, no separate spec: image upload reuses spec 0005's own `{clerkUserId}/{uuid}.{ext}` R2 key convention (already named as this feature's own owed decision in spec 0004's Follow-up), and slug generation reuses `public.slugify()` + the same collision-retry pattern `create_business_listing` already established — both direct extensions of already-decided patterns, not new product decisions.
 **Done when:** an approved supplier can submit a product with images, it is stored `pending`, and it does not appear on any public read path until approved.
 - [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
@@ -222,7 +222,7 @@ Moves where product and company images live, from the Supabase Storage buckets s
 - [ ] Document it: `/document cloudflare r2 image storage`
 spec [0004](../specs/0004-cloudflare-r2-image-storage/index.md) · code in `lib/storage/r2-client.ts`, `lib/storage/r2.ts`, `scripts/seed-demo.ts`, `next.config.ts`, `lib/actions/business-listing.ts`, `supabase/migrations/20260903140000_revoke_supabase_storage_public_read.sql`, `supabase/migrations/20260909020000_disable_supabase_storage_public_buckets.sql`
 
-### 17. Form abuse protection · in-progress
+### 17. Form abuse protection · done
 An invisible Cloudflare Turnstile bot check on the two anonymous forms (Send Enquiry, Post Buy Requirement), a per company hourly cap on product submission, and uploaded images decoded with sharp to reject files that are not real images. No IP address is stored. Enrolled after the fact from spec 0006 and the security hardening commits.
 **Done when:** a missing or rejected Turnstile token blocks the write with a friendly retry, an unreachable Cloudflare fails open and logs, and a supplier past 30 products an hour gets `rate_limited` before any image uploads.
 - [x] Design it (spec): `/architect form abuse protection`
@@ -230,13 +230,13 @@ An invisible Cloudflare Turnstile bot check on the two anonymous forms (Send Enq
    - [x] `verifyTurnstile` helper and `TurnstileWidget`, wired into both anonymous forms (AC-1 to AC-4)
    - [x] Per company product cap in `create_product_submission` plus the pre check in `submitProduct` (AC-5, AC-6)
    - [x] Privacy Policy names Cloudflare; image signature check via sharp (AC-7)
-- [ ] Verify it: `/check verify form abuse protection`
+- [x] Verify it: `/check verify form abuse protection` (2026-09-26, live: with Cloudflare's always fail secret both anonymous forms refuse with the friendly retry message, save nothing, reset the widget and keep typed values (AC-1, AC-2); with no keys the widget is absent, the post goes through, and the server logs "bot check skipped" (AC-4); 3 concurrent `create_product_submission` calls at 28 products gave ok, P0010, ok and a 4th P0010 (AC-5); a capped supplier in the browser gets the cap message with 0 R2 objects written and nothing saved (AC-6); no IP or bot data column exists and the Privacy Policy names Cloudflare Turnstile (AC-7). AC-3 (Cloudflare unreachable, fail open) is covered by `lib/security/turnstile.test.ts`, not forced live. Test data deleted.)
 - [x] Test it: `/test form abuse protection` (unit tests written with the build: `lib/security/turnstile.test.ts`, `lib/image-signature.test.ts`, action mapping tests)
-- [ ] Review it (fresh model): `/check review form abuse protection`
-- [ ] Document it: `/document form abuse protection`
+- [x] Review it (fresh model): `/check review form abuse protection`
+- [x] Document it: `/document form abuse protection`
 spec [0006](../specs/0006-form-abuse-protection.md) · code in `lib/security/turnstile.ts`, `components/turnstile-widget.tsx`, `lib/image-signature.ts`, `lib/actions/send-enquiry.ts`, `lib/actions/post-buy-requirement.ts`, `lib/actions/submit-product.ts`, `supabase/migrations/20260925050000_add_product_submission_rate_limit.sql`
 
-### 18. Legal pages & DPDP compliance · in-progress
+### 18. Legal pages & DPDP compliance · done
 Privacy Policy and Terms pages, an explicit consent checkbox on every form that collects personal data (recorded in the database), and a nightly job that deletes buyer personal data past its retention window, so the promises in the Privacy Policy are actually kept. Built inline without a spec; enrolled after the fact.
 **Done when:** every form that collects personal data requires and stores consent, the database refuses writes without it, the retention job runs nightly, and the privacy and terms pages accurately describe what suppliers see over WhatsApp.
 - [x] Design it (spec): decided inline, no `docs/specs/` entry
@@ -244,14 +244,15 @@ Privacy Policy and Terms pages, an explicit consent checkbox on every form that 
    - [x] `/privacy` and `/terms` pages, WhatsApp data sharing wording clarified
    - [x] `ConsentCheckbox` on enquiry, buy requirement, and business listing forms; consent recorded by the `create_*` functions, consent less overloads dropped
    - [x] Nightly personal data retention job (pg_cron)
-- [ ] Verify it: `/check verify legal pages & dpdp compliance`
-- [ ] Test it: `/test legal pages & dpdp compliance`
-- [ ] Review it (fresh model): `/check review legal pages & dpdp compliance`
-- [ ] Document it: `/document legal pages & dpdp compliance`
+   - [x] Clerk `user.deleted` webhook deletes the supplier's listing, products, contact and images (review 2026-09-26, engineer chose automatic deletion)
+- [x] Verify it: `/check verify legal pages & dpdp compliance` (2026-09-26, live: `/privacy` and `/terms` render; all four `create_*` functions return `P0009` on blank consent, have no consent-less overload left (`PGRST202`), refuse the anon role (`42501`), and wrote nothing; the consent box is required on the enquiry, buy requirement and listing forms; `purge-expired-personal-data` is an active pg_cron job at 20:30 UTC daily, last run succeeded. The Privacy Policy described enquiries but not buy requirements; a factual paragraph was added. Retention periods still carry a `TODO(client)`.)
+- [x] Test it: `/test legal pages & dpdp compliance` (consent is covered in the enquiry, buy requirement and listing action tests; the SQL consent guard and the cron job were proven live, not unit testable)
+- [x] Review it (fresh model): `/check review legal pages & dpdp compliance`
+- [x] Document it: `/document legal pages & dpdp compliance`
 code in `app/privacy/page.tsx`, `app/terms/page.tsx`, `components/consent-checkbox.tsx`, `supabase/migrations/20260925010000_record_dpdp_consent.sql`, `supabase/migrations/20260925020000_add_personal_data_retention_job.sql`, `supabase/migrations/20260925060000_drop_consentless_create_overloads.sql`
 
 ### 19. Go live configuration · planned
-The production settings that have piled up as follow ups across specs, collected in one place so nothing is missed at launch: Clerk production instance, real Turnstile keys in Vercel (spec 0006), a Content Security Policy that allows `challenges.cloudflare.com` (spec 0006), the client's real platform WhatsApp number replacing the placeholder (feature 8; done 2026-09-26, `+919577772757` set in `.env.local` and locked, still to be copied into Vercel), and all env vars set in Vercel. Domains (`exportersasssm.com` for images) and the contact email `info@exportsassam.com` were confirmed correct and locked by the engineer on 2026-09-26; no change needed. The Turnstile site key rejects `localhost` (error 110200 in the dev log), so the production domain must be on its allowed hostnames list.
+The production settings that have piled up as follow ups across specs, collected in one place so nothing is missed at launch: Clerk production instance, real Turnstile keys in Vercel (spec 0006), a Content Security Policy that allows `challenges.cloudflare.com` (spec 0006), the client's real platform WhatsApp number replacing the placeholder (feature 8; done 2026-09-26, `+919577772757` set in `.env.local` and locked, still to be copied into Vercel), and all env vars set in Vercel. Domains (`exportersasssm.com` for images) and the contact email `info@exportsassam.com` were confirmed correct and locked by the engineer on 2026-09-26; no change needed. The Turnstile site key rejects `localhost` (error 110200 in the dev log), so the production domain must be on its allowed hostnames list. Also from the 2026-09-26 reviews: add a Clerk webhook endpoint `https://<domain>/api/webhooks/clerk` subscribed to `user.deleted` and put its signing secret in Vercel as `CLERK_WEBHOOK_SIGNING_SECRET` (without it, account deletion leaves the listing up); switch on Clerk's legal consent setting (Privacy Policy and Terms URLs) so sign up records agreement, as the Privacy Policy now says; and get the client to confirm the retention periods in `app/privacy/page.tsx` (marked `TODO(client)`, the 12 months is also in the purge SQL).
 **Done when:** a Vercel production build runs against production Clerk, real Turnstile keys, and the real WhatsApp number, with every form working end to end on the live domain.
 - [ ] Build it: `/develop go live configuration`
 

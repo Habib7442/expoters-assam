@@ -28,7 +28,7 @@ export default function PrivacyPage() {
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8 flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">Privacy Policy</h1>
-          <p className="text-sm text-muted-foreground">Last updated: September 25, 2026</p>
+          <p className="text-sm text-muted-foreground">Last updated: September 26, 2026</p>
         </div>
 
         <div className="flex flex-col gap-8 text-sm leading-7 text-foreground/80 sm:text-base">
@@ -81,7 +81,10 @@ export default function PrivacyPage() {
               We process your personal data on the basis of your consent, which you give by ticking the consent
               box on the form where you enter it (sending an enquiry, posting a buy requirement, or listing a
               business). Each form tells you what the details are for. Showing a buy requirement publicly is a
-              separate choice, off by default.
+              separate choice, off by default. When you create an account, you agree to this policy and our
+              Terms on the sign up screen; your account details are used only to sign you in and to link you to
+              your business listing. Deleting your account deletes your business listing, its products, and its
+              images.
             </p>
             <p>
               You can withdraw your consent at any time, as easily as you gave it — see{" "}
@@ -123,6 +126,13 @@ export default function PrivacyPage() {
               you typed into our form. From then on, the conversation happens on WhatsApp, outside our systems,
               and is governed by WhatsApp&apos;s own privacy practices.
             </p>
+            <p>
+              When you post a buy requirement, we save it and offer you a WhatsApp link to our own team&apos;s
+              number instead, pre-filled with the product, quantity, and delivery location. Our team reads every
+              requirement, public or private, to match it with suitable exporters. If you choose to show it
+              publicly, only the product, quantity, location, and date appear on the site; your name, phone
+              number, and email never do.
+            </p>
           </section>
 
           <section className="flex flex-col gap-2">
@@ -137,13 +147,14 @@ export default function PrivacyPage() {
                 Service providers who process data on our behalf, under contract: Clerk (authentication),
                 Supabase (database), Cloudflare (image storage, and Turnstile bot protection on our enquiry and
                 buy requirement forms, which checks technical signals from your browser to tell people from
-                automated spam — we don&apos;t store any of it), Razorpay (payments), and PostHog (analytics)
+                automated spam — we don&apos;t store any of it), and Vercel (website hosting). Razorpay (payments) and PostHog (analytics) will be added when those features go live
               </li>
               <li>Law enforcement or regulators, only when legally required to</li>
             </ul>
             <p>
-              Some of these providers store data outside India — our database is hosted in Australia and our
-              authentication provider in the United States. Transfers are made only to countries the Government
+              Some of these providers store data outside India — our database is hosted in Australia, our
+              authentication provider in the United States, and our website is served by Vercel from locations
+              around the world. Transfers are made only to countries the Government
               of India has not restricted under the DPDP Act.
             </p>
             <p>

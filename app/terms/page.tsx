@@ -11,7 +11,7 @@ export default function TermsPage() {
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8 flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">Terms of Service</h1>
-          <p className="text-sm text-muted-foreground">Last updated: September 11, 2026</p>
+          <p className="text-sm text-muted-foreground">Last updated: September 26, 2026</p>
         </div>
 
         <div className="flex flex-col gap-8 text-sm leading-7 text-foreground/80 sm:text-base">
@@ -69,7 +69,9 @@ export default function TermsPage() {
               the product or company name and your message. The name, phone number, and email you entered on our
               form are not included. If you open the link and send the message, the supplier sees it along with
               whatever WhatsApp shows them about you — typically your profile name, and your phone number unless
-              your WhatsApp settings hide it (see our Privacy Policy). You&apos;re responsible for what you post and for any
+              your WhatsApp settings hide it (see our Privacy Policy). Posting a buy requirement instead offers
+              a WhatsApp link to our own team, who read every requirement to match it with suitable exporters.
+              You&apos;re responsible for what you post and for any
               conversation that follows.
             </p>
           </section>

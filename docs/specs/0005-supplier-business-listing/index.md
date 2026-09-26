@@ -1,7 +1,7 @@
 # 0005 · Supplier business listing
 
 **Date**: 2026-09-03
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

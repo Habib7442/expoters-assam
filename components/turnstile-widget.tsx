@@ -44,6 +44,14 @@ function loadTurnstile(): Promise<void> {
   return scriptPromise
 }
 
+/**
+ * True when a site key is configured, so forms know to wait for a token
+ * before enabling submit (a submit before the invisible check finishes
+ * would only earn a "please try again"). Without keys the widget renders
+ * nothing and the server skips the check, so forms must not wait.
+ */
+export const TURNSTILE_ENABLED = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+
 export type TurnstileWidgetHandle = {
   /** Tokens are single use (spec 0006, AC-2): call after every failed submission. */
   reset: () => void

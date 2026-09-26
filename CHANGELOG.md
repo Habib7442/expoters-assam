@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added tests for Post Buy Requirement: the full success path (database call, consent version, WhatsApp link to the platform number), the hourly cap, bad input, server errors, and the `/buy-requirements` listing page.
 - Added a site wide error page, so an unexpected error shows a friendly message with Try again inside the normal header and footer, instead of a bare "Application error" screen.
 - Added tests for the supplier business listing (validation, every database error, upload cleanup) and a first test suite for product submission (39 new tests).
+- Added automatic deletion of a supplier's data when they delete their account: a signed Clerk `user.deleted` webhook removes their business listing, products, WhatsApp contact and images, so the Privacy Policy's deletion promise is kept.
 
 ### Changed
 - The company profile query now filters for approved companies and approved products explicitly, as a second layer on top of Row Level Security, matching every other public read path.
@@ -32,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rewrote the `/buy-requirements` page copy to match how the platform actually works: the team matches each requirement with exporters and introduces them on WhatsApp. Removed claims the product doesn't keep (direct supplier quotes, lab test reports, certified producers, instant replies). The list is now labeled "Recent Requirements" and says when it is showing only the newest 100.
 - Product photos are now resized in the browser before upload, so suppliers can pick normal phone photos; the "up to 2 MB each" limit is gone from the form.
 - Saving a business listing without changing anything no longer sends an approved listing back for review, and the edit page now says plainly that a real change hides the business and its products until re-approved.
+- Updated the Privacy Policy and Terms (version 2026-09-26): they now explain what happens to a buy requirement, name Vercel as the host, cover account data, and say that deleting an account deletes the listing. New consent is recorded against the new version.
+- The Send Enquiry and Post Buy Requirement buttons now wait for the invisible bot check to finish, instead of failing the first click.
 
 ### Removed
 - Removed two plain indexes on `companies.slug` and `products.slug` that duplicated the unique index each table already has, cutting write and storage cost with no effect on lookups.
@@ -52,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the business listing form clearing the chosen logo when a save failed.
 - Fixed product uploads that finished after another upload had failed being left in storage.
 - Fixed `/products/new` showing an empty category list, with no explanation, when categories failed to load.
+- Fixed the enquiry consent text promising that suppliers would contact the buyer, which the platform never does.
 
 ### Security
 - Hardened the database privilege model so a table added by a future migration no longer inherits public write access by default; previously only tables that existed at the time of the initial migration were covered by the explicit privilege revoke.

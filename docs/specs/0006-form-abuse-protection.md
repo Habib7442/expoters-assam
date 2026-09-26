@@ -1,6 +1,6 @@
 # 0006: Form abuse protection (bot check and per user limits)
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-09-25
 **Mode**: ENHANCEMENT
 

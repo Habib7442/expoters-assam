@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
+import { TURNSTILE_ENABLED, TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
 
 type SendEnquiryDialogProps = {
   target:
@@ -180,7 +180,7 @@ export function SendEnquiryDialog({
 
               <ConsentCheckbox
                 id="enquiry-consent"
-                purpose="record this enquiry and let the supplier contact me about it"
+                purpose="record this enquiry and help me contact the supplier on WhatsApp"
                 error={fieldErrors?.consent}
               />
 
@@ -190,7 +190,7 @@ export function SendEnquiryDialog({
             {topLevelError && <p className="text-sm text-destructive">{topLevelError}</p>}
 
             <DialogFooter>
-              <Button type="submit" disabled={pending} className="w-full rounded-full sm:w-auto">
+              <Button type="submit" disabled={pending || (TURNSTILE_ENABLED && !turnstileToken)} className="w-full rounded-full sm:w-auto">
                 {pending ? "Sending..." : "Send Enquiry"}
               </Button>
             </DialogFooter>

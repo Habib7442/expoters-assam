@@ -4,4 +4,4 @@
  * of consent (DPDP Act s. 6(10)). Bump it to the new "Last updated" date
  * whenever app/privacy/page.tsx changes materially.
  */
-export const CONSENT_NOTICE_VERSION = "2026-09-25";
+export const CONSENT_NOTICE_VERSION = "2026-09-26";
