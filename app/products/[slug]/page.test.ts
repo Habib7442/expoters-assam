@@ -1,3 +1,5 @@
+import { createElement, type ReactElement, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getProductBySlugMock = vi.fn();
@@ -19,6 +21,13 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw NOT_FOUND;
   },
+}));
+
+vi.mock("next/image", () => ({
+  default: ({ src, alt }: { src: string; alt: string }) => createElement("img", { src, alt }),
+}));
+vi.mock("next/link", () => ({
+  default: ({ href, children }: { href: string; children: ReactNode }) => createElement("a", { href }, children),
 }));
 
 // Client components are rendered by React, not by this test; stub them out.
@@ -70,6 +79,21 @@ describe("ProductPage", () => {
     expect(getProductBySlugMock).toHaveBeenCalledWith("ahi-resin-gold");
     expect(getCurrentTierMock).toHaveBeenCalledWith("c1");
     expect(page).toBeTruthy();
+  });
+
+  it("describes the product in structured data without claiming the supplier is its brand or maker", async () => {
+    getProductBySlugMock.mockResolvedValue(product);
+
+    const html = renderToStaticMarkup((await ProductPage(paramsFor("ahi-resin-gold"))) as ReactElement);
+    const json = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1] ?? "{}";
+    const graph = (JSON.parse(json) as { "@graph": Record<string, unknown>[] })["@graph"];
+    const productLd = graph.find((node) => node["@type"] === "Product");
+
+    expect(productLd).toMatchObject({ name: product.name, url: "https://www.exportersasssm.com/products/ahi-resin-gold" });
+    expect(productLd).not.toHaveProperty("brand");
+    expect(productLd).not.toHaveProperty("manufacturer");
+    expect(productLd).not.toHaveProperty("offers");
+    expect(graph.some((node) => node["@type"] === "BreadcrumbList")).toBe(true);
   });
 });
 

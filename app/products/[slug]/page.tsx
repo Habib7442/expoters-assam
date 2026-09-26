@@ -63,12 +63,9 @@ export default async function ProductPage({ params }: Props) {
         ...(product.description ? { description: product.description } : {}),
         ...(images.length > 0 ? { image: images } : {}),
         ...(product.category ? { category: product.category.name } : {}),
-        brand: { "@type": "Brand", name: product.company.name },
-        manufacturer: {
-          "@type": "Organization",
-          name: product.company.name,
-          url: absoluteUrl(`/companies/${product.company.slug}`),
-        },
+        // No brand or manufacturer: the directory only knows who lists the
+        // product, and a trader is neither. If an Offer is ever published,
+        // the listing company belongs in Offer.seller.
       },
       {
         "@type": "BreadcrumbList",
