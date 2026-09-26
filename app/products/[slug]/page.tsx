@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProductGallery } from "@/components/product-gallery";
 import { SendEnquiryDialog } from "@/components/send-enquiry-dialog";
 import { JsonLd } from "@/components/json-ld";
-import { SITE_NAME, absoluteUrl } from "@/lib/site";
+import { DEFAULT_OG_IMAGE, SITE_NAME, absoluteUrl } from "@/lib/site";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: path,
       title,
       description,
-      ...(isR2Url(product.image_url) ? { images: [{ url: product.image_url, alt: product.name }] } : {}),
+      images: isR2Url(product.image_url) ? [{ url: product.image_url, alt: product.name }] : [DEFAULT_OG_IMAGE],
     },
   };
 }

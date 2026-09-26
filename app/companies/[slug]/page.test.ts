@@ -250,6 +250,18 @@ describe("generateMetadata", () => {
     expect(metadata.description).toContain("Avadi Herbs India on Exporters Assam");
   });
 
+  it("shares the company logo, or the site image when there is no logo", async () => {
+    getCompanyBySlugMock.mockResolvedValue(company);
+    const withLogo = await generateMetadata(paramsFor("avadi-herbs-india"));
+
+    getCompanyBySlugMock.mockResolvedValue({ ...company, logoUrl: null });
+    const withoutLogo = await generateMetadata(paramsFor("avadi-herbs-india"));
+
+    expect(withLogo.openGraph?.images).toEqual([{ url: company.logoUrl, alt: company.name }]);
+    expect(withoutLogo.openGraph?.images).toEqual([expect.objectContaining({ url: "/og_image.png" })]);
+    expect(withLogo.alternates?.canonical).toBe("/companies/avadi-herbs-india");
+  });
+
   it("returns empty metadata for a missing company instead of throwing", async () => {
     getCompanyBySlugMock.mockResolvedValue(null);
 

@@ -10,7 +10,9 @@ vi.mock("@/lib/supabase/queries/company-tiers", () => ({
   getCurrentTier: (...args: unknown[]) => getCurrentTierMock(...args),
 }));
 
-vi.mock("@/lib/storage/r2", () => ({ isR2Url: () => true }));
+vi.mock("@/lib/storage/r2", () => ({
+  isR2Url: (url: string) => url.startsWith("https://images.exportersasssm.com/"),
+}));
 
 const NOT_FOUND = new Error("NEXT_NOT_FOUND");
 vi.mock("next/navigation", () => ({
@@ -83,6 +85,14 @@ describe("generateMetadata", () => {
 
     expect(metadata.title).toBe("AHI Resin Gold from Avadi Herbs India Pvt Ltd | Exporters Assam");
     expect(metadata.description).toBe(product.description);
+  });
+
+  it("falls back to the site image when the product photo is not on our image host", async () => {
+    getProductBySlugMock.mockResolvedValue({ ...product, image_url: "https://old.supabase.co/p.png" });
+
+    const metadata = await generateMetadata(paramsFor("ahi-resin-gold"));
+
+    expect(metadata.openGraph?.images).toEqual([expect.objectContaining({ url: "/og_image.png" })]);
   });
 
   it("sets a canonical URL and uses the product photo for social previews", async () => {

@@ -6,7 +6,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: SITE_NAME,
     locale: "en_IN",
-    images: [{ url: "/og_image.png", width: 1731, height: 909, alt: "Exporters Assam" }],
+    images: [DEFAULT_OG_IMAGE],
   },
   twitter: { card: "summary_large_image" },
 };

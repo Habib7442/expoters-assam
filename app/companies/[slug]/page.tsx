@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
 import { SendEnquiryDialog } from "@/components/send-enquiry-dialog";
 import { JsonLd } from "@/components/json-ld";
-import { SITE_NAME, absoluteUrl } from "@/lib/site";
+import { DEFAULT_OG_IMAGE, SITE_NAME, absoluteUrl } from "@/lib/site";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: path,
       title,
       description,
-      ...(company.logoUrl ? { images: [{ url: company.logoUrl, alt: company.name }] } : {}),
+      images: company.logoUrl ? [{ url: company.logoUrl, alt: company.name }] : [DEFAULT_OG_IMAGE],
     },
   };
 }
