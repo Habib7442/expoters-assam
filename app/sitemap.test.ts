@@ -61,12 +61,21 @@ describe("sitemap", () => {
 });
 
 describe("robots", () => {
-  it("allows crawling, blocks private pages, and points at the sitemap", () => {
+  it("allows crawling, blocks only the API, and points at the sitemap", () => {
     const result = robots();
     const rule = Array.isArray(result.rules) ? result.rules[0] : result.rules;
 
     expect(rule.allow).toBe("/");
-    expect(rule.disallow).toEqual(expect.arrayContaining(["/api/", "/list-business", "/products/new", "/sign-in", "/sign-up"]));
+    expect(rule.disallow).toEqual(["/api/"]);
     expect(result.sitemap).toBe(`${SITE}/sitemap.xml`);
+  });
+
+  it("leaves noindex pages crawlable, so crawlers can actually read their noindex", () => {
+    const result = robots();
+    const rule = Array.isArray(result.rules) ? result.rules[0] : result.rules;
+
+    for (const path of ["/sign-in", "/sign-up", "/list-business", "/products/new"]) {
+      expect(rule.disallow).not.toContain(path);
+    }
   });
 });

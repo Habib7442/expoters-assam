@@ -2,9 +2,13 @@ import type { MetadataRoute } from "next";
 
 import { absoluteUrl } from "@/lib/site";
 
-// Private or per-user pages, and the API. They also carry noindex metadata;
-// this keeps crawlers from spending their budget on them at all.
-const PRIVATE_PATHS = ["/api/", "/list-business", "/products/new", "/sign-in", "/sign-up"];
+// Only the API is blocked. The per-user pages (sign in, sign up, list your
+// business, add a product) are deliberately NOT listed: they carry noindex
+// metadata, and a crawler can only see noindex on a page it may fetch. A
+// robots-blocked URL that other pages link to (the header links to sign in
+// and list your business everywhere) can still show up in results as a bare
+// URL.
+const PRIVATE_PATHS = ["/api/"];
 
 /**
  * Search engines and AI answer engines (ChatGPT, Claude, Perplexity, Google
