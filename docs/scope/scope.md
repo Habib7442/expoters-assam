@@ -24,7 +24,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 9 | Enquiries on companies & buy requirements | Slice 3 | in-progress |
 | 10 | Supplier business listing | Slice 3 | done |
 | 11 | Membership plans & Razorpay | Slice 4 | planned · deferred |
-| 12 | AI-powered / semantic search | Slice 5 | planned |
+| 12 | AI-powered / semantic search | Slice 5 | in-progress |
 | 13 | SEO & GEO | Slice 5 | done |
 | 14 | PostHog analytics | Slice 5 | planned · deferred |
 | 15 | Cloudflare R2 image storage | Infrastructure | in-progress |
@@ -189,13 +189,16 @@ Basic/Silver/Gold tiers; a supplier upgrades and pays via Razorpay; a successful
 
 ## Slice 5: findability
 
-### 12. AI-powered / semantic search · planned
+### 12. AI-powered / semantic search · in-progress
 Fast product/company search with spelling tolerance and instant suggestions, built on Supabase semantic matching, not a third party search SaaS.
 A basic stand in already works: the header and hero search do a plain name match (`ilike`) on products, companies, and buy requirements. No typo tolerance or semantic matching yet; that is what this feature still owes.
 **Done when:** search returns relevant results tolerant of common typos and updates as the user types.
 **Decided 2026-09-26 by the engineer:** typo tolerant search via Postgres trigram matching (`pg_trgm`), with suggestions as you type. No embeddings or semantic matching for now; that stays a possible later add on.
 - [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
-- [ ] Build it: `/develop ai-powered search`
+- [ ] Build it: `/develop ai-powered search` (code written 2026-09-26; waiting on `supabase db push` for migration `20260926030000_add_trigram_search.sql`)
+  - [x] Ranked typo tolerant search on /products, /companies, /buy-requirements (code in `lib/supabase/queries/search.ts`)
+  - [x] Suggestions as you type under the home page search (code in `app/api/search/suggest/route.ts`, `components/hero-search.tsx`)
+  - [ ] Migration applied to the live database and checked
 
 ### 13. SEO & GEO · done
 Sitemap, per-page metadata and structured data, clean URLs, and AI-crawler readiness, per PRD Sections 8 to 9 and the installed `seo-aeo-best-practices` skill.

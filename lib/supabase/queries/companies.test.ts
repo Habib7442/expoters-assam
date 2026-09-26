@@ -5,6 +5,12 @@ vi.mock("@/lib/supabase/client", () => ({
   supabase: { from: (...args: unknown[]) => fromMock(...args) },
 }));
 
+const searchIdsMock = vi.fn();
+vi.mock("@/lib/supabase/queries/search", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./search")>()),
+  searchIds: (...args: unknown[]) => searchIdsMock(...args),
+}));
+
 const adminFromMock = vi.fn();
 vi.mock("@/lib/supabase/admin", () => ({
   supabaseAdmin: { from: (...args: unknown[]) => adminFromMock(...args) },
@@ -27,7 +33,7 @@ type Result = { data: unknown; error: { message: string } | null };
  */
 function builderResolvingTo(result: Result) {
   const builder: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "ilike", "order", "limit"]) {
+  for (const method of ["select", "eq", "in", "order", "limit"]) {
     builder[method] = vi.fn(() => builder);
   }
   builder.maybeSingle = vi.fn(async () => result);
@@ -214,20 +220,29 @@ describe("getCompanies", () => {
     const companies = await getCompanies();
 
     expect(builder.eq).toHaveBeenCalledWith("status", "approved");
-    expect(builder.ilike).not.toHaveBeenCalled();
+    expect(searchIdsMock).not.toHaveBeenCalled();
     expect(companies).toEqual([
       { id: "c1", slug: "avadi-herbs-india", name: "Avadi Herbs India", logoUrl: `${R2}/logos/a.png`, location: "Silchar", verified: true },
       { id: "c2", slug: "locallify", name: "Locallify", logoUrl: null, location: "India", verified: false },
     ]);
   });
 
-  it("filters by name with the visitor's wildcards escaped", async () => {
-    const builder = builderResolvingTo({ data: [], error: null });
+  it("filters to the typo tolerant search matches, keeping their ranking order", async () => {
+    searchIdsMock.mockResolvedValue(["c2", "c1"]);
+    const builder = builderResolvingTo({
+      data: [
+        { id: "c1", slug: "a", name: "A", logo_url: null, location: "X", country: "India", verified: true },
+        { id: "c2", slug: "b", name: "B", logo_url: null, location: "Y", country: "India", verified: true },
+      ],
+      error: null,
+    });
     fromMock.mockReturnValue(builder);
 
-    await getCompanies({ query: "50%_off" });
+    const companies = await getCompanies({ query: "avdi herbs" });
 
-    expect(builder.ilike).toHaveBeenCalledWith("name", "%50\\%\\_off%");
+    expect(searchIdsMock).toHaveBeenCalledWith("companies", "avdi herbs");
+    expect(builder.in).toHaveBeenCalledWith("id", ["c2", "c1"]);
+    expect(companies?.map((company) => company.id)).toEqual(["c2", "c1"]);
   });
 
   it("drops a logo that is not on the R2 image domain", async () => {

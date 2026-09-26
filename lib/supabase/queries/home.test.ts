@@ -5,6 +5,12 @@ vi.mock("@/lib/supabase/client", () => ({
   supabase: { from: (...args: unknown[]) => fromMock(...args) },
 }));
 
+const searchIdsMock = vi.fn();
+vi.mock("@/lib/supabase/queries/search", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./search")>()),
+  searchIds: (...args: unknown[]) => searchIdsMock(...args),
+}));
+
 const R2 = "https://images.exportersasssm.com";
 vi.mock("@/lib/storage/r2", () => ({
   R2_PUBLIC_DOMAIN: "images.exportersasssm.com",
@@ -23,7 +29,7 @@ type Result = { data: unknown; error: { message: string } | null };
 /** A chainable, awaitable query builder stub, matching supabase-js's builders. */
 function builderResolvingTo(result: Result) {
   const builder: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "ilike", "like", "order", "limit"]) {
+  for (const method of ["select", "eq", "in", "like", "order", "limit"]) {
     builder[method] = vi.fn(() => builder);
   }
   builder.then = (onFulfilled: (v: Result) => unknown) => Promise.resolve(onFulfilled(result));
@@ -281,13 +287,15 @@ describe("getLatestBuyRequirements", () => {
     ]);
   });
 
-  it("filters by product text with an escaped contains pattern when a query is given", async () => {
+  it("filters to the typo tolerant search matches when a query is given", async () => {
+    searchIdsMock.mockResolvedValue(["r1"]);
     const builder = builderResolvingTo({ data: [], error: null });
     fromMock.mockReturnValue(builder);
 
-    await getLatestBuyRequirements(5, "50%");
+    await getLatestBuyRequirements(5, "cardamon");
 
-    expect(builder.ilike).toHaveBeenCalledWith("product_text", "%50\\%%");
+    expect(searchIdsMock).toHaveBeenCalledWith("buy-requirements", "cardamon");
+    expect(builder.in).toHaveBeenCalledWith("id", ["r1"]);
   });
 
   it("applies no text filter without a query", async () => {
@@ -296,7 +304,8 @@ describe("getLatestBuyRequirements", () => {
 
     await getLatestBuyRequirements(5);
 
-    expect(builder.ilike).not.toHaveBeenCalled();
+    expect(searchIdsMock).not.toHaveBeenCalled();
+    expect(builder.in).not.toHaveBeenCalled();
   });
 
   it("returns null and logs on a database error (AC-11)", async () => {

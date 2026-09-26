@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { isR2Url } from "@/lib/storage/r2";
-import { containsPattern } from "@/lib/supabase/like-pattern";
+import { searchIds, sortByRank } from "@/lib/supabase/queries/search";
 
 export type ProductListItem = {
   id: string;
@@ -42,6 +42,13 @@ export async function getProducts({
   query,
   limit = 60,
 }: GetProductsOptions = {}): Promise<ProductListItem[] | null> {
+  // A search reads its ranked matches (at most 100) and keeps their order;
+  // the limit is applied after ranking, so it drops the weakest matches, not
+  // the oldest.
+  const rankedIds = query ? await searchIds("products", query) : null;
+  if (query && rankedIds === null) return null;
+  if (rankedIds?.length === 0) return [];
+
   const builder = categorySlug
     ? supabase
         .from("products")
@@ -51,19 +58,20 @@ export async function getProducts({
 
   let filtered = builder.eq("status", "approved").eq("companies.status", "approved").eq("companies.verified", true);
   if (country) filtered = filtered.eq("companies.country", country);
-  if (query) filtered = filtered.ilike("name", containsPattern(query));
+  if (rankedIds) filtered = filtered.in("id", rankedIds);
 
   const { data, error } = await filtered
     .order("created_at", { ascending: false })
     .order("id", { ascending: true })
-    .limit(limit);
+    .limit(rankedIds ? rankedIds.length : limit);
 
   if (error) {
     console.error("getProducts failed", error);
     return null;
   }
 
-  return (data ?? [])
+  const rows = rankedIds ? sortByRank(data ?? [], rankedIds).slice(0, limit) : (data ?? []);
+  return rows
     .filter((product) => isR2Url(product.image_url))
     .map((product) => ({
       id: product.id,

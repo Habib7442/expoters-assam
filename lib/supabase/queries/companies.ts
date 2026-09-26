@@ -2,7 +2,7 @@ import "server-only";
 import { supabase } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isR2Url } from "@/lib/storage/r2";
-import { containsPattern } from "@/lib/supabase/like-pattern";
+import { searchIds, sortByRank } from "@/lib/supabase/queries/search";
 
 export type MyCompany = {
   id: string;
@@ -88,6 +88,11 @@ type GetCompaniesOptions = {
 export async function getCompanies({ query, categorySlug, country, limit = 60 }: GetCompaniesOptions = {}): Promise<
   CompanyListItem[] | null
 > {
+  // A search keeps its ranked order and applies the limit after ranking (see getProducts).
+  const rankedIds = query ? await searchIds("companies", query) : null;
+  if (query && rankedIds === null) return null;
+  if (rankedIds?.length === 0) return [];
+
   // A category filter needs the products embed as !inner so companies with
   // no matching approved product drop out (same reasoning as getProducts);
   // PostgREST still returns each company once.
@@ -100,19 +105,20 @@ export async function getCompanies({ query, categorySlug, country, limit = 60 }:
         .eq("products.categories.slug", categorySlug)
     : supabase.from("companies").select("id, slug, name, logo_url, location, country, verified").eq("status", "approved");
   if (country) filtered = filtered.eq("country", country);
-  if (query) filtered = filtered.ilike("name", containsPattern(query));
+  if (rankedIds) filtered = filtered.in("id", rankedIds);
 
   const { data, error } = await filtered
     .order("created_at", { ascending: false })
     .order("id", { ascending: true })
-    .limit(limit);
+    .limit(rankedIds ? rankedIds.length : limit);
 
   if (error) {
     console.error("getCompanies failed", error);
     return null;
   }
 
-  return (data ?? []).map((company) => ({
+  const rows = rankedIds ? sortByRank(data ?? [], rankedIds).slice(0, limit) : (data ?? []);
+  return rows.map((company) => ({
     id: company.id,
     slug: company.slug,
     name: company.name,

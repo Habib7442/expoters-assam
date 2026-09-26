@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { isR2Url, R2_PUBLIC_DOMAIN } from "@/lib/storage/r2";
-import { containsPattern } from "@/lib/supabase/like-pattern";
+import { searchIds, sortByRank } from "@/lib/supabase/queries/search";
 
 export type CategoryWithCount = {
   id: string;
@@ -145,23 +145,29 @@ export async function getLatestBuyRequirements(
   limit: number,
   query?: string,
 ): Promise<LatestBuyRequirement[] | null> {
+  // A search keeps its ranked order and applies the limit after ranking (see getProducts).
+  const rankedIds = query ? await searchIds("buy-requirements", query) : null;
+  if (query && rankedIds === null) return null;
+  if (rankedIds?.length === 0) return [];
+
   let filtered = supabase
     .from("buy_requirements")
     .select("id, product_text, quantity, location, created_at")
     .eq("is_public", true);
-  if (query) filtered = filtered.ilike("product_text", containsPattern(query));
+  if (rankedIds) filtered = filtered.in("id", rankedIds);
 
   const { data, error } = await filtered
     .order("created_at", { ascending: false })
     .order("id", { ascending: true })
-    .limit(limit);
+    .limit(rankedIds ? rankedIds.length : limit);
 
   if (error) {
     console.error("getLatestBuyRequirements failed", error);
     return null;
   }
 
-  return (data ?? []).map((row) => ({
+  const rows = rankedIds ? sortByRank(data ?? [], rankedIds).slice(0, limit) : (data ?? []);
+  return rows.map((row) => ({
     id: row.id,
     productText: row.product_text,
     quantity: row.quantity,

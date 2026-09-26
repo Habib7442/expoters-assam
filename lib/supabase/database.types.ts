@@ -647,6 +647,28 @@ export type Database = {
           enquiries_deleted: number
         }[]
       }
+      search_buy_requirement_ids: {
+        Args: { max_results?: number; search: string }
+        Returns: {
+          id: string
+          score: number
+        }[]
+      }
+      search_company_ids: {
+        Args: { max_results?: number; search: string }
+        Returns: {
+          id: string
+          score: number
+        }[]
+      }
+      search_contains_pattern: { Args: { search: string }; Returns: string }
+      search_product_ids: {
+        Args: { max_results?: number; search: string }
+        Returns: {
+          id: string
+          score: number
+        }[]
+      }
       slugify: { Args: { p_text: string }; Returns: string }
       update_business_listing: {
         Args: {

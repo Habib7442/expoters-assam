@@ -5,6 +5,12 @@ vi.mock("@/lib/supabase/client", () => ({
   supabase: { from: (...args: unknown[]) => fromMock(...args) },
 }));
 
+const searchIdsMock = vi.fn();
+vi.mock("@/lib/supabase/queries/search", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./search")>()),
+  searchIds: (...args: unknown[]) => searchIdsMock(...args),
+}));
+
 const R2 = "https://images.exportersasssm.com";
 vi.mock("@/lib/storage/r2", () => ({
   isR2Url: (url: string) => url.startsWith("https://images.exportersasssm.com/"),
@@ -21,7 +27,7 @@ type Result = { data: unknown; error: { message: string } | null };
  */
 function builderResolvingTo(result: Result) {
   const builder: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "ilike", "order", "limit"]) {
+  for (const method of ["select", "eq", "in", "order", "limit"]) {
     builder[method] = vi.fn(() => builder);
   }
   builder.maybeSingle = vi.fn(async () => result);
@@ -178,7 +184,8 @@ describe("getProducts country filter", () => {
     vi.clearAllMocks();
   });
 
-  it("filters on the supplier company's country, alongside the category and name filters", async () => {
+  it("filters on the supplier company's country, alongside the category and search filters", async () => {
+    searchIdsMock.mockResolvedValue(["p1"]);
     const builder = builderResolvingTo({ data: [], error: null });
     fromMock.mockReturnValue(builder);
 
@@ -186,7 +193,44 @@ describe("getProducts country filter", () => {
 
     expect(builder.eq).toHaveBeenCalledWith("companies.country", "India");
     expect(builder.eq).toHaveBeenCalledWith("categories.slug", "tea");
-    expect(builder.ilike).toHaveBeenCalledWith("name", "%green%");
+    expect(searchIdsMock).toHaveBeenCalledWith("products", "green");
+    expect(builder.in).toHaveBeenCalledWith("id", ["p1"]);
+  });
+});
+
+describe("getProducts search", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const listRow = (id: string) => ({
+    id,
+    slug: id,
+    name: `Product ${id}`,
+    image_url: `${R2}/products/${id}.webp`,
+    companies: { name: "Avadi Herbs" },
+  });
+
+  it("returns matches in the database's ranking order, not by date, and applies the limit after ranking", async () => {
+    searchIdsMock.mockResolvedValue(["p3", "p1", "p2"]);
+    fromMock.mockReturnValue(builderResolvingTo({ data: [listRow("p1"), listRow("p2"), listRow("p3")], error: null }));
+
+    const products = await getProducts({ query: "agarwod", limit: 2 });
+
+    expect(products?.map((product) => product.id)).toEqual(["p3", "p1"]);
+  });
+
+  it("returns an empty list without reading products when nothing matches", async () => {
+    searchIdsMock.mockResolvedValue([]);
+
+    await expect(getProducts({ query: "zzzz" })).resolves.toEqual([]);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("returns null, not an empty list, when the search itself fails", async () => {
+    searchIdsMock.mockResolvedValue(null);
+
+    await expect(getProducts({ query: "tea" })).resolves.toBeNull();
   });
 
   it("applies no country filter when none is picked", async () => {
