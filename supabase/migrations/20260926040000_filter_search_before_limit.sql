@@ -18,6 +18,14 @@
 -- replace would add an overload, and two overloads with defaults would make
 -- PostgREST calls ambiguous). Still security invoker: every column read here
 -- is within the anon column grants.
+--
+-- Postgres only knows pg_trgm.word_similarity_threshold once the pg_trgm
+-- library is loaded in the session; until then it is an unknown
+-- "placeholder" setting, and only a superuser may attach one to a function
+-- (`permission denied to set parameter`, the first push of this file).
+-- 20260926030000 got away with it because its `create extension` loaded the
+-- library. Calling any pg_trgm function loads it, so do that first.
+select extensions.similarity('', '');
 
 drop function public.search_product_ids(text, integer);
 drop function public.search_company_ids(text, integer);
