@@ -152,6 +152,14 @@ describe("postBuyRequirement", () => {
     });
   });
 
+  it("accepts an international number written with the 00 dialing prefix", async () => {
+    rpcMock.mockResolvedValue({ data: [{ buy_requirement_id: "r1", rate_limited: false }], error: null });
+
+    const result = await postBuyRequirement({ ...validInput, phone: "00 123 456 789 012 345" });
+
+    expect(result.ok).toBe(true);
+  });
+
   it("reports the hourly cap as rate_limited, not success", async () => {
     rpcMock.mockResolvedValue({ data: [{ buy_requirement_id: null, rate_limited: true }], error: null });
 

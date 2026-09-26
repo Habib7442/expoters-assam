@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { hasValidPhoneDigitCount } from "@/lib/phone";
 import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
 import { BOT_CHECK_FAILED_MESSAGE, readTurnstileToken, verifyTurnstile } from "@/lib/security/turnstile";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -11,13 +12,10 @@ const buyRequirementSchema = z.object({
   phone: z
     .string()
     .trim()
-    .regex(/^[0-9+\-\s()]{10,20}$/, "Enter a valid phone number")
+    .regex(/^[0-9+\-\s()]{10,25}$/, "Enter a valid phone number")
     // The characters alone can pass with too few digits (e.g. "+++ --- 12"),
     // which the database then rejects as a server error; count the digits.
-    .refine((value) => {
-      const digits = value.replace(/[^0-9]/g, "").length;
-      return digits >= 10 && digits <= 15;
-    }, "Enter a valid phone number"),
+    .refine(hasValidPhoneDigitCount, "Enter a valid phone number"),
   email: z.string().trim().email("Enter a valid email address").optional().or(z.literal("")),
   categoryId: z.string().trim().uuid().optional().or(z.literal("")),
   productText: z.string().trim().min(2, "Tell us what you're looking to buy").max(300),

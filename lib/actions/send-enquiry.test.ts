@@ -94,6 +94,16 @@ describe("sendEnquiry", () => {
     });
 
     // covers: AC-2
+    // covers: AC-2
+    it("AC-2: accepts an international number written with the 00 dialing prefix", async () => {
+      rpcMock.mockResolvedValue({ data: [{ enquiry_id: "e1", rate_limited: false, whatsapp_number: null }], error: null });
+
+      const result = await sendEnquiry({ ...productInput, phone: "00 123 456 789 012 345" });
+
+      expect(result.ok === false && result.fieldErrors?.phone).toBeFalsy();
+      expect(rpcMock).toHaveBeenCalled();
+    });
+
     it("AC-2: rejects a phone made mostly of symbols, with too few digits, before the database sees it", async () => {
       const result = await sendEnquiry({ ...productInput, phone: "(+) - 12 - ()" });
 

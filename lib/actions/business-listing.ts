@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { hasValidPhoneDigitCount } from "@/lib/phone";
 import { CONSENT_NOTICE_VERSION } from "@/lib/consent";
 import { readVerifiedImage, type VerifiedImage } from "@/lib/image-signature";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -20,10 +21,7 @@ const whatsappNumber = z
   .string()
   .trim()
   .min(1, "Enter your WhatsApp number")
-  .refine((value) => {
-    const digits = value.replace(/[^0-9]/g, "");
-    return digits.length >= 10 && digits.length <= 15;
-  }, "Enter a valid WhatsApp number, with country code if outside India");
+  .refine(hasValidPhoneDigitCount, "Enter a valid WhatsApp number, with country code if outside India");
 
 const baseFields = {
   name: z.string().trim().min(2, "Enter your business name").max(200),
