@@ -32,7 +32,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 17 | Form abuse protection | Infrastructure | done |
 | 18 | Legal pages & DPDP compliance | Infrastructure | done |
 | 19 | Go live configuration | Infrastructure | planned |
-| 20 | About, Contact & FAQ pages | Infrastructure | planned |
+| 20 | About, Contact & FAQ pages | Infrastructure | done |
 
 ## Foundations
 
@@ -256,10 +256,13 @@ The production settings that have piled up as follow ups across specs, collected
 **Done when:** a Vercel production build runs against production Clerk, real Turnstile keys, and the real WhatsApp number, with every form working end to end on the live domain.
 - [ ] Build it: `/develop go live configuration`
 
-### 20. About, Contact & FAQ pages · planned
+### 20. About, Contact & FAQ pages · done
 The footer links to `/about`, `/contact`, and `/faq`, and all three return 404 (found by `/check verify home page`, 2026-09-26). Build them from facts already on record (PRD, the company details in the footer, the enquiry and listing flows), never invented claims; anything only the client can supply (team, history, phone) is left as a clearly marked gap for them to fill.
 **Done when:** every footer link resolves to a real page with accurate content.
-- [ ] Build it: `/develop about, contact & faq pages`
+- [x] Build it: `/develop about, contact & faq pages` (2026-09-26: `/about`, `/contact` (email, WhatsApp from `PLATFORM_WHATSAPP_NUMBER`, company), `/faq` (16 answers written from how the code behaves, with FAQPage JSON-LD); every footer link now resolves; 390px layout checked)
+- [x] Test it: FAQ structured data matches the questions shown; Contact follows the configured WhatsApp number and hides it when unset
+- [x] Review it: skipped on purpose, static content pages with no data or input; the copy was checked line by line against the code and Privacy Policy
+code in `app/about/page.tsx`, `app/contact/page.tsx`, `app/faq/page.tsx`
 
 ## Legend
 

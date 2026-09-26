@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a site wide error page, so an unexpected error shows a friendly message with Try again inside the normal header and footer, instead of a bare "Application error" screen.
 - Added tests for the supplier business listing (validation, every database error, upload cleanup) and a first test suite for product submission (39 new tests).
 - Added automatic deletion of a supplier's data when they delete their account: a signed Clerk `user.deleted` webhook removes their business listing, products, WhatsApp contact and images, so the Privacy Policy's deletion promise is kept.
+- Added About Us, Contact and FAQ pages, so every footer link now works. Contact shows the team's WhatsApp and email; the FAQ answers 16 common buyer, supplier and data questions and is marked up for Google and AI answer engines.
 
 ### Changed
 - The company profile query now filters for approved companies and approved products explicitly, as a second layer on top of Row Level Security, matching every other public read path.
