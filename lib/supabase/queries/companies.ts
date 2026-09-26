@@ -89,7 +89,7 @@ export async function getCompanies({ query, categorySlug, country, limit = 60 }:
   CompanyListItem[] | null
 > {
   // A search keeps its ranked order and applies the limit after ranking (see getProducts).
-  const rankedIds = query ? await searchIds("companies", query) : null;
+  const rankedIds = query ? await searchIds("companies", query, { categorySlug, country }) : null;
   if (query && rankedIds === null) return null;
   if (rankedIds?.length === 0) return [];
 

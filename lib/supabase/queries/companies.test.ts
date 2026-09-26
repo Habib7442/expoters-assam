@@ -240,7 +240,7 @@ describe("getCompanies", () => {
 
     const companies = await getCompanies({ query: "avdi herbs" });
 
-    expect(searchIdsMock).toHaveBeenCalledWith("companies", "avdi herbs");
+    expect(searchIdsMock).toHaveBeenCalledWith("companies", "avdi herbs", { categorySlug: undefined, country: undefined });
     expect(builder.in).toHaveBeenCalledWith("id", ["c2", "c1"]);
     expect(companies?.map((company) => company.id)).toEqual(["c2", "c1"]);
   });

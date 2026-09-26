@@ -193,7 +193,7 @@ describe("getProducts country filter", () => {
 
     expect(builder.eq).toHaveBeenCalledWith("companies.country", "India");
     expect(builder.eq).toHaveBeenCalledWith("categories.slug", "tea");
-    expect(searchIdsMock).toHaveBeenCalledWith("products", "green");
+    expect(searchIdsMock).toHaveBeenCalledWith("products", "green", { categorySlug: "tea", country: "India" });
     expect(builder.in).toHaveBeenCalledWith("id", ["p1"]);
   });
 });

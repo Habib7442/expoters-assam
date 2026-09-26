@@ -655,7 +655,12 @@ export type Database = {
         }[]
       }
       search_company_ids: {
-        Args: { max_results?: number; search: string }
+        Args: {
+          category_slug?: string
+          company_country?: string
+          max_results?: number
+          search: string
+        }
         Returns: {
           id: string
           score: number
@@ -663,7 +668,12 @@ export type Database = {
       }
       search_contains_pattern: { Args: { search: string }; Returns: string }
       search_product_ids: {
-        Args: { max_results?: number; search: string }
+        Args: {
+          category_slug?: string
+          company_country?: string
+          max_results?: number
+          search: string
+        }
         Returns: {
           id: string
           score: number

@@ -42,10 +42,11 @@ export async function getProducts({
   query,
   limit = 60,
 }: GetProductsOptions = {}): Promise<ProductListItem[] | null> {
-  // A search reads its ranked matches (at most 100) and keeps their order;
-  // the limit is applied after ranking, so it drops the weakest matches, not
-  // the oldest.
-  const rankedIds = query ? await searchIds("products", query) : null;
+  // A search reads its ranked matches (at most 100, with the category and
+  // country filters already applied inside the search so the cap never hides
+  // a match) and keeps their order; the limit is applied after ranking, so it
+  // drops the weakest matches, not the oldest.
+  const rankedIds = query ? await searchIds("products", query, { categorySlug, country }) : null;
   if (query && rankedIds === null) return null;
   if (rankedIds?.length === 0) return [];
 
