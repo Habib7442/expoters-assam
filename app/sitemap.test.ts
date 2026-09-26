@@ -1,13 +1,32 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type Result = { data: unknown; error: { message: string } | null };
+type Result = { data: unknown[] | null; error: { message: string } | null };
 const results: Record<string, Result> = {};
+/** Pages requested per table, as [from, to]; `failFrom` makes a page starting there fail. */
+const ranges: Record<string, [number, number][]> = {};
+let failFrom: { table: string; from: number } | null = null;
 
-/** Every filter returns the builder; awaiting it resolves to that table's result. */
+/**
+ * Filters return the builder; `.range(from, to)` slices that table's rows the
+ * way PostgREST pages them, so the sitemap's paging loop runs for real.
+ */
 function builderFor(table: string) {
+  let window: [number, number] | null = null;
   const builder: Record<string, unknown> = {};
-  for (const method of ["select", "eq"]) builder[method] = vi.fn(() => builder);
-  builder.then = (onFulfilled: (v: Result) => unknown) => Promise.resolve(onFulfilled(results[table]));
+  for (const method of ["select", "eq", "order"]) builder[method] = vi.fn(() => builder);
+  builder.range = vi.fn((from: number, to: number) => {
+    window = [from, to];
+    (ranges[table] ??= []).push([from, to]);
+    return builder;
+  });
+  builder.then = (onFulfilled: (v: Result) => unknown) => {
+    const all = results[table];
+    if (failFrom && failFrom.table === table && window?.[0] === failFrom.from) {
+      return Promise.resolve(onFulfilled({ data: null, error: { message: "timeout" } }));
+    }
+    const data = all.data && window ? all.data.slice(window[0], window[1] + 1) : all.data;
+    return Promise.resolve(onFulfilled({ data, error: all.error }));
+  };
   return builder;
 }
 vi.mock("@/lib/supabase/client", () => ({
@@ -21,6 +40,8 @@ const SITE = "https://www.exportersasssm.com";
 
 describe("sitemap", () => {
   beforeEach(() => {
+    failFrom = null;
+    for (const key of Object.keys(ranges)) delete ranges[key];
     results.products = { data: [{ slug: "ahi-resin-gold", updated_at: "2026-09-20T10:00:00Z" }], error: null };
     results.companies = { data: [{ slug: "avadi-herbs-india", created_at: "2026-09-12T03:14:38Z" }], error: null };
     results.categories = { data: [{ slug: "spices-herbs" }], error: null };
@@ -57,6 +78,52 @@ describe("sitemap", () => {
 
     expect(urls).toContain(`${SITE}/companies/avadi-herbs-india`);
     expect(urls.some((url) => url.includes("/products/ahi"))).toBe(false);
+  });
+});
+
+describe("sitemap paging past the 1000 row cap", () => {
+  beforeEach(() => {
+    failFrom = null;
+    for (const key of Object.keys(ranges)) delete ranges[key];
+    results.products = {
+      data: Array.from({ length: 2500 }, (_, i) => ({ slug: `p-${i}`, updated_at: "2026-09-20T10:00:00Z" })),
+      error: null,
+    };
+    results.companies = { data: [], error: null };
+    results.categories = { data: [], error: null };
+  });
+
+  it("fetches every product in consecutive pages of 1000, none skipped or repeated", async () => {
+    const urls = (await sitemap()).map((entry) => entry.url).filter((url) => url.includes("/products/p-"));
+
+    expect(ranges.products).toEqual([
+      [0, 999],
+      [1000, 1999],
+      [2000, 2999],
+    ]);
+    expect(urls).toHaveLength(2500);
+    expect(new Set(urls).size).toBe(2500);
+  });
+
+  it("after a full page asks for one more, and stops at the empty page that follows", async () => {
+    results.products = { data: results.products.data!.slice(0, 1000), error: null };
+
+    await sitemap();
+
+    // Exactly 1000 rows is a full page, so one more (empty) page confirms the end.
+    expect(ranges.products).toEqual([
+      [0, 999],
+      [1000, 1999],
+    ]);
+  });
+
+  it("keeps the pages already fetched when a later page fails", async () => {
+    failFrom = { table: "products", from: 1000 };
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const urls = (await sitemap()).map((entry) => entry.url).filter((url) => url.includes("/products/p-"));
+
+    expect(urls).toHaveLength(1000);
   });
 });
 
