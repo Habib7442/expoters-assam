@@ -8,6 +8,8 @@ import { BusinessListingForm } from "@/components/business-listing-form";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
+  // Per-user page: nothing here for search results (robots.txt disallows it too).
+  robots: { index: false, follow: false },
   title: "List Your Business | Exporters Assam",
   description: "List your business on Exporters Assam and get discovered by buyers worldwide.",
 };

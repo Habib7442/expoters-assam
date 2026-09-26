@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/terms" },
   title: "Terms of Service | Exporters Assam",
   description: "The terms that govern your use of Exporters Assam.",
 };

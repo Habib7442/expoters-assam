@@ -81,8 +81,17 @@ describe("generateMetadata", () => {
 
     const metadata = await generateMetadata(paramsFor("ahi-resin-gold"));
 
-    expect(metadata.title).toBe("AHI Resin Gold — Avadi Herbs India Pvt Ltd | Exporters Assam");
+    expect(metadata.title).toBe("AHI Resin Gold from Avadi Herbs India Pvt Ltd | Exporters Assam");
     expect(metadata.description).toBe(product.description);
+  });
+
+  it("sets a canonical URL and uses the product photo for social previews", async () => {
+    getProductBySlugMock.mockResolvedValue(product);
+
+    const metadata = await generateMetadata(paramsFor("ahi-resin-gold"));
+
+    expect(metadata.alternates?.canonical).toBe(`/products/${product.slug}`);
+    expect(metadata.openGraph?.images).toEqual([{ url: product.image_url, alt: product.name }]);
   });
 
   it("trims a long description to 155 characters", async () => {

@@ -9,6 +9,8 @@ import { getCurrentTier } from "@/lib/supabase/queries/company-tiers";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
 import { SendEnquiryDialog } from "@/components/send-enquiry-dialog";
+import { JsonLd } from "@/components/json-ld";
+import { SITE_NAME, absoluteUrl } from "@/lib/site";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -23,9 +25,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? company.about.slice(0, 155)
     : `${company.name} on Exporters Assam, a B2B directory connecting Assam and Indian exporters with buyers worldwide.`;
 
+  const path = `/companies/${company.slug}`;
+  const title = `${company.name} | Exporters Assam`;
   return {
-    title: `${company.name} | Exporters Assam`,
+    title,
     description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      url: path,
+      title,
+      description,
+      ...(company.logoUrl ? { images: [{ url: company.logoUrl, alt: company.name }] } : {}),
+    },
   };
 }
 
@@ -52,8 +65,36 @@ export default async function CompanyPage({ params }: Props) {
     memberSince ? `Member since ${memberSince}` : null,
   ].filter(Boolean);
 
+  const companyUrl = absoluteUrl(`/companies/${company.slug}`);
+  const companyJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: company.name,
+        url: companyUrl,
+        ...(company.logoUrl ? { logo: company.logoUrl } : {}),
+        ...(company.about ? { description: company.about } : {}),
+        address: {
+          "@type": "PostalAddress",
+          ...(company.location ? { addressLocality: company.location } : {}),
+          addressCountry: company.country,
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Companies", item: absoluteUrl("/companies") },
+          { "@type": "ListItem", position: 3, name: company.name, item: companyUrl },
+        ],
+      },
+    ],
+  };
+
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
+      <JsonLd data={companyJsonLd} />
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link href="/" className="transition-colors hover:text-green">

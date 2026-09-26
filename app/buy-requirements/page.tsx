@@ -24,6 +24,7 @@ import { LoadFailedState } from "@/components/load-failed-state";
 import { firstParam, type SearchParamValue } from "@/lib/search-params";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/buy-requirements" },
   title: "Buy Leads & RFQs | Exporters Assam",
   description:
     "See what buyers are sourcing from Assam, or post your own requirement. Our team matches each one with suitable Assam exporters and connects you on WhatsApp.",

@@ -6,6 +6,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -26,7 +27,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Exporters Assam — B2B Trade Directory for Assam & Indian Exporters",
+  // Every relative URL in page metadata (canonicals, OG images) resolves against the live domain.
+  metadataBase: new URL(SITE_URL),
+  title: "Exporters Assam: B2B Trade Directory for Assam & Indian Exporters",
   description:
     "Connect with verified exporters of agarwood, spices, tea, essential oils, and nursery plants from Assam and across India. Post buy requirements, send enquiries, and close deals directly over WhatsApp.",
   icons: {
@@ -37,6 +40,14 @@ export const metadata: Metadata = {
     apple: "/favicons/apple-touch-icon.png",
   },
   manifest: "/favicons/site.webmanifest",
+  // Defaults every page inherits; pages override title, description, url and image.
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_IN",
+    images: [{ url: "/og_image.png", width: 1731, height: 909, alt: "Exporters Assam" }],
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

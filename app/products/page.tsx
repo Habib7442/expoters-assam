@@ -11,10 +11,28 @@ import { firstParam, type SearchParamValue } from "@/lib/search-params";
 import { ProductCard } from "@/components/product-card";
 import { LoadFailedState } from "@/components/load-failed-state";
 
-export const metadata: Metadata = {
-  title: "Products | Exporters Assam",
-  description: "Browse approved products from verified Assam and Indian exporters.",
-};
+/**
+ * A plain category view (/products?category=tea) is a real landing page for
+ * "tea exporters", so it gets its own title and canonical. Search results
+ * and country views point back to the unfiltered or category page instead of
+ * competing with it.
+ */
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const category = firstParam((await searchParams).category);
+  const match = category ? (await getCategoriesWithProductCounts())?.find((c) => c.slug === category) : undefined;
+  if (!match) {
+    return {
+      title: "Products | Exporters Assam",
+      description: "Browse approved products from verified Assam and Indian exporters.",
+      alternates: { canonical: "/products" },
+    };
+  }
+  return {
+    title: `${match.name} from Assam & Indian Exporters | Exporters Assam`,
+    description: `Browse ${match.name.toLowerCase()} from verified exporters in Assam and across India, and send an enquiry straight to the supplier on WhatsApp.`,
+    alternates: { canonical: `/products?category=${encodeURIComponent(match.slug)}` },
+  };
+}
 
 // Real Supabase data, not build-time content: without a dynamic API in this
 // page, Next would otherwise prerender it once and freeze that snapshot

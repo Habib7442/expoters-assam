@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/about" },
   title: "About Us | Exporters Assam",
   description:
     "Exporters Assam is a B2B trade directory by Avadi Herbs India Pvt. Ltd., connecting buyers worldwide with exporters of agarwood, tea, spices, essential oils and more from Assam and India.",

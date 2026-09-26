@@ -25,7 +25,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 10 | Supplier business listing | Slice 3 | done |
 | 11 | Membership plans & Razorpay | Slice 4 | planned · deferred |
 | 12 | AI-powered / semantic search | Slice 5 | planned |
-| 13 | SEO & GEO | Slice 5 | planned |
+| 13 | SEO & GEO | Slice 5 | done |
 | 14 | PostHog analytics | Slice 5 | planned · deferred |
 | 15 | Cloudflare R2 image storage | Infrastructure | in-progress |
 | 16 | Supplier product submission | Slice 3 | done |
@@ -197,10 +197,14 @@ A basic stand in already works: the header and hero search do a plain name match
 - [x] Design it (spec): decided inline (see note above), no `docs/specs/` entry
 - [ ] Build it: `/develop ai-powered search`
 
-### 13. SEO & GEO · planned
+### 13. SEO & GEO · done
 Sitemap, per-page metadata and structured data, clean URLs, and AI-crawler readiness, per PRD Sections 8 to 9 and the installed `seo-aeo-best-practices` skill.
 **Done when:** every product and company page has correct metadata and structured data, a sitemap exists, and crawler access is configured.
-- [ ] Build it: `/develop seo & geo`
+- [x] Build it: `/develop seo & geo` (2026-09-26, using the `seo-aeo-best-practices` skill: `metadataBase` and default Open Graph/Twitter cards on `https://www.exportersasssm.com`; a canonical URL on every public page, with plain category views on /products and /companies getting their own title and canonical; JSON-LD for Organization + WebSite with SearchAction (home), Product + BreadcrumbList, Organization + BreadcrumbList, FAQPage; `app/sitemap.ts` from live approved data (hourly); `app/robots.ts` welcoming search and AI crawlers and blocking private paths; noindex on sign in, sign up, list business and add product)
+- [x] Verify it: live robots.txt, a 25 URL sitemap from real data, canonicals, titles, OG images and valid JSON-LD on every page type
+- [x] Test it: sitemap (URLs, dates, private pages excluded, a failed query), robots, product metadata
+- [x] Review it: skipped on purpose, metadata only and every output checked live
+code in `lib/site.ts`, `components/json-ld.tsx`, `app/sitemap.ts`, `app/robots.ts`, `app/layout.tsx`, and each page's metadata
 
 ### 14. PostHog analytics · planned
 Page views, search behavior, and enquiry funnel drop-off tracked via PostHog.

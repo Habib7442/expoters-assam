@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ProductSubmissionForm } from "@/components/product-submission-form";
 
 export const metadata: Metadata = {
+  // Per-user page: nothing here for search results (robots.txt disallows it too).
+  robots: { index: false, follow: false },
   title: "Submit a Product | Exporters Assam",
   description: "List a product under your approved business on Exporters Assam.",
 };

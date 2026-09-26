@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Mail, MapPin, MessageCircle } from "lucide-react";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/contact" },
   title: "Contact Us | Exporters Assam",
   description: "Get in touch with the Exporters Assam team by email or WhatsApp.",
 };

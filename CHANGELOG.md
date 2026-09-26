@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added automatic deletion of a supplier's data when they delete their account: a signed Clerk `user.deleted` webhook removes their business listing, products, WhatsApp contact and images, so the Privacy Policy's deletion promise is kept.
 - Added About Us, Contact and FAQ pages, so every footer link now works. Contact shows the team's WhatsApp and email; the FAQ answers 16 common buyer, supplier and data questions and is marked up for Google and AI answer engines.
 - Added country filters to the Products and Companies pages and a category filter to Companies (companies with products in that category). Filters combine with search and each other, show in the URL, and the country row appears once the directory has suppliers from more than one country. Country names are normalized when a listing is saved, so "india" and "India" are one filter.
+- Added SEO and AI answer engine readiness: a sitemap built from live listings, a robots.txt that welcomes search and AI crawlers but keeps private pages out, canonical URLs on every public page, their own titles for category pages (e.g. "Tea from Assam & Indian Exporters"), social preview cards, and structured data for the site, products, companies, breadcrumbs and the FAQ.
 
 ### Changed
 - The company profile query now filters for approved companies and approved products explicitly, as a second layer on top of Row Level Security, matching every other public read path.

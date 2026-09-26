@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { JsonLd } from "@/components/json-ld";
+
 export const metadata: Metadata = {
+  alternates: { canonical: "/faq" },
   title: "FAQ | Exporters Assam",
   description:
     "Answers to common questions about Exporters Assam: contacting suppliers, posting buy requirements, listing your business, fees, and your data.",
@@ -108,11 +111,7 @@ const faqJsonLd = {
 export default function FaqPage() {
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
-      <script
-        type="application/ld+json"
-        // Static content from this file only; escape "<" so nothing can close the tag.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c") }}
-      />
+      <JsonLd data={faqJsonLd} />
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8 flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">Frequently Asked Questions</h1>

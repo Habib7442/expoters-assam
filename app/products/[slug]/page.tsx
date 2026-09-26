@@ -10,6 +10,8 @@ import { isR2Url } from "@/lib/storage/r2";
 import { Badge } from "@/components/ui/badge";
 import { ProductGallery } from "@/components/product-gallery";
 import { SendEnquiryDialog } from "@/components/send-enquiry-dialog";
+import { JsonLd } from "@/components/json-ld";
+import { SITE_NAME, absoluteUrl } from "@/lib/site";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -24,9 +26,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? product.description.slice(0, 155)
     : `${product.name} from ${product.company.name} on Exporters Assam, connecting Assam and Indian exporters with buyers worldwide.`;
 
+  const path = `/products/${product.slug}`;
+  const title = `${product.name} from ${product.company.name} | Exporters Assam`;
   return {
-    title: `${product.name} — ${product.company.name} | Exporters Assam`,
+    title,
     description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      url: path,
+      title,
+      description,
+      ...(isR2Url(product.image_url) ? { images: [{ url: product.image_url, alt: product.name }] } : {}),
+    },
   };
 }
 
@@ -39,8 +52,38 @@ export default async function ProductPage({ params }: Props) {
   const galleryImages = product.gallery_urls.filter((url) => url !== product.image_url);
   const images = [product.image_url, ...galleryImages].filter((url) => isR2Url(url));
 
+  // No offers/price: prices are agreed off-platform, so none is published.
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        name: product.name,
+        url: absoluteUrl(`/products/${product.slug}`),
+        ...(product.description ? { description: product.description } : {}),
+        ...(images.length > 0 ? { image: images } : {}),
+        ...(product.category ? { category: product.category.name } : {}),
+        brand: { "@type": "Brand", name: product.company.name },
+        manufacturer: {
+          "@type": "Organization",
+          name: product.company.name,
+          url: absoluteUrl(`/companies/${product.company.slug}`),
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Products", item: absoluteUrl("/products") },
+          { "@type": "ListItem", position: 3, name: product.name, item: absoluteUrl(`/products/${product.slug}`) },
+        ],
+      },
+    ],
+  };
+
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
+      <JsonLd data={productJsonLd} />
       <div className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 sm:py-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           <ProductGallery images={images} productName={product.name} />

@@ -10,10 +10,23 @@ import { firstParam, type SearchParamValue } from "@/lib/search-params";
 import { ExporterCard } from "@/components/exporter-card";
 import { LoadFailedState } from "@/components/load-failed-state";
 
-export const metadata: Metadata = {
-  title: "Companies | Exporters Assam",
-  description: "Browse approved exporters on the Exporters Assam directory.",
-};
+/** Same approach as /products: a plain category view has its own title and canonical. */
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const category = firstParam((await searchParams).category);
+  const match = category ? (await getCategoriesWithProductCounts())?.find((c) => c.slug === category) : undefined;
+  if (!match) {
+    return {
+      title: "Companies | Exporters Assam",
+      description: "Browse approved exporters on the Exporters Assam directory.",
+      alternates: { canonical: "/companies" },
+    };
+  }
+  return {
+    title: `${match.name} Exporters in Assam & India | Exporters Assam`,
+    description: `Approved ${match.name.toLowerCase()} exporters and suppliers from Assam and across India. Contact them directly on WhatsApp.`,
+    alternates: { canonical: `/companies?category=${encodeURIComponent(match.slug)}` },
+  };
+}
 
 // Real Supabase data, not build-time content: without a dynamic API in this
 // page, Next would otherwise prerender it once and freeze that snapshot

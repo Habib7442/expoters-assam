@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Building2, Globe, Handshake, PackagePlus, ShieldCheck, TrendingUp, UserPlus } from "lucide-react";
@@ -15,6 +16,42 @@ import {
   getFeaturedExporters,
   getLatestBuyRequirements,
 } from "@/lib/supabase/queries/home";
+import { JsonLd } from "@/components/json-ld";
+import { CONTACT_EMAIL, OPERATOR_NAME, SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+// Who runs the site, and how to search it: lets search engines show the
+// site name and a search box, and gives AI answer engines a clear source.
+const SITE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": absoluteUrl("/#organization"),
+      name: SITE_NAME,
+      legalName: OPERATOR_NAME,
+      url: SITE_URL,
+      logo: absoluteUrl("/logo.png"),
+      email: CONTACT_EMAIL,
+      address: { "@type": "PostalAddress", addressRegion: "Assam", addressCountry: "IN" },
+    },
+    {
+      "@type": "WebSite",
+      "@id": absoluteUrl("/#website"),
+      name: SITE_NAME,
+      url: SITE_URL,
+      publisher: { "@id": absoluteUrl("/#organization") },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/products?q={search_term_string}` },
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
+};
 
 const VALUE_PROPS = [
   { icon: Globe, label: "Global Reach" },
@@ -59,6 +96,7 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft w-full overflow-x-hidden">
+      <JsonLd data={SITE_JSON_LD} />
       {categories && categories.length > 0 && (
         <nav
           aria-label="Categories"
