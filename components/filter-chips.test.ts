@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: ReactNode }) =>
     createElement("a", { href, ...rest }, children),
+  useLinkStatus: () => ({ pending: false }),
 }));
 
 import { FilterChips } from "./filter-chips";

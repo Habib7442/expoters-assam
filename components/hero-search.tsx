@@ -1,8 +1,8 @@
 "use client"
 
-import { type FormEvent, type KeyboardEvent, useEffect, useId, useState } from "react"
+import { type FormEvent, type KeyboardEvent, useEffect, useId, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronDown, Search } from "lucide-react"
+import { ChevronDown, Loader2, Search } from "lucide-react"
 
 import type { SearchSuggestion } from "@/app/api/search/suggest/route"
 import { Button } from "@/components/ui/button"
@@ -34,6 +34,15 @@ export function HeroSearch() {
   const [results, setResults] = useState<SuggestionResults | null>(null)
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  // True from the moment a search or suggestion is chosen until the next
+  // page is ready, so the button shows a spinner even before app/loading.tsx
+  // can take over (a page that wasn't prefetched).
+  const [navigating, startNavigation] = useTransition()
+
+  function navigate(href: string) {
+    setOpen(false)
+    startNavigation(() => router.push(href))
+  }
 
   const trimmed = query.trim()
   const requestKey = `${scope.value}:${trimmed}`
@@ -74,11 +83,7 @@ export function HeroSearch() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const active = showSuggestions ? suggestions[activeIndex] : undefined
-    if (active) {
-      router.push(active.href)
-      return
-    }
-    router.push(trimmed ? `${scope.href}?q=${encodeURIComponent(trimmed)}` : scope.href)
+    navigate(active ? active.href : trimmed ? `${scope.href}?q=${encodeURIComponent(trimmed)}` : scope.href)
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -146,10 +151,16 @@ export function HeroSearch() {
         <Button
           type="submit"
           className="h-8 shrink-0 rounded-full px-3 text-xs sm:h-9 sm:px-4 sm:text-sm"
-          aria-label="Search"
+          aria-label={navigating ? "Loading results" : "Search"}
+          aria-busy={navigating}
+          disabled={navigating}
         >
-          <Search className="size-3.5 sm:size-4" />
-          <span className="hidden sm:inline">Search</span>
+          {navigating ? (
+            <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none sm:size-4" aria-hidden="true" />
+          ) : (
+            <Search className="size-3.5 sm:size-4" aria-hidden="true" />
+          )}
+          <span className="hidden sm:inline">{navigating ? "Loading" : "Search"}</span>
         </Button>
       </form>
 
@@ -169,7 +180,7 @@ export function HeroSearch() {
             // mousedown, not click: it fires before the input's blur closes the list.
             onMouseDown={(event) => {
               event.preventDefault()
-              router.push(suggestion.href)
+              navigate(suggestion.href)
             }}
             onMouseEnter={() => setActiveIndex(index)}
             className={cn(

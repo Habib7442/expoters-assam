@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Search } from "lucide-react"
+import { Loader2, Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -39,7 +39,9 @@ export function SearchBar({
 
   const [value, setValue] = useState(urlValue)
   const [syncedUrlValue, setSyncedUrlValue] = useState(urlValue)
-  const [, startTransition] = useTransition()
+  // Pending from the URL update until the page's new results arrive: the
+  // old list stays on screen meanwhile, so the icon turns into a spinner.
+  const [isPending, startTransition] = useTransition()
 
   // Keeps the input in sync with external navigation (a category chip that
   // carries the current q along, browser back/forward) without fighting the
@@ -69,15 +71,23 @@ export function SearchBar({
 
   return (
     <div className={cn("relative flex w-full max-w-md items-center", className)}>
-      <Search
-        className="pointer-events-none absolute left-3 size-4 text-muted-foreground"
-        aria-hidden="true"
-      />
+      {isPending ? (
+        <Loader2
+          className="pointer-events-none absolute left-3 size-4 animate-spin text-muted-foreground motion-reduce:animate-none"
+          aria-hidden="true"
+        />
+      ) : (
+        <Search
+          className="pointer-events-none absolute left-3 size-4 text-muted-foreground"
+          aria-hidden="true"
+        />
+      )}
       <Input
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
+        aria-busy={isPending}
         className="h-10 pl-9"
       />
     </div>

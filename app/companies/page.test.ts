@@ -15,6 +15,7 @@ vi.mock("@/lib/supabase/queries/home", () => ({
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: ReactNode }) =>
     createElement("a", { href, ...rest }, children),
+  useLinkStatus: () => ({ pending: false }),
 }));
 vi.mock("next/image", () => ({
   default: ({ src, alt }: { src: string; alt: string }) => createElement("img", { src, alt }),
