@@ -489,6 +489,24 @@ describe("business listing never wastes or orphans an R2 upload (review 2026-09-
     expect(uploadToR2Mock).not.toHaveBeenCalled();
   });
 
+  it("treats a stored lowercase country as unchanged, so normalization alone never sends a listing to review", async () => {
+    mockExistingListing({ ...storedListing, country: "india" });
+
+    const result = await updateBusinessListing(editFormData());
+
+    expect(result).toEqual({ ok: true, companyId: "c1", status: "approved" });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("still treats a genuinely different country as a change", async () => {
+    mockExistingListing({ ...storedListing, country: "Bhutan" });
+    rpcMock.mockResolvedValue({ data: [{ company_id: "c1", status: "pending" }], error: null });
+
+    await updateBusinessListing(editFormData());
+
+    expect(rpcMock).toHaveBeenCalledWith("update_business_listing", expect.objectContaining({ p_country: "India" }));
+  });
+
   it("treats a changed field as a real edit", async () => {
     mockExistingListing({ ...storedListing, about: "Old about" });
     rpcMock.mockResolvedValue({ data: [{ company_id: "c1", status: "pending" }], error: null });

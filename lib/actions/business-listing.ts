@@ -168,7 +168,9 @@ function isUnchanged(existing: ExistingListing, next: ListingFields): boolean {
     same(existing.location, next.location) &&
     same(existing.state, next.state) &&
     same(existing.postal_code, next.postalCode) &&
-    existing.country === next.country &&
+    // Stored values may predate normalization (or come from the admin app),
+    // so normalize both sides: "india" on file and "India" submitted is no change.
+    canonicalCountryName(existing.country) === next.country &&
     same(existing.about, next.about) &&
     same(existing.email, next.email) &&
     same(existing.gst_number, next.gstNumber) &&
