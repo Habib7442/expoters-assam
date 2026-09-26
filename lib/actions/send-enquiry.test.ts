@@ -93,6 +93,14 @@ describe("sendEnquiry", () => {
       expect(rpcMock).not.toHaveBeenCalled();
     });
 
+    // covers: AC-2
+    it("AC-2: rejects a phone made mostly of symbols, with too few digits, before the database sees it", async () => {
+      const result = await sendEnquiry({ ...productInput, phone: "(+) - 12 - ()" });
+
+      expect(result.ok === false && result.fieldErrors?.phone).toBe("Enter a valid phone number");
+      expect(rpcMock).not.toHaveBeenCalled();
+    });
+
     it("rejects a malformed optional email but accepts a valid one", async () => {
       const bad = await sendEnquiry({ ...productInput, email: "not-an-email" });
       expect(bad.ok === false && bad.fieldErrors?.email).toBe("Enter a valid email address");

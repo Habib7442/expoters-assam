@@ -8,7 +8,16 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const buyRequirementSchema = z.object({
   name: z.string().trim().min(2).max(100),
-  phone: z.string().trim().regex(/^[0-9+\-\s()]{10,20}$/, "Enter a valid phone number"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[0-9+\-\s()]{10,20}$/, "Enter a valid phone number")
+    // The characters alone can pass with too few digits (e.g. "+++ --- 12"),
+    // which the database then rejects as a server error; count the digits.
+    .refine((value) => {
+      const digits = value.replace(/[^0-9]/g, "").length;
+      return digits >= 10 && digits <= 15;
+    }, "Enter a valid phone number"),
   email: z.string().trim().email("Enter a valid email address").optional().or(z.literal("")),
   categoryId: z.string().trim().uuid().optional().or(z.literal("")),
   productText: z.string().trim().min(2, "Tell us what you're looking to buy").max(300),
@@ -84,6 +93,8 @@ export async function postBuyRequirement(input: PostBuyRequirementInput): Promis
         fieldErrors: { categoryId: "That category is no longer available. Choose another, or leave it blank." },
       };
     }
+    // Code and message only: never the buyer's name, phone, or email.
+    console.error("postBuyRequirement failed", { code: error.code, message: error.message });
     return {
       ok: false,
       code: "server_error",
@@ -93,6 +104,7 @@ export async function postBuyRequirement(input: PostBuyRequirementInput): Promis
 
   const row = data?.[0];
   if (!row) {
+    console.error("postBuyRequirement failed: the database returned no row");
     return {
       ok: false,
       code: "server_error",

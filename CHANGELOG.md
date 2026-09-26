@@ -22,10 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a unique, URL safe `slug` to every company. Existing companies were backfilled without collisions, a new business listing gets its slug when it is created (a numeric suffix if the name is taken), and a rename never changes it.
 - Added tests for the company query helpers, the company profile page and its metadata, and the exporter card (43 tests).
 - Added tests for the home page and its query helpers (40 tests), including proof that one failing section never breaks the rest of the page (spec 0002).
+- Added tests for Post Buy Requirement: the full success path (database call, consent version, WhatsApp link to the platform number), the hourly cap, bad input, server errors, and the `/buy-requirements` listing page.
 
 ### Changed
 - The company profile query now filters for approved companies and approved products explicitly, as a second layer on top of Row Level Security, matching every other public read path.
 - The header now uses the design system colors throughout, replacing the default Tailwind palette in the mobile menu.
+- Rewrote the `/buy-requirements` page copy to match how the platform actually works: the team matches each requirement with exporters and introduces them on WhatsApp. Removed claims the product doesn't keep (direct supplier quotes, lab test reports, certified producers, instant replies). The list is now labeled "Recent Requirements" and says when it is showing only the newest 100.
 
 ### Removed
 - Removed two plain indexes on `companies.slug` and `products.slug` that duplicated the unique index each table already has, cutting write and storage cost with no effect on lookups.
@@ -39,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed home page category tiles counting products from approved but unverified companies, so a tile could promise more products than the category page it links to shows.
 - Fixed buy requirement dates following the server clock (UTC on Vercel); a requirement posted just after midnight in India now shows that day, not the day before.
 - Fixed the home page showing made up category names when categories failed to load; the chip row is now left out like every other section, and each chip links to its category.
+- Fixed phone numbers made mostly of symbols (fewer than 10 digits) passing the form check on Send Enquiry and Post Buy Requirement and then failing in the database as a generic error; they now get a clear phone field error.
+- Fixed failed buy requirement saves leaving no trace; the error is now logged on the server (code and message only, never the buyer's details).
 
 ### Security
 - Hardened the database privilege model so a table added by a future migration no longer inherits public write access by default; previously only tables that existed at the time of the initial migration were covered by the explicit privilege revoke.

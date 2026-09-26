@@ -26,7 +26,7 @@ import { firstParam, type SearchParamValue } from "@/lib/search-params";
 export const metadata: Metadata = {
   title: "Buy Leads & RFQs | Exporters Assam",
   description:
-    "Discover active B2B buy requirements and sourcing requests from international and domestic buyers. Connect directly with verified Assam exporters.",
+    "See what buyers are sourcing from Assam, or post your own requirement. Our team matches each one with suitable Assam exporters and connects you on WhatsApp.",
 };
 
 // Real Supabase data, not build-time content: without a dynamic API in this
@@ -37,6 +37,9 @@ export const dynamic = "force-dynamic";
 type Props = {
   searchParams: Promise<{ q?: SearchParamValue }>;
 };
+
+// The board shows the newest posts only; there is no pagination yet.
+const LIST_LIMIT = 100;
 
 const POPULAR_SEARCHES = [
   "Agarwood",
@@ -54,25 +57,25 @@ const SOURCING_STEPS = [
     step: "01",
     title: "Post What You Need",
     description:
-      "Specify your desired product, volume, target grade, destination port, and packaging specifications in under 60 seconds.",
+      "Tell us the product, quantity, and delivery location. Choose whether it is shown publicly on this board or kept private.",
     icon: FileText,
-    iconColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+    iconColor: "bg-green/15 text-green",
   },
   {
     step: "02",
-    title: "Verified Exporters Review",
+    title: "Our Team Finds a Match",
     description:
-      "Registered Assam growers, distillers, and certified export houses inspect your RFQ to prepare competitive wholesale quotes.",
+      "The Exporters Assam team reads every requirement, public or private, and matches it with suitable exporters listed in the directory.",
     icon: ShieldCheck,
-    iconColor: "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300",
+    iconColor: "bg-green-deep/10 text-green-deep",
   },
   {
     step: "03",
-    title: "Direct WhatsApp Quotations",
+    title: "Talk on WhatsApp",
     description:
-      "Receive detailed pricing, lab test reports, and sample offers directly on your WhatsApp with zero middleman fees.",
+      "We introduce you to the exporter on WhatsApp. Pricing, samples, and the deal are agreed between you; the platform takes no commission.",
     icon: MessageCircle,
-    iconColor: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    iconColor: "bg-gold/15 text-gold",
   },
 ];
 
@@ -105,18 +108,18 @@ const SOURCING_CATEGORIES = [
 
 export default async function BuyRequirementsPage({ searchParams }: Props) {
   const q = firstParam((await searchParams).q);
-  const buyRequirements = await getLatestBuyRequirements(100, q);
+  const buyRequirements = await getLatestBuyRequirements(LIST_LIMIT, q);
   const hasRequirements = buyRequirements && buyRequirements.length > 0;
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft/70">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 px-4 py-8 sm:px-6 sm:py-12">
         {/* Hero Header Section */}
-        <section className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-green-wash/90 via-emerald-50/50 to-white p-6 shadow-xs sm:p-10">
+        <section className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-green-wash/90 via-green-wash/40 to-background p-6 shadow-xs sm:p-10">
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex max-w-2xl flex-col gap-3">
-              <div className="inline-flex items-center gap-2 self-start rounded-full border border-green/20 bg-white/90 px-3.5 py-1 text-xs font-semibold text-green-deep shadow-2xs backdrop-blur-xs">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="inline-flex items-center gap-2 self-start rounded-full border border-green/20 bg-background/90 px-3.5 py-1 text-xs font-semibold text-green-deep shadow-2xs backdrop-blur-xs">
+                <span className="size-2 rounded-full bg-green animate-pulse" />
                 <span>Live B2B Sourcing Board &bull; Exporters Assam</span>
               </div>
 
@@ -125,22 +128,22 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
               </h1>
 
               <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Discover active sourcing requirements posted by buyers worldwide. Assam
-                exporters and certified producers connect directly via WhatsApp to submit bids and fulfill orders.
+                See what buyers are looking for, or post your own requirement. Our team matches each
+                requirement with suitable Assam exporters and connects you on WhatsApp.
               </p>
 
               <div className="flex flex-wrap items-center gap-2 pt-1 text-xs font-medium text-green-deep">
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1 shadow-2xs border border-border/60">
-                  <Zap className="size-3.5 text-amber-600" />
-                  Direct WhatsApp Quotes
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-background/80 px-2.5 py-1 shadow-2xs border border-border/60">
+                  <Zap className="size-3.5 text-gold" />
+                  WhatsApp Follow Up
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1 shadow-2xs border border-border/60">
-                  <ShieldCheck className="size-3.5 text-emerald-600" />
-                  Zero Platform Fees
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-background/80 px-2.5 py-1 shadow-2xs border border-border/60">
+                  <ShieldCheck className="size-3.5 text-green" />
+                  Free for Buyers
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/80 px-2.5 py-1 shadow-2xs border border-border/60">
-                  <Globe className="size-3.5 text-teal-600" />
-                  Verified Assam Sourcing
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-background/80 px-2.5 py-1 shadow-2xs border border-border/60">
+                  <Globe className="size-3.5 text-green-deep" />
+                  Approved Assam Exporters
                 </span>
               </div>
             </div>
@@ -194,8 +197,8 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
                 href={`/buy-requirements?q=${encodeURIComponent(term)}`}
                 className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
                   q?.toLowerCase() === term.toLowerCase()
-                    ? "border-green bg-green text-white font-medium shadow-2xs"
-                    : "border-border bg-white text-muted-foreground hover:border-green/50 hover:bg-green-wash/40 hover:text-green-deep"
+                    ? "border-green bg-green text-primary-foreground font-medium shadow-2xs"
+                    : "border-border bg-background text-muted-foreground hover:border-green/50 hover:bg-green-wash/40 hover:text-green-deep"
                 }`}
               >
                 {term}
@@ -225,8 +228,11 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Active Requirements ({buyRequirements.length})
+                Recent Requirements ({buyRequirements.length})
               </h2>
+              {buyRequirements.length === LIST_LIMIT && (
+                <span className="text-xs text-muted-foreground">Showing the {LIST_LIMIT} most recent</span>
+              )}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {buyRequirements.map((requirement) => (
@@ -274,10 +280,10 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
           </section>
         ) : (
           /* Default Empty State: No requirements in database yet */
-          <section className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center rounded-3xl border border-border/80 bg-gradient-to-b from-white to-bg-soft/40 p-8 text-center shadow-xs sm:p-14">
+          <section className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center rounded-3xl border border-border/80 bg-gradient-to-b from-background to-bg-soft/40 p-8 text-center shadow-xs sm:p-14">
             <div className="relative flex size-16 items-center justify-center rounded-2xl bg-green-wash text-green-deep ring-8 ring-green-wash/40 shadow-xs">
               <ClipboardList className="size-8" />
-              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-gold text-white shadow-xs">
+              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-gold text-primary-foreground shadow-xs">
                 <Sparkles className="size-3" />
               </span>
             </div>
@@ -288,8 +294,8 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
 
             <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-base">
               Looking for authentic Assam Agarwood, single-estate tea, organic spices, or herbal
-              extracts? Submit your requirement and receive verified quotations directly on WhatsApp
-              from registered Assam exporters.
+              extracts? Post your requirement and our team will match it with suitable exporters from the
+              directory and connect you on WhatsApp.
             </p>
 
             <div className="mt-6 flex flex-col items-center gap-3">
@@ -303,30 +309,30 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
                 Post Your Buy Requirement Now
               </Button>
               <span className="text-xs text-muted-foreground">
-                Free for all buyers &bull; Takes under 60 seconds &bull; Zero commission
+                Free for buyers &bull; Takes about a minute &bull; No commission on your deal
               </span>
             </div>
 
             <div className="mt-8 grid w-full grid-cols-1 gap-3 pt-6 border-t border-border/70 sm:grid-cols-3 text-left">
-              <div className="flex items-start gap-2.5 rounded-xl bg-white p-3 border border-border/60">
+              <div className="flex items-start gap-2.5 rounded-xl bg-background p-3 border border-border/60">
                 <CheckCircle2 className="size-4 text-green shrink-0 mt-0.5" />
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-foreground">Direct WhatsApp RFQs</span>
-                  <span className="text-[11px] text-muted-foreground">Hear back from sellers instantly</span>
+                  <span className="text-xs font-semibold text-foreground">WhatsApp Follow Up</span>
+                  <span className="text-[11px] text-muted-foreground">Our team replies on WhatsApp</span>
                 </div>
               </div>
-              <div className="flex items-start gap-2.5 rounded-xl bg-white p-3 border border-border/60">
+              <div className="flex items-start gap-2.5 rounded-xl bg-background p-3 border border-border/60">
                 <CheckCircle2 className="size-4 text-green shrink-0 mt-0.5" />
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-foreground">Verified Exporters</span>
-                  <span className="text-[11px] text-muted-foreground">Authentic Assam suppliers</span>
+                  <span className="text-xs font-semibold text-foreground">Approved Exporters</span>
+                  <span className="text-[11px] text-muted-foreground">Every listed business is checked by our team</span>
                 </div>
               </div>
-              <div className="flex items-start gap-2.5 rounded-xl bg-white p-3 border border-border/60">
+              <div className="flex items-start gap-2.5 rounded-xl bg-background p-3 border border-border/60">
                 <CheckCircle2 className="size-4 text-green shrink-0 mt-0.5" />
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-foreground">Zero Brokerage</span>
-                  <span className="text-[11px] text-muted-foreground">Deal directly without middleman</span>
+                  <span className="text-xs font-semibold text-foreground">No Commission</span>
+                  <span className="text-[11px] text-muted-foreground">You agree the deal directly with the exporter</span>
                 </div>
               </div>
             </div>
@@ -340,7 +346,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
               How Sourcing on Exporters Assam Works
             </h2>
             <p className="text-sm text-muted-foreground">
-              A straightforward, transparent pathway from your requirement to verified export delivery.
+              From your requirement to a conversation with the right exporter.
             </p>
           </div>
 
@@ -383,7 +389,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
               Popular Export Categories from Assam
             </h2>
             <p className="text-sm text-muted-foreground">
-              Looking for something specific? Request quotes across these high-demand regional specialties.
+              Looking for something specific? Post a requirement in any of these regional specialties.
             </p>
           </div>
 
@@ -404,7 +410,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
                 </div>
                 <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between">
                   <Link
-                    href={`/buy-requirements/new?product=${encodeURIComponent(cat.title)}`}
+                    href={`/buy-requirements/new?product=${encodeURIComponent(cat.query)}`}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-green hover:text-green-deep transition-colors"
                   >
                     <span>Post RFQ</span>
@@ -423,7 +429,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
         </section>
 
         {/* Supplier Invitation Banner */}
-        <section className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-leaf/25 bg-gradient-to-r from-green-wash/80 via-emerald-50 to-bg-soft p-6 shadow-xs sm:flex-row sm:p-8">
+        <section className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-leaf/25 bg-gradient-to-r from-green-wash/80 via-green-wash/40 to-bg-soft p-6 shadow-xs sm:flex-row sm:p-8">
           <div className="flex max-w-xl flex-col gap-2 text-center sm:text-left">
             <span className="inline-flex items-center gap-1.5 self-center sm:self-start text-xs font-semibold uppercase tracking-wider text-green-deep">
               <Store className="size-4" />
@@ -433,8 +439,8 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
               Grow Your Export Business with Direct Buyer Leads
             </h3>
             <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-              Register your enterprise in Assam&apos;s premier B2B export directory. Get discovered by
-              global buyers and receive direct enquiries on WhatsApp.
+              List your business in the Exporters Assam directory for free. Buyers find your products and
+              send enquiries straight to your WhatsApp.
             </p>
           </div>
           <Button

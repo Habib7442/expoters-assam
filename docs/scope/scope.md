@@ -128,10 +128,10 @@ A buyer posts what they want to buy (product, quantity, location, notes); it is 
 - [x] Build it: `/develop post buy requirement`
    - [x] `create_buy_requirement` RPC: buyer resolution, a 3/hour rate limit (heavier action than an enquiry, so a lower cap), no dedup (distinct requirements from the same buyer are legitimate)
    - [x] `postBuyRequirement` server action + `BuyRequirementForm`; `/buy-requirements/new` (post) and `/buy-requirements` (full public listing, fixing the two nav links that already pointed here)
-- [ ] Verify it: `/check verify post buy requirement`
-- [ ] Test it: `/test post buy requirement`
-- [ ] Review it (fresh model): `/check review post buy requirement`
-- [ ] Document it: `/document post buy requirement`
+- [x] Verify it: `/check verify post buy requirement` (2026-09-26, driven in a real browser with Cloudflare's always pass Turnstile test keys, since the real key rejects localhost: invalid phone keeps the typed values and saves nothing; a public post saves with consent recorded, normalizes the phone, and hands a wa.me link to +919577772757; a private post saves but never lists; the public post shows on `/buy-requirements` and `/` with no name, phone or email; the 4th post in an hour gets the rate limit message; a missing token is refused with a friendly retry; prefill and 390px layout fine. Test rows deleted.)
+- [x] Test it: `/test post buy requirement`
+- [x] Review it (fresh model): `/check review post buy requirement`
+- [x] Document it: `/document post buy requirement`
 code in `supabase/migrations/20260909050000_add_create_buy_requirement.sql`, `lib/actions/post-buy-requirement.ts`, `components/buy-requirement-form.tsx`, `app/buy-requirements/new/page.tsx`, `app/buy-requirements/page.tsx`, `.env.local`
 
 ### 9. Enquiries on companies & buy requirements · in-progress
