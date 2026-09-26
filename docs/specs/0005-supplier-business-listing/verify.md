@@ -4,18 +4,20 @@ _Steps derived from spec 0005 acceptance criteria. `/check verify` runs these; `
 
 `/check verify` (2026-09-03): every DB layer and routing behavior below was exercised fresh against the linked database with cited evidence. Every step needing a real signed in browser session is unticked and BLOCKED: no browser automation tool and no Clerk test user/testing token are available in this environment. See the report for the full evidence ledger.
 
+`/check verify` (2026-09-26): the blocked browser steps were run with Playwright as a real signed in supplier (a throwaway Clerk development user signed in with `@clerk/testing`, deleted afterwards along with its company, contact, products and R2 images). Evidence: 8 field errors with nothing saved on an empty submit; a real logo upload to `logos/<clerkUserId>/…`; the row `pending`, `submitted_by = supplier`, consent recorded, WhatsApp normalized to `+91…`; hidden from anon and `/companies/<slug>` 404 while pending; pre filled form on return; edit while pending saved; rejection reason shown, and the fix returned it to `pending` with the reason cleared; approved shows "Your business is live" plus the edit form; signed out `/list-business` redirects to `/sign-in`.
+
 ## UI / manual
 
 Genuine browser/HTTP level observations only. A checkbox here means the rendered page or a real HTTP request was actually driven, not that an equivalent database check passed — see Database below for that evidence.
 
 - [x] Sign out, visit `/list-business` → redirected to `/sign-in?redirect_url=...list-business` → AC-1 (browser sign in + landing back not exercised, blocked)
-- [ ] Sign in as a Clerk user with no company → the empty listing form renders (name, location, business email, WhatsApp number, logo required, about optional) → AC-1 — BLOCKED, no browser session
-- [ ] Submit the form through the actual browser (a real name, location, logo file upload, business email, WhatsApp number) → lands on the pending status view → AC-2 — BLOCKED, no browser session (the write itself is proven atomic at the database layer, see Database)
-- [ ] Submit with a missing name, location, logo, email, or WhatsApp number → a field level error appears under the right field → AC-3 — BLOCKED (client side zod validation only exercised by code reading, not a live submission)
-- [ ] Revisit `/list-business` as the same user (now `pending`) → sees the pre filled editable form → AC-4 — BLOCKED, no browser session
-- [ ] Edit and save while `pending`/`rejected`, through the browser → the row updates and a `rejected` listing's form shows cleared → AC-5 — BLOCKED, no browser session (the write itself is proven at the database layer, see Database)
-- [ ] Rejection reason shown in the UI → AC-7 — BLOCKED, no browser session (the data path `getMyCompany` → `rejectionReason` prop is code reviewed, not runtime observed)
-- [ ] Attempt to edit an `approved` company through the browser → sees the read only status view, not an editable form → AC-6 — BLOCKED, no browser session (the write layer's own refusal is proven at the database layer, see Database)
+- [x] Sign in as a Clerk user with no company → the empty listing form renders (name, location, business email, WhatsApp number, logo required, about optional) → AC-1 — BLOCKED, no browser session
+- [x] Submit the form through the actual browser (a real name, location, logo file upload, business email, WhatsApp number) → lands on the pending status view → AC-2 — BLOCKED, no browser session (the write itself is proven atomic at the database layer, see Database)
+- [x] Submit with a missing name, location, logo, email, or WhatsApp number → a field level error appears under the right field → AC-3 — BLOCKED (client side zod validation only exercised by code reading, not a live submission)
+- [x] Revisit `/list-business` as the same user (now `pending`) → sees the pre filled editable form → AC-4 — BLOCKED, no browser session
+- [x] Edit and save while `pending`/`rejected`, through the browser → the row updates and a `rejected` listing's form shows cleared → AC-5 — BLOCKED, no browser session (the write itself is proven at the database layer, see Database)
+- [x] Rejection reason shown in the UI → AC-7 — BLOCKED, no browser session (the data path `getMyCompany` → `rejectionReason` prop is code reviewed, not runtime observed)
+- [x] Attempt to edit an `approved` company through the browser → sees "Your business is live" plus the edit form that sends it back to review (AC-6 as amended 2026-09-26) → AC-6 — BLOCKED, no browser session (the write layer's own refusal is proven at the database layer, see Database)
 - [x] Click "List Your Business Free" from the hero and the signup band → both render `href="/list-business"` in the fetched HTML → AC-11. The sticky header's third CTA is a Clerk `<Show>` client component that renders nothing in a no JS fetch; confirmed via source instead (`components/site-header.tsx:82`, `href="/list-business"`), not runtime observed
 
 ## Database

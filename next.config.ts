@@ -21,7 +21,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: "3mb",
+      // Under Vercel's 4.5 MB request cap. Product photos are shrunk in the
+      // browser first (lib/shrink-image.ts) so five of them fit.
+      bodySizeLimit: "4mb",
     },
   },
   images: {

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { type ChangeEvent, type SubmitEvent, useRef, useState, useTransition } from "react"
 
 import { submitProduct, type SubmitProductResult } from "@/lib/actions/submit-product"
+import { MAX_TOTAL_UPLOAD_BYTES, shrinkImage } from "@/lib/shrink-image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -40,12 +41,42 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
     const formData = new FormData(event.currentTarget)
     setResult(null)
     startTransition(async () => {
-      const response = await submitProduct({
-        name: String(formData.get("name") ?? ""),
-        description: String(formData.get("description") ?? ""),
-        categoryId: String(formData.get("categoryId") ?? ""),
-        images: formData.getAll("images").filter((v): v is File => v instanceof File && v.size > 0),
-      })
+      // Shrink big phone photos first: every image travels in this one
+      // request, which must stay under the server action body limit.
+      const images = await Promise.all(
+        formData
+          .getAll("images")
+          .filter((v): v is File => v instanceof File && v.size > 0)
+          .map((file) => shrinkImage(file)),
+      )
+      const totalBytes = images.reduce((sum, file) => sum + file.size, 0)
+      if (totalBytes > MAX_TOTAL_UPLOAD_BYTES) {
+        setResult({
+          ok: false,
+          code: "invalid_input",
+          message: "Please check the form and try again.",
+          fieldErrors: { images: "These images are too large together. Try fewer or smaller images." },
+        })
+        return
+      }
+
+      let response: SubmitProductResult
+      try {
+        response = await submitProduct({
+          name: String(formData.get("name") ?? ""),
+          description: String(formData.get("description") ?? ""),
+          categoryId: String(formData.get("categoryId") ?? ""),
+          images,
+        })
+      } catch {
+        // A dropped connection or a rejected request body throws here rather
+        // than returning a result; show it in the form, never crash the page.
+        response = {
+          ok: false,
+          code: "server_error",
+          message: "We couldn't send your product. Check your connection and try again.",
+        }
+      }
       setResult(response)
       if (response.ok) {
         formRef.current?.reset()
@@ -63,7 +94,7 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
       <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-background p-8 text-center shadow-sm">
         <h2 className="font-heading text-xl font-semibold text-green-deep">Product submitted</h2>
         <p className="text-sm text-muted-foreground">
-          Your product is pending review. We&apos;ll let you know once an admin has approved it.
+          Your product is pending review. It will appear on your company page once an admin approves it.
         </p>
       </div>
     )
@@ -129,7 +160,7 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
           aria-invalid={!!fieldErrors?.images}
           className="h-auto py-1.5"
         />
-        <p className="text-xs text-muted-foreground">JPG, PNG, or WebP, up to 2 MB each, up to 5 images.</p>
+        <p className="text-xs text-muted-foreground">JPG, PNG, or WebP, up to 5 images. Large photos are resized automatically.</p>
         {fieldErrors?.images && <p className="text-xs text-destructive">{fieldErrors.images}</p>}
         {previews.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-2">

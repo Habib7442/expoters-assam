@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { type ChangeEvent, useState, useTransition } from "react"
+import { type ChangeEvent, type SubmitEvent, useState, useTransition } from "react"
 
 import {
   submitBusinessListing,
@@ -39,13 +39,11 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
   const [result, setResult] = useState<BusinessListingResult | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(initialValues?.logoUrl ?? null)
 
-  // Controlled, not defaultValue: <form action={fn}> resets every
-  // uncontrolled field the instant a submission starts (React's built-in
-  // form-action behavior, not tied to whether the action succeeds), so a
-  // validation error would otherwise wipe what the user just typed. A
-  // controlled value survives that reset since React re-asserts it from
-  // state on the next render. The file input can't be controlled (browser
-  // security), so it still clears on any submission — unavoidable.
+  // A plain onSubmit handler, not <form action={fn}>: React resets every
+  // uncontrolled field (including the logo file input, which can't be
+  // controlled) the instant a form action starts, so a failed save would
+  // silently drop the chosen logo. Same fix as the product and buy
+  // requirement forms.
   const initialPhone = splitPhoneNumber(initialValues?.whatsappNumber ?? COUNTRY_CODES[0]!.dialCode)
   const [name, setName] = useState(initialValues?.name ?? "")
   const [addressLine, setAddressLine] = useState(initialValues?.addressLine ?? "")
@@ -68,12 +66,23 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
     })
   }
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
     setResult(null)
     startTransition(async () => {
       const action = mode === "create" ? submitBusinessListing : updateBusinessListing
-      const response = await action(formData)
-      setResult(response)
+      try {
+        setResult(await action(formData))
+      } catch {
+        // A dropped connection or a rejected request body throws rather than
+        // returning a result; show it in the form, never crash the page.
+        setResult({
+          ok: false,
+          code: "server_error",
+          message: "We couldn't save your listing. Check your connection and try again.",
+        })
+      }
     })
   }
 
@@ -87,7 +96,7 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
           {mode === "create" ? "Listing submitted" : "Changes saved"}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Your business is pending review. We&apos;ll let you know once an admin has reviewed it.
+          Your business is pending review. Check back on this page to see when an admin has reviewed it.
         </p>
       </div>
     )
@@ -95,7 +104,7 @@ export function BusinessListingForm({ mode, initialValues, rejectionReason }: Bu
 
   return (
     <form
-      action={handleSubmit}
+      onSubmit={handleSubmit}
       className="flex flex-col gap-5 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8"
     >
       {rejectionReason && (

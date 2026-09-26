@@ -26,7 +26,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 11 | Membership plans & Razorpay | Slice 4 | planned · deferred |
 | 12 | AI-powered / semantic search | Slice 5 | planned |
 | 13 | SEO & GEO | Slice 5 | planned |
-| 14 | PostHog analytics | Slice 5 | planned |
+| 14 | PostHog analytics | Slice 5 | planned · deferred |
 | 15 | Cloudflare R2 image storage | Infrastructure | in-progress |
 | 16 | Supplier product submission | Slice 3 | in-progress |
 | 17 | Form abuse protection | Infrastructure | in-progress |
@@ -154,10 +154,10 @@ A supplier turns their Clerk account into a real, pending business listing: name
    - [x] Atomic DB functions: `create_business_listing`, `update_business_listing` (AC-2, AC-5, AC-6)
    - [x] Data layer & server actions: `getMyCompany`, `submitBusinessListing`, `updateBusinessListing`, logo upload + storage config (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-9, AC-10)
    - [x] `/list-business` page and rewiring the "List Your Business Free" CTAs (AC-1, AC-4, AC-5, AC-6, AC-7, AC-11)
-- [ ] Verify it: `/check verify supplier business listing`
-- [ ] Test it: `/test supplier business listing`
-- [ ] Review it (fresh model): `/check review supplier business listing`
-- [ ] Document it: `/document supplier business listing`
+- [x] Verify it: `/check verify supplier business listing` (2026-09-26, real signed in browser; AC-6 amended to record the shipped "edit sends it back to review" behavior)
+- [x] Test it: `/test supplier business listing`
+- [x] Review it (fresh model): `/check review supplier business listing`
+- [x] Document it: `/document supplier business listing`
 spec [0005](../specs/0005-supplier-business-listing/index.md) · code in `supabase/migrations/20260903120000_add_business_listing.sql`, `supabase/migrations/20260903120500_add_business_listing_rate_limit.sql`, `supabase/migrations/20260903121000_fix_update_business_listing_conflict_target.sql`, `supabase/migrations/20260903130000_add_business_listing_email.sql`, `lib/supabase/queries/companies.ts`, `lib/actions/business-listing.ts`, `app/list-business/page.tsx`, `components/business-listing-form.tsx`
 
 ### 16. Supplier product submission · in-progress · from spec 0005
@@ -169,10 +169,10 @@ An approved supplier submits their own product (name, category, images) from the
    - [x] `submitProduct` server action (`lib/actions/submit-product.ts`): up to 5 images, 2 MB/JPG-PNG-WebP each, uploaded to R2 before the database write
    - [x] `ProductSubmissionForm` (plain `onSubmit`, not `<form action={fn}>` — same fix as the business listing/buy requirement forms, so a validation error doesn't wipe what the user typed) and `/products/new`, gated on the caller's own company status (no company → list business first; pending/rejected → check status; approved → the form)
    - [x] Live-verified directly against the RPC: happy path (real row, correct slug, correct `image_url`/`gallery_urls`), the `pending`-company gate (`P0007`), the no-images guard (`P0008`), the no-company guard (`P0004`), slug collision suffixing, and invisibility on the public anon read path; test rows cleaned up after
-- [ ] Verify it: `/check verify supplier product submission`
-- [ ] Test it: `/test supplier product submission`
-- [ ] Review it (fresh model): `/check review supplier product submission`
-- [ ] Document it: `/document supplier product submission`
+- [x] Verify it: `/check verify supplier product submission` (2026-09-26, real signed in browser as an approved supplier: two images uploaded to R2, product `pending` and `submitted_by = supplier`, public page 404 until approved then 200 and listed on the company page; a pending company sees "under review" instead of the form and its approved products go hidden; signed out `/products/new` redirects to sign in. Test data deleted.)
+- [x] Test it: `/test supplier product submission`
+- [x] Review it (fresh model): `/check review supplier product submission`
+- [x] Document it: `/document supplier product submission`
 code in `supabase/migrations/20260911010000_add_create_product_submission.sql`, `lib/actions/submit-product.ts`, `components/product-submission-form.tsx`, `app/products/new/page.tsx`
 
 ## Slice 4: revenue
@@ -200,6 +200,7 @@ Sitemap, per-page metadata and structured data, clean URLs, and AI-crawler readi
 
 ### 14. PostHog analytics · planned
 Page views, search behavior, and enquiry funnel drop-off tracked via PostHog.
+**Deferred by you (2026-09-26):** you will implement it yourself later; not part of this handover pass.
 **Done when:** key events (page view, search performed, enquiry sent, buy requirement posted) appear in PostHog.
 - [ ] Build it: `/develop posthog analytics`
 

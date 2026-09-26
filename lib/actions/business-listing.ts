@@ -121,6 +121,65 @@ const GENERIC_ERROR: BusinessListingResult = {
   message: "Something went wrong on our end. Please try again in a moment.",
 };
 
+const ALREADY_LISTED_RESULT: BusinessListingResult = {
+  ok: false,
+  code: "already_listed",
+  message: "You already have a business listed.",
+};
+
+const RATE_LIMITED_RESULT: BusinessListingResult = {
+  ok: false,
+  code: "rate_limited",
+  message: "You've just saved a change. Please wait a moment before saving again.",
+};
+
+type ExistingListing = {
+  name: string;
+  address_line: string | null;
+  location: string | null;
+  state: string | null;
+  postal_code: string | null;
+  country: string;
+  about: string | null;
+  email: string | null;
+  gst_number: string | null;
+  company_contacts: { whatsapp_number: string } | null;
+};
+
+type ListingFields = {
+  name: string;
+  addressLine: string;
+  location: string;
+  state: string;
+  postalCode?: string;
+  country: string;
+  about?: string;
+  email: string;
+  whatsappNumber: string;
+  gstNumber?: string;
+};
+
+/** True when a submitted edit matches what is already stored (WhatsApp compared by digits, since it is stored normalized). */
+function isUnchanged(existing: ExistingListing, next: ListingFields): boolean {
+  const same = (stored: string | null, submitted: string | undefined) => (stored ?? "") === (submitted ?? "");
+  const digits = (value: string | null | undefined) => (value ?? "").replace(/[^0-9]/g, "");
+  return (
+    existing.name === next.name &&
+    same(existing.address_line, next.addressLine) &&
+    same(existing.location, next.location) &&
+    same(existing.state, next.state) &&
+    same(existing.postal_code, next.postalCode) &&
+    existing.country === next.country &&
+    same(existing.about, next.about) &&
+    same(existing.email, next.email) &&
+    same(existing.gst_number, next.gstNumber) &&
+    digits(existing.company_contacts?.whatsapp_number) === digits(next.whatsappNumber)
+  );
+}
+
+/** Must match update_business_listing's own cooldown (P0006). */
+const EDIT_COOLDOWN_MS = 10_000;
+
 /** Only the one-company-per-user constraint means "already listed"; any other 23505 (e.g. a slug) does not. */
 function isAlreadyListedViolation(error: { code?: string; message?: string }): boolean {
   return error.code === "23505" && !!error.message?.includes("companies_clerk_user_id_key");
@@ -193,6 +252,18 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
     logo,
   } = parsed.data;
 
+  // Refuse a second listing before uploading anything: otherwise every
+  // repeat submit writes a logo to R2 and only then fails on the one
+  // company per user constraint. The database constraint stays the real
+  // guard against a race; this only saves the upload.
+  const { data: alreadyListed, error: lookupError } = await supabaseAdmin
+    .from("companies")
+    .select("id")
+    .eq("clerk_user_id", userId)
+    .maybeSingle();
+  if (lookupError) return GENERIC_ERROR;
+  if (alreadyListed) return ALREADY_LISTED_RESULT;
+
   const logoImage = await readVerifiedImage(logo);
   if (!logoImage) return INVALID_LOGO_RESULT;
 
@@ -219,17 +290,16 @@ export async function submitBusinessListing(formData: FormData): Promise<Busines
     p_consent_notice_version: CONSENT_NOTICE_VERSION,
   });
 
-  if (error) {
-    if (isAlreadyListedViolation(error)) {
-      return { ok: false, code: "already_listed", message: "You already have a business listed." };
-    }
+  const row = data?.[0];
+  if (error || !row) {
+    // Nothing points at the logo we just uploaded; don't leave it in R2.
+    await deleteLogoBestEffort(logoUrl);
+    if (!error) return GENERIC_ERROR;
+    if (isAlreadyListedViolation(error)) return ALREADY_LISTED_RESULT;
     if (isWhatsappCheckViolation(error)) return WHATSAPP_FIELD_ERROR;
     if (isEmailCheckViolation(error)) return EMAIL_FIELD_ERROR;
     return GENERIC_ERROR;
   }
-
-  const row = data?.[0];
-  if (!row) return GENERIC_ERROR;
 
   revalidatePath("/list-business");
   return { ok: true, companyId: row.company_id, status: row.status };
@@ -279,11 +349,27 @@ export async function updateBusinessListing(formData: FormData): Promise<Busines
     logo,
   } = parsed.data;
 
-  const { data: existing } = await supabaseAdmin
+  const { data: existing, error: lookupError } = await supabaseAdmin
     .from("companies")
-    .select("logo_url")
+    .select(
+      "id, logo_url, status, updated_at, name, address_line, location, state, postal_code, country, about, email, gst_number, company_contacts(whatsapp_number)",
+    )
     .eq("clerk_user_id", userId)
     .maybeSingle();
+  if (lookupError) return GENERIC_ERROR;
+  if (!existing) return { ok: false, code: "not_found", message: "No business listing found for your account." };
+
+  // A save that changes nothing must not send an approved listing (and with
+  // it every product and enquiry path) back into review.
+  if (!logo && isUnchanged(existing, parsed.data)) {
+    return { ok: true, companyId: existing.id, status: existing.status };
+  }
+
+  // Checked here too, before any upload: the database cooldown (P0006) only
+  // limits database writes, not the R2 upload that would come first.
+  if (existing.updated_at && Date.now() - new Date(existing.updated_at).getTime() < EDIT_COOLDOWN_MS) {
+    return RATE_LIMITED_RESULT;
+  }
 
   let logoUrl: string | null = null;
   if (logo) {
@@ -311,26 +397,21 @@ export async function updateBusinessListing(formData: FormData): Promise<Busines
     p_postal_code: (postalCode || null) as string,
   });
 
-  if (error) {
+  const row = data?.[0];
+  if (error || !row) {
+    // The new logo never got attached to the listing; don't leave it in R2.
+    if (logoUrl) await deleteLogoBestEffort(logoUrl);
+    if (!error) return GENERIC_ERROR;
     if (error.code === "P0004") {
       return { ok: false, code: "not_found", message: "No business listing found for your account." };
     }
-    if (error.code === "P0006") {
-      return {
-        ok: false,
-        code: "rate_limited",
-        message: "You've just saved a change. Please wait a moment before saving again.",
-      };
-    }
+    if (error.code === "P0006") return RATE_LIMITED_RESULT;
     if (isWhatsappCheckViolation(error)) return WHATSAPP_FIELD_ERROR;
     if (isEmailCheckViolation(error)) return EMAIL_FIELD_ERROR;
     return GENERIC_ERROR;
   }
 
-  const row = data?.[0];
-  if (!row) return GENERIC_ERROR;
-
-  if (logoUrl && existing?.logo_url && existing.logo_url !== logoUrl) {
+  if (logoUrl && existing.logo_url && existing.logo_url !== logoUrl) {
     void deleteLogoBestEffort(existing.logo_url);
   }
 

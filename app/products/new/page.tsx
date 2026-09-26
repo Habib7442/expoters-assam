@@ -56,10 +56,21 @@ export default async function NewProductPage() {
           </div>
         )}
 
-        {company && company.status === "approved" && (
-          <ProductSubmissionForm categories={(await getCategoriesWithProductCounts()) ?? []} />
-        )}
+        {company && company.status === "approved" && <ApprovedForm />}
       </div>
     </main>
   );
+}
+
+/** Categories are required to submit; if they fail to load, say so instead of showing an empty choice. */
+async function ApprovedForm() {
+  const categories = await getCategoriesWithProductCounts();
+  if (!categories || categories.length === 0) {
+    return (
+      <div className="rounded-2xl border border-border bg-background p-6 text-sm text-muted-foreground shadow-sm">
+        We couldn&apos;t load the product categories right now. Please refresh the page in a moment.
+      </div>
+    );
+  }
+  return <ProductSubmissionForm categories={categories} />;
 }

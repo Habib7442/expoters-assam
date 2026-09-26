@@ -313,7 +313,7 @@ export function SiteHeader() {
                         <div className="flex flex-col min-w-0">
                           <span className="text-xs font-semibold text-green-deep">Signed In</span>
                           <span className="text-[11px] text-muted-foreground truncate">
-                            Manage products &amp; leads
+                            Manage your business &amp; products
                           </span>
                         </div>
                       </div>

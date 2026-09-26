@@ -153,21 +153,23 @@ export async function submitProduct(input: SubmitProductInput): Promise<SubmitPr
     };
   }
 
+  // allSettled, not all: Promise.all rejects on the first failure while the
+  // other uploads are still in flight, so any that finished afterwards would
+  // never be cleaned up.
   const uploadedKeys: string[] = [];
-  let imageUrls: string[];
-  try {
-    imageUrls = await Promise.all(
-      (verifiedImages as VerifiedImage[]).map(async (image) => {
-        const key = `${userId}/${crypto.randomUUID()}.${image.ext}`;
-        const url = await uploadToR2("products", key, image.buffer, image.type);
-        uploadedKeys.push(key);
-        return url;
-      }),
-    );
-  } catch {
+  const uploads = await Promise.allSettled(
+    (verifiedImages as VerifiedImage[]).map(async (image) => {
+      const key = `${userId}/${crypto.randomUUID()}.${image.ext}`;
+      const url = await uploadToR2("products", key, image.buffer, image.type);
+      uploadedKeys.push(key);
+      return url;
+    }),
+  );
+  if (uploads.some((upload) => upload.status === "rejected")) {
     await cleanupUploadedImages(uploadedKeys);
     return { ok: false, code: "upload_failed", message: "Could not upload your images. Please try again." };
   }
+  const imageUrls = uploads.map((upload) => (upload as PromiseFulfilledResult<string>).value);
 
   const { data, error } = await supabaseAdmin.rpc("create_product_submission", {
     p_clerk_user_id: userId,

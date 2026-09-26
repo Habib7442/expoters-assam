@@ -23,11 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added tests for the company query helpers, the company profile page and its metadata, and the exporter card (43 tests).
 - Added tests for the home page and its query helpers (40 tests), including proof that one failing section never breaks the rest of the page (spec 0002).
 - Added tests for Post Buy Requirement: the full success path (database call, consent version, WhatsApp link to the platform number), the hourly cap, bad input, server errors, and the `/buy-requirements` listing page.
+- Added a site wide error page, so an unexpected error shows a friendly message with Try again inside the normal header and footer, instead of a bare "Application error" screen.
+- Added tests for the supplier business listing (validation, every database error, upload cleanup) and a first test suite for product submission (39 new tests).
 
 ### Changed
 - The company profile query now filters for approved companies and approved products explicitly, as a second layer on top of Row Level Security, matching every other public read path.
 - The header now uses the design system colors throughout, replacing the default Tailwind palette in the mobile menu.
 - Rewrote the `/buy-requirements` page copy to match how the platform actually works: the team matches each requirement with exporters and introduces them on WhatsApp. Removed claims the product doesn't keep (direct supplier quotes, lab test reports, certified producers, instant replies). The list is now labeled "Recent Requirements" and says when it is showing only the newest 100.
+- Product photos are now resized in the browser before upload, so suppliers can pick normal phone photos; the "up to 2 MB each" limit is gone from the form.
+- Saving a business listing without changing anything no longer sends an approved listing back for review, and the edit page now says plainly that a real change hides the business and its products until re-approved.
 
 ### Removed
 - Removed two plain indexes on `companies.slug` and `products.slug` that duplicated the unique index each table already has, cutting write and storage cost with no effect on lookups.
@@ -43,6 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the home page showing made up category names when categories failed to load; the chip row is now left out like every other section, and each chip links to its category.
 - Fixed phone numbers made mostly of symbols (fewer than 10 digits) passing the form check on Send Enquiry and Post Buy Requirement and then failing in the database as a generic error; they now get a clear phone field error.
 - Fixed failed buy requirement saves leaving no trace; the error is now logged on the server (code and message only, never the buyer's details).
+- Fixed product submission crashing to an error page whenever the photos added up to more than 3 MB (two ordinary phone photos were enough).
+- Fixed the business listing uploading a logo before checking for an existing listing or the edit cooldown, and leaving that logo in storage when the save failed.
+- Fixed the business listing form clearing the chosen logo when a save failed.
+- Fixed product uploads that finished after another upload had failed being left in storage.
+- Fixed `/products/new` showing an empty category list, with no explanation, when categories failed to load.
 
 ### Security
 - Hardened the database privilege model so a table added by a future migration no longer inherits public write access by default; previously only tables that existed at the time of the initial migration were covered by the explicit privilege revoke.

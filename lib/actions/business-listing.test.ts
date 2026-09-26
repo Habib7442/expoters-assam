@@ -71,14 +71,23 @@ function baseFormData() {
   return fd;
 }
 
-function mockExistingLogo(logoUrl: string | null) {
+/** The caller's existing listing, as update/submit look it up. The stored name differs from the form's, so a save counts as a change. */
+function mockExistingListing(row: Record<string, unknown> | null, error: { message: string } | null = null) {
   fromMock.mockReturnValue({
     select: () => ({
       eq: () => ({
-        maybeSingle: async () => ({ data: logoUrl ? { logo_url: logoUrl } : null }),
+        maybeSingle: async () => ({ data: row, error }),
       }),
     }),
   });
+}
+
+function mockExistingLogo(logoUrl: string | null) {
+  mockExistingListing({ id: "c1", logo_url: logoUrl, status: "pending", updated_at: null, name: "Old name", country: "India" });
+}
+
+function mockNoCompanyYet() {
+  mockExistingListing(null);
 }
 
 async function flushMicrotasks() {
@@ -89,6 +98,7 @@ describe("submitBusinessListing logo upload (R2)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authMock.mockResolvedValue({ userId: "user_123" });
+    mockNoCompanyYet();
   });
 
   it("uploads under the logos category with a clerkUserId-prefixed key, and passes the R2 URL to the RPC", async () => {
@@ -252,5 +262,278 @@ describe("updateBusinessListing logo replace (R2 delete-on-replace)", () => {
     await flushMicrotasks();
 
     expect(result.ok).toBe(true);
+  });
+});
+
+describe("submitBusinessListing validation and errors (spec 0005)", () => {
+  const LOGO_URL = "https://images.exportersasssm.com/logos/user_123/uuid.webp";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authMock.mockResolvedValue({ userId: "user_123" });
+    mockNoCompanyYet();
+    parseR2UrlMock.mockReturnValue({ category: "logos", key: "user_123/uuid.webp" });
+    uploadToR2Mock.mockResolvedValue(LOGO_URL);
+  });
+
+  function validFormData() {
+    const fd = baseFormData();
+    fd.set("logo", makeLogoFile());
+    return fd;
+  }
+
+  it("refuses a signed out caller before uploading or writing anything (AC-1)", async () => {
+    authMock.mockResolvedValue({ userId: null });
+
+    const result = await submitBusinessListing(validFormData());
+
+    expect(result).toMatchObject({ ok: false, code: "not_signed_in" });
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("returns a field error for every missing required field, and writes nothing (AC-3)", async () => {
+    const fd = new FormData();
+    fd.set("logo", new File([], "", { type: "application/octet-stream" }));
+
+    const result = await submitBusinessListing(fd);
+
+    expect(result).toMatchObject({ ok: false, code: "invalid_input" });
+    const fields = Object.keys(result.ok === false ? (result.fieldErrors ?? {}) : {});
+    expect(fields).toEqual(
+      expect.arrayContaining(["name", "addressLine", "location", "state", "email", "whatsappNumber", "logo", "consent"]),
+    );
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a WhatsApp number with fewer than 10 digits as a field error (AC-3)", async () => {
+    const fd = validFormData();
+    fd.set("whatsappNumber", "+91 123");
+
+    const result = await submitBusinessListing(fd);
+
+    expect(result.ok === false && result.fieldErrors?.whatsappNumber).toBeTruthy();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("creates the listing through create_business_listing with consent recorded, and refreshes the page (AC-2)", async () => {
+    rpcMock.mockResolvedValue({ data: [{ company_id: "c1", status: "pending" }], error: null });
+
+    const result = await submitBusinessListing(validFormData());
+
+    expect(result).toEqual({ ok: true, companyId: "c1", status: "pending" });
+    expect(rpcMock).toHaveBeenCalledWith(
+      "create_business_listing",
+      expect.objectContaining({
+        p_clerk_user_id: "user_123",
+        p_name: "Demo Exporters",
+        p_whatsapp_number: "+919812345678",
+        p_email: "owner@example.com",
+        p_consent_notice_version: expect.any(String),
+        p_about: null,
+        p_postal_code: null,
+      }),
+    );
+    expect(revalidatePathMock).toHaveBeenCalledWith("/list-business");
+  });
+
+  it.each([
+    ["the WhatsApp format check", { code: "23514", message: 'violates check constraint "company_contacts_whatsapp_number_check"' }, "whatsappNumber"],
+    ["the email format check", { code: "23514", message: 'violates check constraint "companies_email_check"' }, "email"],
+  ])("maps a database failure of %s to that field's error (AC-3)", async (_label, error, field) => {
+    rpcMock.mockResolvedValue({ data: null, error });
+
+    const result = await submitBusinessListing(validFormData());
+
+    expect(result).toMatchObject({ ok: false, code: "invalid_input" });
+    expect(result.ok === false && result.fieldErrors?.[field]).toBeTruthy();
+  });
+
+  it.each([
+    ["an unexpected database error", { data: null, error: { code: "XX000", message: "boom" } }],
+    ["an empty result", { data: [], error: null }],
+  ])("reports %s as a server error", async (_label, response) => {
+    rpcMock.mockResolvedValue(response);
+
+    const result = await submitBusinessListing(validFormData());
+
+    expect(result).toMatchObject({ ok: false, code: "server_error" });
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateBusinessListing errors (spec 0005)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authMock.mockResolvedValue({ userId: "user_123" });
+    mockExistingLogo(null);
+  });
+
+  function editFormData() {
+    const fd = baseFormData();
+    fd.delete("consent");
+    fd.set("logo", unchangedLogoFile());
+    return fd;
+  }
+
+  it("refuses a signed out caller before writing anything", async () => {
+    authMock.mockResolvedValue({ userId: null });
+
+    const result = await updateBusinessListing(editFormData());
+
+    expect(result).toMatchObject({ ok: false, code: "not_signed_in" });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("saves an edit without asking for consent again, and returns the new status (AC-5)", async () => {
+    rpcMock.mockResolvedValue({ data: [{ company_id: "c1", status: "pending" }], error: null });
+
+    const result = await updateBusinessListing(editFormData());
+
+    expect(result).toEqual({ ok: true, companyId: "c1", status: "pending" });
+    expect(rpcMock).toHaveBeenCalledWith("update_business_listing", expect.objectContaining({ p_logo_url: null }));
+    expect(revalidatePathMock).toHaveBeenCalledWith("/list-business");
+  });
+
+  it.each([
+    ["P0004", "not_found"],
+    ["P0006", "rate_limited"],
+    ["XX000", "server_error"],
+  ])("maps database error %s to %s", async (code, expected) => {
+    rpcMock.mockResolvedValue({ data: null, error: { code, message: "x" } });
+
+    const result = await updateBusinessListing(editFormData());
+
+    expect(result).toMatchObject({ ok: false, code: expected });
+  });
+});
+
+describe("business listing never wastes or orphans an R2 upload (review 2026-09-26)", () => {
+  const NEW_LOGO = "https://images.exportersasssm.com/logos/user_123/new.webp";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authMock.mockResolvedValue({ userId: "user_123" });
+    uploadToR2Mock.mockResolvedValue(NEW_LOGO);
+    parseR2UrlMock.mockImplementation((url: string) => ({ category: "logos", key: url.split("/logos/")[1] }));
+    deleteFromR2Mock.mockResolvedValue(undefined);
+  });
+
+  function createFormData() {
+    const fd = baseFormData();
+    fd.set("logo", makeLogoFile());
+    return fd;
+  }
+
+  function editFormData(logo: File = unchangedLogoFile()) {
+    const fd = baseFormData();
+    fd.delete("consent");
+    fd.set("logo", logo);
+    return fd;
+  }
+
+  const storedListing = {
+    id: "c1",
+    logo_url: "https://images.exportersasssm.com/logos/user_123/old.webp",
+    status: "approved",
+    updated_at: null,
+    name: "Demo Exporters",
+    address_line: "12 GS Road, Christian Basti",
+    location: "Guwahati",
+    state: "Assam",
+    postal_code: null,
+    country: "India",
+    about: null,
+    email: "owner@example.com",
+    gst_number: null,
+    company_contacts: { whatsapp_number: "+919812345678" },
+  };
+
+  it("refuses a second listing before uploading anything", async () => {
+    mockExistingListing({ id: "c1" });
+
+    const result = await submitBusinessListing(createFormData());
+
+    expect(result).toMatchObject({ ok: false, code: "already_listed" });
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("stops with a server error, uploading nothing, when the existing listing lookup fails", async () => {
+    mockExistingListing(null, { message: "timeout" });
+
+    const result = await submitBusinessListing(createFormData());
+
+    expect(result).toMatchObject({ ok: false, code: "server_error" });
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
+  });
+
+  it("deletes the uploaded logo when creating the listing then fails", async () => {
+    mockNoCompanyYet();
+    rpcMock.mockResolvedValue({ data: null, error: { code: "23505", message: 'violates "companies_clerk_user_id_key"' } });
+
+    const result = await submitBusinessListing(createFormData());
+
+    expect(result).toMatchObject({ ok: false, code: "already_listed" });
+    expect(deleteFromR2Mock).toHaveBeenCalledWith("logos", "user_123/new.webp");
+  });
+
+  it("saving an unchanged approved listing keeps it live: no database write, no upload", async () => {
+    mockExistingListing(storedListing);
+
+    const result = await updateBusinessListing(editFormData());
+
+    expect(result).toEqual({ ok: true, companyId: "c1", status: "approved" });
+    expect(rpcMock).not.toHaveBeenCalled();
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
+  });
+
+  it("treats a changed field as a real edit", async () => {
+    mockExistingListing({ ...storedListing, about: "Old about" });
+    rpcMock.mockResolvedValue({ data: [{ company_id: "c1", status: "pending" }], error: null });
+
+    const result = await updateBusinessListing(editFormData());
+
+    expect(result).toEqual({ ok: true, companyId: "c1", status: "pending" });
+    expect(rpcMock).toHaveBeenCalledWith("update_business_listing", expect.anything());
+  });
+
+  it("applies the 10 second cooldown before uploading a new logo", async () => {
+    mockExistingListing({ ...storedListing, about: "Old about", updated_at: new Date(Date.now() - 3000).toISOString() });
+
+    const result = await updateBusinessListing(editFormData(makeLogoFile()));
+
+    expect(result).toMatchObject({ ok: false, code: "rate_limited" });
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
+  });
+
+  it("returns not_found, writing nothing, when the caller has no listing", async () => {
+    mockExistingListing(null);
+
+    const result = await updateBusinessListing(editFormData());
+
+    expect(result).toMatchObject({ ok: false, code: "not_found" });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("stops with a server error when the existing listing lookup fails", async () => {
+    mockExistingListing(null, { message: "timeout" });
+
+    const result = await updateBusinessListing(editFormData(makeLogoFile()));
+
+    expect(result).toMatchObject({ ok: false, code: "server_error" });
+    expect(uploadToR2Mock).not.toHaveBeenCalled();
+  });
+
+  it("deletes the new logo, and keeps the old one, when the edit then fails", async () => {
+    mockExistingListing({ ...storedListing, about: "Old about" });
+    rpcMock.mockResolvedValue({ data: null, error: { code: "P0006", message: "rate_limited" } });
+
+    const result = await updateBusinessListing(editFormData(makeLogoFile()));
+
+    expect(result).toMatchObject({ ok: false, code: "rate_limited" });
+    expect(deleteFromR2Mock).toHaveBeenCalledTimes(1);
+    expect(deleteFromR2Mock).toHaveBeenCalledWith("logos", "user_123/new.webp");
   });
 });

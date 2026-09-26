@@ -59,8 +59,9 @@ export default async function ListBusinessPage() {
           <div className="mb-5 flex flex-col gap-1">
             <h2 className="font-heading text-lg font-semibold text-green-deep">Edit your details</h2>
             <p className="text-sm text-muted-foreground">
-              Saving a change sends your listing back for admin review. It may be temporarily hidden from the
-              public directory until it&apos;s re-approved.
+              Saving a change sends your listing back for admin review. Until it&apos;s re-approved, your
+              business and all its products are hidden from the directory and buyers can&apos;t send you
+              enquiries. Saving without changing anything keeps it live.
             </p>
           </div>
         )}
