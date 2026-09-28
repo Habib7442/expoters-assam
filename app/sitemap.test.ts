@@ -36,7 +36,7 @@ vi.mock("@/lib/supabase/client", () => ({
 import sitemap from "./sitemap";
 import robots from "./robots";
 
-const SITE = "https://www.exportersasssm.com";
+const SITE = "https://www.exportersassam.com";
 
 describe("sitemap", () => {
   beforeEach(() => {

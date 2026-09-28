@@ -89,7 +89,7 @@ describe("ProductPage", () => {
     const graph = (JSON.parse(json) as { "@graph": Record<string, unknown>[] })["@graph"];
     const productLd = graph.find((node) => node["@type"] === "Product");
 
-    expect(productLd).toMatchObject({ name: product.name, url: "https://www.exportersasssm.com/products/ahi-resin-gold" });
+    expect(productLd).toMatchObject({ name: product.name, url: "https://www.exportersassam.com/products/ahi-resin-gold" });
     expect(productLd).not.toHaveProperty("brand");
     expect(productLd).not.toHaveProperty("manufacturer");
     expect(productLd).not.toHaveProperty("offers");

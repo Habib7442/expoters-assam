@@ -1,9 +1,11 @@
 /**
- * The live site's canonical origin (with www), locked 2026-09-26. Used for
- * metadataBase, canonical URLs, the sitemap, robots.txt and structured data,
- * so every absolute URL the site publishes points at the same host.
+ * The live site's canonical origin (with www); moved 2026-09-28 from the old
+ * www.exportersasssm.com. Used for metadataBase, canonical URLs, the
+ * sitemap, robots.txt and structured data, so every absolute URL the site
+ * publishes points at the same host. Images stay on their own R2 domain,
+ * images.exportersasssm.com (spec 0004), which this does not change.
  */
-export const SITE_URL = "https://www.exportersasssm.com";
+export const SITE_URL = "https://www.exportersassam.com";
 
 export const SITE_NAME = "Exporters Assam";
 
