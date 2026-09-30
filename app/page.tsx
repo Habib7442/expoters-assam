@@ -81,9 +81,11 @@ const LISTING_STEPS = [
   },
 ];
 
-// Real Supabase data, not build-time content: without a dynamic API in this
-// page, Next would otherwise prerender it once and freeze that snapshot.
-export const dynamic = "force-dynamic";
+// Real Supabase data, not build-time content, so never frozen at build:
+// cached and rebuilt at most every 5 minutes (was force-dynamic, rebuilt on
+// every visit; changed 2026-09-30 to stay inside Vercel Hobby's CPU
+// allowance). New listings and admin changes show within 5 minutes.
+export const revalidate = 300;
 
 export default async function Home() {
   const [categories, featuredProducts, featuredExporters, latestBuyRequirements] =

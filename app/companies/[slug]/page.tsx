@@ -16,6 +16,17 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+// Cached per company, rebuilt at most every 5 minutes (decided 2026-09-30 to
+// stay inside Vercel Hobby's CPU allowance): every visit, crawler or not,
+// is served from the CDN instead of running this page again. An admin
+// approval, rejection or removal shows within 5 minutes. The empty
+// generateStaticParams renders each page on its first visit, not at build.
+export const revalidate = 300;
+
+export function generateStaticParams(): { slug: string }[] {
+  return [];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const company = await getCompanyBySlug(slug);
