@@ -31,7 +31,9 @@ type ProductSubmissionFormProps = {
   product?: EditedProduct
 }
 
+// Must match lib/product-images.ts (server only, so not importable here).
 const MAX_IMAGES = 5
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024
 
 export function ProductSubmissionForm({ categories, product }: ProductSubmissionFormProps) {
   const [pending, startTransition] = useTransition()
@@ -67,14 +69,35 @@ export function ProductSubmissionForm({ categories, product }: ProductSubmission
     const formData = new FormData(event.currentTarget)
     setResult(null)
     startTransition(async () => {
+      // The same limits the server enforces (lib/product-images.ts), checked
+      // here first so the supplier gets the right field error without
+      // uploading anything. The count before shrinking, so nobody waits for
+      // photos to be resized only to hear there are too many.
+      const files = formData.getAll("images").filter((v): v is File => v instanceof File && v.size > 0)
+      const keptCount = isEdit ? keptUrls.length : 0
+      if (keptCount + files.length > MAX_IMAGES) {
+        setResult({
+          ok: false,
+          code: "invalid_input",
+          message: "Please check the form and try again.",
+          fieldErrors: { images: isEdit ? `Up to ${MAX_IMAGES} images in total, counting the ones you keep.` : `Up to ${MAX_IMAGES} images.` },
+        })
+        return
+      }
       // Shrink big phone photos first: every image travels in this one
       // request, which must stay under the server action body limit.
-      const images = await Promise.all(
-        formData
-          .getAll("images")
-          .filter((v): v is File => v instanceof File && v.size > 0)
-          .map((file) => shrinkImage(file)),
-      )
+      const images = await Promise.all(files.map((file) => shrinkImage(file)))
+      // shrinkImage keeps the original when it can't decode a file, and a
+      // PNG can stay large after re-encoding, so check each result too.
+      if (images.some((file) => file.size > MAX_IMAGE_BYTES)) {
+        setResult({
+          ok: false,
+          code: "invalid_input",
+          message: "Please check the form and try again.",
+          fieldErrors: { images: "Each image must be under 2 MB." },
+        })
+        return
+      }
       const totalBytes = images.reduce((sum, file) => sum + file.size, 0)
       if (totalBytes > MAX_TOTAL_UPLOAD_BYTES) {
         setResult({
