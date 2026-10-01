@@ -2,7 +2,9 @@
 
 import Link from "next/link"
 import { type ChangeEvent, type SubmitEvent, useRef, useState, useTransition } from "react"
+import { RotateCcw, X } from "lucide-react"
 
+import { updateProduct, type ManageProductResult } from "@/lib/actions/manage-product"
 import { submitProduct, type SubmitProductResult } from "@/lib/actions/submit-product"
 import { MAX_TOTAL_UPLOAD_BYTES, shrinkImage } from "@/lib/shrink-image"
 import { Button } from "@/components/ui/button"
@@ -15,20 +17,44 @@ type Category = {
   name: string
 }
 
-type ProductSubmissionFormProps = {
-  categories: Category[]
+/** An existing product being edited (spec 0007); absent when submitting a new one. */
+type EditedProduct = {
+  id: string
+  name: string
+  description: string | null
+  categoryId: string
+  imageUrls: string[]
 }
 
-export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps) {
+type ProductSubmissionFormProps = {
+  categories: Category[]
+  product?: EditedProduct
+}
+
+const MAX_IMAGES = 5
+
+export function ProductSubmissionForm({ categories, product }: ProductSubmissionFormProps) {
   const [pending, startTransition] = useTransition()
-  const [result, setResult] = useState<SubmitProductResult | null>(null)
+  const [result, setResult] = useState<SubmitProductResult | ManageProductResult | null>(null)
   const [previews, setPreviews] = useState<string[]>([])
+  // Editing: which of the product's current images to keep, in their original order.
+  const [keptUrls, setKeptUrls] = useState<string[]>(product?.imageUrls ?? [])
   const formRef = useRef<HTMLFormElement>(null)
+  const isEdit = product !== undefined
 
   function handleImagesChange(event: ChangeEvent<HTMLInputElement>) {
     previews.forEach((url) => URL.revokeObjectURL(url))
     const files = Array.from(event.target.files ?? [])
     setPreviews(files.map((file) => URL.createObjectURL(file)))
+  }
+
+  function toggleKept(url: string) {
+    if (!product) return
+    setKeptUrls((current) =>
+      current.includes(url)
+        ? current.filter((kept) => kept !== url)
+        : product.imageUrls.filter((original) => original === url || current.includes(original)),
+    )
   }
 
   // A plain onSubmit handler, not <form action={fn}>: React resets every
@@ -59,22 +85,35 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
         })
         return
       }
-
-      let response: SubmitProductResult
-      try {
-        response = await submitProduct({
-          name: String(formData.get("name") ?? ""),
-          description: String(formData.get("description") ?? ""),
-          categoryId: String(formData.get("categoryId") ?? ""),
-          images,
+      if (isEdit && keptUrls.length + images.length === 0) {
+        setResult({
+          ok: false,
+          code: "invalid_input",
+          message: "Please check the form and try again.",
+          fieldErrors: { images: "Keep or add at least one image" },
         })
+        return
+      }
+
+      const fields = {
+        name: String(formData.get("name") ?? ""),
+        description: String(formData.get("description") ?? ""),
+        categoryId: String(formData.get("categoryId") ?? ""),
+      }
+      let response: SubmitProductResult | ManageProductResult
+      try {
+        response = isEdit
+          ? await updateProduct({ ...fields, productId: product.id, keepImageUrls: keptUrls, newImages: images })
+          : await submitProduct({ ...fields, images })
       } catch {
         // A dropped connection or a rejected request body throws here rather
         // than returning a result; show it in the form, never crash the page.
         response = {
           ok: false,
           code: "server_error",
-          message: "We couldn't send your product. Check your connection and try again.",
+          message: isEdit
+            ? "We couldn't save your changes. Check your connection and try again."
+            : "We couldn't send your product. Check your connection and try again.",
         }
       }
       setResult(response)
@@ -92,10 +131,17 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
   if (result?.ok) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-background p-8 text-center shadow-sm">
-        <h2 className="font-heading text-xl font-semibold text-green-deep">Product submitted</h2>
+        <h2 className="font-heading text-xl font-semibold text-green-deep">
+          {isEdit ? "Changes saved" : "Product submitted"}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Your product is pending review. It will appear on your company page once an admin approves it.
+          {isEdit
+            ? "Your product is back in review. It will reappear on your company page once an admin approves the changes."
+            : "Your product is pending review. It will appear on your company page once an admin approves it."}
         </p>
+        <Button size="lg" className="rounded-full" render={<Link href="/my-products" />} nativeButton={false}>
+          Go to My products
+        </Button>
       </div>
     )
   }
@@ -112,6 +158,7 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
           id="product-name"
           name="name"
           required
+          defaultValue={product?.name}
           placeholder="e.g. Assam Agarwood Chips, Grade A"
           aria-invalid={!!fieldErrors?.name}
         />
@@ -124,7 +171,7 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
           id="product-category"
           name="categoryId"
           required
-          defaultValue=""
+          defaultValue={product?.categoryId ?? ""}
           aria-invalid={!!fieldErrors?.categoryId}
           className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
@@ -144,23 +191,62 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
         <Label htmlFor="product-description">
           Description <span className="font-normal text-muted-foreground">(optional)</span>
         </Label>
-        <Textarea id="product-description" name="description" rows={3} placeholder="Grade, pack size, origin..." />
+        <Textarea
+          id="product-description"
+          name="description"
+          rows={3}
+          defaultValue={product?.description ?? undefined}
+          placeholder="Grade, pack size, origin..."
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="product-images">Images</Label>
+        {isEdit && product.imageUrls.length > 0 && (
+          <div className="mb-2 flex flex-col gap-1.5">
+            <span className="text-sm font-medium">Current images</span>
+            <p className="text-xs text-muted-foreground">
+              Tap an image to remove it, tap again to keep it. The first image kept is the main photo.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {product.imageUrls.map((url, i) => {
+                const kept = keptUrls.includes(url)
+                return (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() => toggleKept(url)}
+                    aria-pressed={!kept}
+                    aria-label={kept ? `Remove image ${i + 1}` : `Keep image ${i + 1}`}
+                    className="relative size-16 overflow-hidden rounded-lg border border-border"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" className={kept ? "size-full object-cover" : "size-full object-cover opacity-30"} />
+                    <span className="absolute top-0.5 right-0.5 flex size-5 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm">
+                      {kept ? <X className="size-3" aria-hidden="true" /> : <RotateCcw className="size-3" aria-hidden="true" />}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+        <Label htmlFor="product-images">{isEdit ? "Add images" : "Images"}</Label>
         <Input
           id="product-images"
           name="images"
           type="file"
           multiple
           accept="image/jpeg,image/png,image/webp"
-          required
+          required={!isEdit}
           onChange={handleImagesChange}
           aria-invalid={!!fieldErrors?.images}
           className="h-auto py-1.5"
         />
-        <p className="text-xs text-muted-foreground">JPG, PNG, or WebP, up to 5 images. Large photos are resized automatically.</p>
+        <p className="text-xs text-muted-foreground">
+          {isEdit
+            ? `JPG, PNG, or WebP. Up to ${MAX_IMAGES} images in total, counting the ones you keep.`
+            : "JPG, PNG, or WebP, up to 5 images. Large photos are resized automatically."}
+        </p>
         {fieldErrors?.images && <p className="text-xs text-destructive">{fieldErrors.images}</p>}
         {previews.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-2">
@@ -188,7 +274,7 @@ export function ProductSubmissionForm({ categories }: ProductSubmissionFormProps
       )}
 
       <Button type="submit" size="lg" disabled={pending} className="w-full rounded-full sm:w-auto">
-        {pending ? "Submitting..." : "Submit product"}
+        {pending ? (isEdit ? "Saving..." : "Submitting...") : isEdit ? "Save and send for review" : "Submit product"}
       </Button>
     </form>
   )

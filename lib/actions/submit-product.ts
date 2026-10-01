@@ -4,23 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { readVerifiedImage, type VerifiedImage } from "@/lib/image-signature";
+import { cleanupUploadedImages, imageFile, MAX_IMAGES, uploadProductImages } from "@/lib/product-images";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { deleteFromR2, uploadToR2 } from "@/lib/storage/r2";
-
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-const MAX_IMAGES = 5;
-const ALLOWED_IMAGE_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-};
-
-const imageFile = z
-  .instanceof(File)
-  .refine((file) => file.size > 0, "Choose an image")
-  .refine((file) => file.size <= MAX_IMAGE_BYTES, "Each image must be under 2 MB")
-  .refine((file) => file.type in ALLOWED_IMAGE_TYPES, "Images must be JPG, PNG, or WebP");
 
 const submitProductSchema = z.object({
   name: z.string().trim().min(2, "Enter a product name").max(200),
@@ -71,17 +56,6 @@ const SERVER_ERROR_RESULT: SubmitProductResult = {
   code: "server_error",
   message: "Something went wrong on our end. Please try again in a moment.",
 };
-
-/** Best effort only: an orphaned R2 object is an accepted, low cost tradeoff (same reasoning as business-listing.ts's deleteLogoBestEffort). */
-async function cleanupUploadedImages(keys: string[]): Promise<void> {
-  await Promise.all(
-    keys.map((key) =>
-      deleteFromR2("products", key).catch(() => {
-        // best effort only
-      }),
-    ),
-  );
-}
 
 /**
  * Creates a pending product submission for the signed in supplier's own
@@ -141,10 +115,9 @@ export async function submitProduct(input: SubmitProductInput): Promise<SubmitPr
   if (countError) return SERVER_ERROR_RESULT;
   if ((recentCount ?? 0) >= PRODUCTS_PER_HOUR) return RATE_LIMITED_RESULT;
 
-  // Verify every file's real bytes before uploading any, so one disguised
-  // non-image never leaves the others orphaned in R2.
-  const verifiedImages = await Promise.all(images.map(readVerifiedImage));
-  if (verifiedImages.some((image) => image === null)) {
+  // Verifies every file's real bytes before uploading any (lib/product-images.ts).
+  const upload = await uploadProductImages(userId, images);
+  if (!upload.ok && upload.code === "invalid_images") {
     return {
       ok: false,
       code: "invalid_input",
@@ -152,24 +125,10 @@ export async function submitProduct(input: SubmitProductInput): Promise<SubmitPr
       fieldErrors: { images: "Images must be JPG, PNG, or WebP" },
     };
   }
-
-  // allSettled, not all: Promise.all rejects on the first failure while the
-  // other uploads are still in flight, so any that finished afterwards would
-  // never be cleaned up.
-  const uploadedKeys: string[] = [];
-  const uploads = await Promise.allSettled(
-    (verifiedImages as VerifiedImage[]).map(async (image) => {
-      const key = `${userId}/${crypto.randomUUID()}.${image.ext}`;
-      const url = await uploadToR2("products", key, image.buffer, image.type);
-      uploadedKeys.push(key);
-      return url;
-    }),
-  );
-  if (uploads.some((upload) => upload.status === "rejected")) {
-    await cleanupUploadedImages(uploadedKeys);
+  if (!upload.ok) {
     return { ok: false, code: "upload_failed", message: "Could not upload your images. Please try again." };
   }
-  const imageUrls = uploads.map((upload) => (upload as PromiseFulfilledResult<string>).value);
+  const { urls: imageUrls, keys: uploadedKeys } = upload;
 
   const { data, error } = await supabaseAdmin.rpc("create_product_submission", {
     p_clerk_user_id: userId,

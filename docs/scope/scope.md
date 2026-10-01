@@ -33,6 +33,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 18 | Legal pages & DPDP compliance | Infrastructure | done |
 | 19 | Go live configuration | Infrastructure | planned |
 | 20 | About, Contact & FAQ pages | Infrastructure | done |
+| 21 | Product and company management | Slice 3 | in-progress |
 
 ## Foundations
 
@@ -275,6 +276,16 @@ The footer links to `/about`, `/contact`, and `/faq`, and all three return 404 (
 - [x] Test it: FAQ structured data matches the questions shown; Contact follows the configured WhatsApp number and hides it when unset
 - [x] Review it: skipped on purpose, static content pages with no data or input; the copy was checked line by line against the code and Privacy Policy
 code in `app/about/page.tsx`, `app/contact/page.tsx`, `app/faq/page.tsx`
+
+### 21. Product and company management · in-progress
+Once approved, nothing could change: suppliers could only add products, and the admin app could only approve or reject pending items. Suppliers now edit (back to review) and delete their own products from a My products page; admins hide, unhide and permanently delete products and whole companies from the separate admin app, through a new reversible `hidden` status. Asked for 2026-10-01; decisions recorded by /develop as an assumed spec on the engineer's "do the best way".
+**Done when:** a supplier can edit and delete their own products, and an admin can hide, unhide and delete any product or company, with hidden and deleted items gone from every public page.
+- [x] Design it (spec): assumed decision (spec 0007), owes `/architect product and company management` to ratify
+- [x] Build it: `/develop product and company management` (2026-10-01, migration `20261001010000_add_product_company_management.sql` applied)
+   - [x] Supplier side: My products page, edit (back to review, keep/remove/add images) and delete, hidden company notices (13 tests in `lib/actions/manage-product.test.ts`)
+   - [x] Admin side (separate app): Hide, Unhide and permanent Delete for each product and for the company, on the company detail page
+   - [x] Migration applied to the live database and checked: both status checks allow `hidden`, `update_product_submission` exists and refuses the anon role (`42501`); types regenerated in both apps
+spec [0007](../specs/0007-product-company-management.md) · assumed decision (spec 0007) · code in `app/my-products/`, `lib/actions/manage-product.ts`, `lib/product-images.ts`, `lib/supabase/queries/my-products.ts`, `components/product-submission-form.tsx`, `components/delete-product-button.tsx`, `supabase/migrations/20261001010000_add_product_company_management.sql`; admin app `lib/actions/listing-management.ts`, `components/listing-controls.tsx`, `app/(dashboard)/companies/[id]/page.tsx`
 
 ## Legend
 

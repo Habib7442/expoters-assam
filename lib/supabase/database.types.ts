@@ -721,6 +721,21 @@ export type Database = {
           slug: string
         }[]
       }
+      update_product_submission: {
+        Args: {
+          p_category_id: string
+          p_clerk_user_id: string
+          p_description: string
+          p_image_urls: string[]
+          p_name: string
+          p_product_id: string
+        }
+        Returns: {
+          product_id: string
+          slug: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -45,12 +45,18 @@ export default async function NewProductPage() {
         {company && company.status !== "approved" && (
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-background p-8 text-center shadow-sm">
             <h2 className="font-heading text-lg font-semibold text-green-deep">
-              {company.status === "pending" ? "Your business is under review" : "Your business needs attention"}
+              {company.status === "pending"
+                ? "Your business is under review"
+                : company.status === "hidden"
+                  ? "Your business is hidden"
+                  : "Your business needs attention"}
             </h2>
             <p className="text-sm text-muted-foreground">
               {company.status === "pending"
                 ? "You can submit products once an admin approves your business listing."
-                : "Your business listing was rejected. Fix it before you can submit products."}
+                : company.status === "hidden"
+                  ? "The Exporters Assam team has hidden your business, so you can't add products right now. Contact us if you think this is a mistake."
+                  : "Your business listing was rejected. Fix it before you can submit products."}
             </p>
             <Button size="lg" className="rounded-full" render={<Link href="/list-business" />} nativeButton={false}>
               Check your listing status

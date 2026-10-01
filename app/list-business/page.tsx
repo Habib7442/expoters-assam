@@ -4,6 +4,7 @@ import { BadgeCheck } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 
 import { getMyCompany } from "@/lib/supabase/queries/companies";
+import { CONTACT_EMAIL } from "@/lib/site";
 import { BusinessListingForm } from "@/components/business-listing-form";
 import { Button } from "@/components/ui/button";
 
@@ -45,9 +46,35 @@ export default async function ListBusinessPage() {
             <p className="text-sm text-muted-foreground">
               {company.name} is approved and visible on Exporters Assam.
             </p>
-            <Button size="lg" className="rounded-full" render={<Link href="/products/new" />} nativeButton={false}>
-              Add a Product
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button size="lg" className="rounded-full" render={<Link href="/products/new" />} nativeButton={false}>
+                Add a Product
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full"
+                render={<Link href="/my-products" />}
+                nativeButton={false}
+              >
+                Manage My Products
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {company && company.status === "hidden" && (
+          <div className="mb-5 rounded-xl bg-zinc-100 p-4 text-sm text-zinc-700">
+            Your business has been hidden by the Exporters Assam team, so it and its products aren&apos;t shown on the
+            site and buyers can&apos;t send you enquiries. Editing your details won&apos;t change that. Email{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="underline">
+              {CONTACT_EMAIL}
+            </a>{" "}
+            if you think this is a mistake. You can still{" "}
+            <Link href="/my-products" className="underline">
+              manage your products
+            </Link>
+            .
           </div>
         )}
 
