@@ -39,6 +39,8 @@ export function SearchBar({
 
   const [value, setValue] = useState(urlValue)
   const [syncedUrlValue, setSyncedUrlValue] = useState(urlValue)
+  // The last value this box itself sent to the URL.
+  const [issuedValue, setIssuedValue] = useState<string | null>(null)
   // Pending from the URL update until the page's new results arrive: the
   // old list stays on screen meanwhile, so the icon turns into a spinner.
   const [isPending, startTransition] = useTransition()
@@ -47,10 +49,14 @@ export function SearchBar({
   // carries the current q along, browser back/forward) without fighting the
   // user's own typing: adjusted during render, not in an effect, per React's
   // "adjusting state when a prop changes" pattern — setState directly inside
-  // an effect body causes an avoidable extra render.
+  // an effect body causes an avoidable extra render. When the URL change is
+  // this box's own search arriving, the text is left alone: the user may
+  // have kept typing ("car" sent, "cart" typed since), and resetting it
+  // would drop that draft and cancel its pending update.
   if (urlValue !== syncedUrlValue) {
     setSyncedUrlValue(urlValue)
-    setValue(urlValue)
+    if (urlValue !== issuedValue) setValue(urlValue)
+    setIssuedValue(null)
   }
 
   useEffect(() => {
@@ -61,6 +67,7 @@ export function SearchBar({
       if (value) params.set(paramName, value)
       else params.delete(paramName)
 
+      setIssuedValue(value)
       startTransition(() => {
         router.replace(params.size > 0 ? `${pathname}?${params.toString()}` : pathname)
       })
