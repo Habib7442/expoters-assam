@@ -533,6 +533,19 @@ export type Database = {
       }
     }
     Functions: {
+      create_admin_product: {
+        Args: {
+          p_category_id: string
+          p_company_id: string
+          p_description: string
+          p_image_urls: string[]
+          p_name: string
+        }
+        Returns: {
+          product_id: string
+          slug: string
+        }[]
+      }
       create_business_listing: {
         Args: {
           p_about: string
