@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 // address. The DPDP Act (s. 8(10)) requires a published contact who can answer
 // data-protection questions; the shared inbox stands in until then.
 const GRIEVANCE_OFFICER_NAME = "Grievance Officer";
-const PRIVACY_EMAIL = "info@exportsassam.com";
+const PRIVACY_EMAIL = "avadiherbsindia@gmail.com";
 
 const DELETION_MAILTO = `mailto:${PRIVACY_EMAIL}?subject=${encodeURIComponent("Data deletion request")}`;
 

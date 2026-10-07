@@ -18,8 +18,8 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
         <h1 className="font-heading text-2xl font-bold text-green-deep">Something went wrong</h1>
         <p className="text-sm text-muted-foreground">
           Sorry, this page ran into a problem. Please try again. If it keeps happening, email us at{" "}
-          <a href="mailto:info@exportsassam.com" className="text-green underline underline-offset-2">
-            info@exportsassam.com
+          <a href="mailto:avadiherbsindia@gmail.com" className="text-green underline underline-offset-2">
+            avadiherbsindia@gmail.com
           </a>
           .
         </p>

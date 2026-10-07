@@ -373,11 +373,11 @@ export function SiteHeader() {
                     </span>
                   </div>
                   <a
-                    href="mailto:info@exportsassam.com"
+                    href="mailto:avadiherbsindia@gmail.com"
                     className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors hover:text-green"
                   >
                     <Mail className="size-3 shrink-0" />
-                    info@exportsassam.com
+                    avadiherbsindia@gmail.com
                   </a>
                 </div>
               </SheetContent>

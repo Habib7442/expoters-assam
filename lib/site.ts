@@ -12,7 +12,7 @@ export const SITE_NAME = "Exporters Assam";
 /** The operating company, as named in the Terms and Privacy Policy. */
 export const OPERATOR_NAME = "Avadi Herbs India Pvt. Ltd.";
 
-export const CONTACT_EMAIL = "info@exportsassam.com";
+export const CONTACT_EMAIL = "avadiherbsindia@gmail.com";
 
 /**
  * The site-wide social preview image. A page that sets its own

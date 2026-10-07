@@ -90,7 +90,7 @@ const FAQ_GROUPS: { title: string; items: Faq[] }[] = [
       {
         question: "How do I delete my account and listing?",
         answer:
-          "Deleting your account from your account settings also deletes your business listing, its products and its images. For anything else, email info@exportsassam.com.",
+          "Deleting your account from your account settings also deletes your business listing, its products and its images. For anything else, email avadiherbsindia@gmail.com.",
       },
       {
         question: "How long do you keep enquiries and buy requirements?",

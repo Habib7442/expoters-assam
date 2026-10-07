@@ -68,10 +68,10 @@ export function SiteFooter() {
           <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
             <li>
               <a
-                href="mailto:info@exportsassam.com"
+                href="mailto:avadiherbsindia@gmail.com"
                 className="transition-colors hover:text-green"
               >
-                info@exportsassam.com
+                avadiherbsindia@gmail.com
               </a>
             </li>
             <li>Assam, India</li>

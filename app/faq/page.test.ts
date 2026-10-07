@@ -38,7 +38,7 @@ describe("ContactPage", () => {
 
     expect(html).toContain('href="https://wa.me/919577772757"');
     expect(html).toContain("+91 95777 72757");
-    expect(html).toContain("mailto:info@exportsassam.com");
+    expect(html).toContain("mailto:avadiherbsindia@gmail.com");
   });
 
   it("leaves the WhatsApp card out, never showing a broken link, when no number is configured", () => {
@@ -47,6 +47,6 @@ describe("ContactPage", () => {
     const html = renderToStaticMarkup(ContactPage() as ReactElement);
 
     expect(html).not.toContain("wa.me");
-    expect(html).toContain("mailto:info@exportsassam.com");
+    expect(html).toContain("mailto:avadiherbsindia@gmail.com");
   });
 });

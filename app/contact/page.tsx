@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Get in touch with the Exporters Assam team by email or WhatsApp.",
 };
 
-const CONTACT_EMAIL = "info@exportsassam.com";
+const CONTACT_EMAIL = "avadiherbsindia@gmail.com";
 
 /** The same number buy requirements are sent to, so the two never drift apart. */
 function platformWhatsapp(): { display: string; href: string } | null {

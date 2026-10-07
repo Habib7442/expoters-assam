@@ -145,8 +145,8 @@ export default function TermsPage() {
             <h2 className="font-heading text-lg font-semibold text-green-deep">11. Contact us</h2>
             <p>
               Questions about these terms can be sent to{" "}
-              <a href="mailto:info@exportsassam.com" className="text-green underline underline-offset-2">
-                info@exportsassam.com
+              <a href="mailto:avadiherbsindia@gmail.com" className="text-green underline underline-offset-2">
+                avadiherbsindia@gmail.com
               </a>
               .
             </p>
