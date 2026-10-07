@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Loader2, Lock } from "lucide-react";
 
@@ -39,6 +40,7 @@ function allowanceText(allowance: ContactAllowance): string {
  * unlocks the buyer's name, phone and email and uses one buyer contact.
  */
 export function ContactBuyerDialog({ buyRequirementId, productText }: ContactBuyerDialogProps) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<BuyerContactStatus | null>(null);
   const [unlockError, setUnlockError] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export function ContactBuyerDialog({ buyRequirementId, productText }: ContactBuy
           </div>
         )}
 
-        {!loading && status && <StatusBody status={status} unlocking={unlocking} unlockError={unlockError} onUnlock={handleUnlock} />}
+        {!loading && status && <StatusBody status={status} returnPath={pathname} unlocking={unlocking} unlockError={unlockError} onUnlock={handleUnlock} />}
       </DialogContent>
     </Dialog>
   );
@@ -91,17 +93,19 @@ export function ContactBuyerDialog({ buyRequirementId, productText }: ContactBuy
 
 type StatusBodyProps = {
   status: BuyerContactStatus;
+  /** The page the dialog was opened on, so sign in returns the supplier there. */
+  returnPath: string;
   unlocking: boolean;
   unlockError: string | null;
   onUnlock: () => void;
 };
 
-function StatusBody({ status, unlocking, unlockError, onUnlock }: StatusBodyProps) {
+function StatusBody({ status, returnPath, unlocking, unlockError, onUnlock }: StatusBodyProps) {
   switch (status.kind) {
     case "signed_out":
       return (
         <Notice text="Sign in with your supplier account to see this buyer's contact details.">
-          <Button className="w-full rounded-full" render={<Link href="/sign-in?redirect_url=%2Fbuy-requirements" />} nativeButton={false}>
+          <Button className="w-full rounded-full" render={<Link href={`/sign-in?redirect_url=${encodeURIComponent(returnPath)}`} />} nativeButton={false}>
             Sign in
           </Button>
         </Notice>
