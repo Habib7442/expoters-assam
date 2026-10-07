@@ -34,6 +34,9 @@ export const metadata: Metadata = {
     "Connect with verified exporters of agarwood, spices, tea, essential oils, and nursery plants from Assam and across India. Post buy requirements, send enquiries, and close deals directly over WhatsApp.",
   icons: {
     icon: [
+      // Google Search shows a favicon only if it's a multiple of 48px, and
+      // prefers larger ones; /favicon.ico (app/favicon.ico) is the 48px one.
+      { url: "/favicons/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
       { url: "/favicons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
     ],
