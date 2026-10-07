@@ -29,7 +29,7 @@ export default function PrivacyPage() {
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8 flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">Privacy Policy</h1>
-          <p className="text-sm text-muted-foreground">Last updated: September 26, 2026</p>
+          <p className="text-sm text-muted-foreground">Last updated: October 7, 2026</p>
         </div>
 
         <div className="flex flex-col gap-8 text-sm leading-7 text-foreground/80 sm:text-base">
@@ -64,9 +64,10 @@ export default function PrivacyPage() {
             </p>
             <p className="font-medium text-foreground">Payment information</p>
             <p>
-              When a supplier pays for a membership, the payment is processed by Razorpay. We never collect or
-              store your card, UPI, or bank details — Razorpay handles those directly and shares only the payment
-              status and reference with us.
+              Membership is not paid on this website. A supplier pays us directly, using the details we share on
+              WhatsApp, and sends us a screenshot of the payment there. We keep the payment screenshot and
+              record which plan the business is on and when it ends. We never collect card, UPI, or bank login
+              details.
             </p>
             <p className="font-medium text-foreground">Usage data</p>
             <p>
@@ -82,7 +83,8 @@ export default function PrivacyPage() {
               We process your personal data on the basis of your consent, which you give by ticking the consent
               box on the form where you enter it (sending an enquiry, posting a buy requirement, or listing a
               business). Each form tells you what the details are for. Showing a buy requirement publicly is a
-              separate choice, off by default. When you create an account, you agree to this policy and our
+              separate choice, off by default; choosing it also lets suppliers unlock your contact details (see
+              section 4). When you create an account, you agree to this policy and our
               Terms on the sign up screen; your account details are used only to sign you in and to link you to
               your business listing. Deleting your account deletes your business listing, its products, and its
               images.
@@ -104,7 +106,7 @@ export default function PrivacyPage() {
               <li>To create and manage your account and business listing</li>
               <li>To review and approve business and product listings before they go live</li>
               <li>To record your enquiry or buy requirement and let the relevant supplier, or our team, respond</li>
-              <li>To process supplier membership payments and manage your membership tier</li>
+              <li>To record supplier membership payments and manage your membership plan</li>
               <li>To respond to support requests and platform-related communication</li>
               <li>To understand usage patterns and improve the directory, if you&apos;ve agreed to analytics</li>
             </ul>
@@ -131,14 +133,20 @@ export default function PrivacyPage() {
               When you post a buy requirement, we save it and offer you a WhatsApp link to our own team&apos;s
               number instead, pre-filled with the product, quantity, and delivery location. Our team reads every
               requirement, public or private, to match it with suitable exporters. If you choose to show it
-              publicly, only the product, quantity, location, and date appear on the site; your name, phone
-              number, and email never do.
+              publicly, only the product, quantity, location, and date appear on the site for everyone.
             </p>
             <p>
-              When a supplier responds to a public buy requirement, we save the response and offer a WhatsApp
-              link to our own team&apos;s number, pre-filled with the requirement&apos;s reference and product.
-              Our team then introduces the supplier and the buyer. The buyer&apos;s contact details are never
-              shown on the site or handed to the supplier automatically.
+              A public buy requirement can also be unlocked by a signed in supplier with an approved business
+              listing. The supplier then sees your name, phone number, email (if you gave one), and the
+              requirement details, so they can call or message you directly. We record which supplier unlocked
+              which requirement and when. Each supplier can unlock a limited number of requirements per year,
+              depending on their membership plan. If you don&apos;t want suppliers to contact you directly,
+              don&apos;t choose to show your requirement publicly; our team will still match it for you.
+            </p>
+            <p>
+              Buy requirements posted publicly before October 7, 2026 were posted under a policy that did not
+              allow this, so their contact details are never unlocked. A supplier who responds to one of them
+              reaches our own team on WhatsApp instead, and our team introduces the supplier and the buyer.
             </p>
           </section>
 
@@ -151,10 +159,14 @@ export default function PrivacyPage() {
                 whatever WhatsApp shows them about you (see section 4)
               </li>
               <li>
+                Suppliers who unlock a buy requirement you chose to show publicly: they see your name, phone
+                number, email (if given), and the requirement details (see section 4)
+              </li>
+              <li>
                 Service providers who process data on our behalf, under contract: Clerk (authentication),
                 Supabase (database), Cloudflare (image storage, and Turnstile bot protection on our enquiry and
                 buy requirement forms, which checks technical signals from your browser to tell people from
-                automated spam — we don&apos;t store any of it), and Vercel (website hosting). Razorpay (payments) and PostHog (analytics) will be added when those features go live
+                automated spam — we don&apos;t store any of it), and Vercel (website hosting). PostHog (analytics) will be added when that feature goes live
               </li>
               <li>Law enforcement or regulators, only when legally required to</li>
             </ul>
@@ -167,9 +179,10 @@ export default function PrivacyPage() {
             <p>
               A business&apos;s email address and GST number are never shown on public pages and are visible only
               to our admin team. The name, phone number, and email you enter on an enquiry or buy requirement
-              form are stored by us and visible only to our admin team — we never show them on public pages or
-              share them with suppliers. A supplier only sees your WhatsApp details if you choose to message them
-              on WhatsApp, and then only what WhatsApp shows them (see section 4).
+              form are stored by us and never shown on public pages. They are visible to our admin team and, for a
+              buy requirement you chose to show publicly, to the suppliers who unlock it (see section 4). For an
+              enquiry, a supplier only sees your WhatsApp details if you choose to message them on WhatsApp, and
+              then only what WhatsApp shows them.
             </p>
           </section>
 
@@ -179,7 +192,8 @@ export default function PrivacyPage() {
               Once a business listing is approved, its name, logo, location (city, state, country), and
               WhatsApp number are visible to anyone browsing the directory — that&apos;s the point of listing.
               A buy requirement is only shown publicly if you choose that when posting it, and then only the
-              product, quantity, and delivery location. A submitted product or business stays private (visible
+              product, quantity, and delivery location; your contact details are shown only to suppliers who
+              unlock it. A submitted product or business stays private (visible
               only to you and our admin team) until it&apos;s approved.
             </p>
           </section>

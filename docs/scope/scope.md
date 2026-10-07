@@ -23,7 +23,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 8 | Post Buy Requirement | Slice 3 | done |
 | 9 | Enquiries on companies & buy requirements | Slice 3 | done |
 | 10 | Supplier business listing | Slice 3 | done |
-| 11 | Membership plans & Razorpay | Slice 4 | planned · deferred |
+| 11 | Membership plans (manual, WhatsApp) | Slice 4 | in-progress |
 | 12 | AI-powered / semantic search | Slice 5 | in-progress |
 | 13 | SEO & GEO | Slice 5 | done |
 | 14 | PostHog analytics | Slice 5 | planned · deferred |
@@ -183,11 +183,15 @@ code in `supabase/migrations/20260911010000_add_create_product_submission.sql`, 
 
 ## Slice 4: revenue
 
-### 11. Membership plans & Razorpay · needs a decision
-Basic/Silver/Gold tiers; a supplier upgrades and pays via Razorpay; a successful payment auto-upgrades the account (badge, ranking boost, featured placement).
-**Deferred by you (2026-09-25):** not the next build; pick it back up later. Silver and Gold prices are still unconfirmed by the client. A static `/membership` plans page already exists; its checkout button is not wired yet (code in `app/membership/page.tsx`).
-**Done when:** a supplier can choose Silver or Gold, pay via Razorpay, and their membership tier updates automatically on successful payment, with the payment logged.
-- [ ] Design it (spec): `/architect membership plans & razorpay`
+### 11. Membership plans (manual payment via WhatsApp) · in-progress
+Basic free, Silver ₹12,000 + GST per year (15 buyer contacts per year), Gold ₹23,999 + GST per year (unlimited). **Changed 2026-10-06 by the client:** no Razorpay. The plan buttons on `/membership` open WhatsApp; the supplier pays and sends the screenshot there, and an admin sets the plan from the admin app's Memberships page (all companies, 20 per page).
+**Done when:** a supplier can reach us on WhatsApp from a plan, is clearly told to send the payment screenshot, and the admin can set any company's plan so the tier updates for one year.
+- [x] Design it (spec): [0008](../specs/0008-manual-membership-requests.md)
+- [x] Build it: `/develop membership plans` (2026-10-06, migrations `20261006010000` and `20261006020000` applied; admin Memberships page built in `expoters-assam-admin`)
+- [ ] Prove it: `/check verify membership plans`
+- [ ] Test it: `/test membership plans`
+- [x] Buyer contact limits (Basic 1, Silver 15, Gold unlimited per plan year), IndiaMART style unlocks: [0009](../specs/0009-buyer-contact-unlocks.md), built 2026-10-07, migration `20261007010000` applied
+- [ ] Enforce the remaining plan perks (product limit, badge, ranking, home page featuring): needs its own spec
 
 ## Slice 5: findability
 

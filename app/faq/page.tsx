@@ -36,12 +36,12 @@ const FAQ_GROUPS: { title: string; items: Faq[] }[] = [
       {
         question: "Will the supplier see my phone number or email?",
         answer:
-          "Not from us. The name, phone number and email you type into our forms are never shown on the site or passed to suppliers. If you message a supplier on WhatsApp, they see whatever WhatsApp shows them about you, which is controlled by your WhatsApp settings.",
+          "Never on the site. For an enquiry, we don't pass your details to the supplier; if you message them on WhatsApp, they see whatever WhatsApp shows them about you. For a buy requirement you choose to show publicly, suppliers listed on Exporters Assam can unlock your name, phone and email to contact you directly. Keep it private if you'd rather only our team contacts you.",
       },
       {
         question: "What happens after I post a buy requirement?",
         answer:
-          "We save it and give you a WhatsApp link to our team. Our team reads every requirement and matches it with suitable exporters from the directory. You can choose to show it publicly on the Buy Leads page; only the product, quantity, location and date are ever shown.",
+          "We save it and give you a WhatsApp link to our team. Our team reads every requirement and matches it with suitable exporters from the directory. You can choose to show it publicly on the Buy Leads page: everyone sees only the product, quantity, location and date, and suppliers who unlock it also see your contact details so they can reach you directly.",
       },
     ],
   },
@@ -73,9 +73,14 @@ const FAQ_GROUPS: { title: string; items: Faq[] }[] = [
           "A real change sends it back for review, and your business and its products are hidden until it is re-approved. Saving without changing anything keeps it live.",
       },
       {
+        question: "What is a buyer contact?",
+        answer:
+          "On the Buy Leads page, tap Contact Buyer on a requirement to unlock the buyer's name, phone and email. Each unlock uses one buyer contact from your plan for the year; opening the same buyer again is free. A contact is used when you unlock it, whether or not you then reach the buyer.",
+      },
+      {
         question: "Are there paid plans?",
         answer:
-          "Listing is free on the Basic plan. Silver and Gold plans add more visibility; to upgrade, email info@exportsassam.com.",
+          "Listing is free on the Basic plan, which includes 1 buyer contact a year. Silver (₹12,000 + GST a year) adds more visibility and 15 buyer contacts a year; Gold (₹23,999 + GST a year) gives unlimited buyer contacts. To upgrade, choose a plan on the Membership page, pay using the details we share on WhatsApp, and send us the payment screenshot there.",
       },
     ],
   },

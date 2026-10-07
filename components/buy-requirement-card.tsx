@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Clock, MapPin, Package, ArrowRight } from "lucide-react";
 
+import { ContactBuyerDialog } from "@/components/contact-buyer-dialog";
 import { SendEnquiryDialog } from "@/components/send-enquiry-dialog";
 
 type BuyRequirementCardProps = {
@@ -9,6 +10,8 @@ type BuyRequirementCardProps = {
   quantity: string;
   location: string | null;
   createdAt: string;
+  /** Posted after buyers agreed to share contacts (spec 0009): Contact Buyer instead of Respond. */
+  contactUnlockable: boolean;
 };
 
 export function BuyRequirementCard({
@@ -17,6 +20,7 @@ export function BuyRequirementCard({
   quantity,
   location,
   createdAt,
+  contactUnlockable,
 }: BuyRequirementCardProps) {
   const postedOn = new Date(createdAt).toLocaleDateString("en-US", {
     year: "numeric",
@@ -59,17 +63,22 @@ export function BuyRequirementCard({
         </div>
       </div>
 
-      {/* "Respond" sends a supplier's reply to the platform team, who
-          introduce the two sides (feature 9); the buyer's contact details
-          stay private. "Post similar" starts a *new* requirement, prefilled
-          with this one's product. */}
+      {/* "Contact Buyer" unlocks the buyer's details for a signed in supplier
+          (spec 0009). Requirements posted before buyers agreed to that keep
+          "Respond", which sends the reply to the platform team, who
+          introduce the two sides (feature 9). "Post similar" starts a *new*
+          requirement, prefilled with this one's product. */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border/60 pt-3 text-xs">
-        <SendEnquiryDialog
-          target={{ type: "buy_requirement", buyRequirementId: id, productText }}
-          triggerLabel="Respond"
-          triggerSize="sm"
-          triggerClassName="rounded-full px-4"
-        />
+        {contactUnlockable ? (
+          <ContactBuyerDialog buyRequirementId={id} productText={productText} />
+        ) : (
+          <SendEnquiryDialog
+            target={{ type: "buy_requirement", buyRequirementId: id, productText }}
+            triggerLabel="Respond"
+            triggerSize="sm"
+            triggerClassName="rounded-full px-4"
+          />
+        )}
         <Link
           href={`/buy-requirements/new?product=${encodeURIComponent(productText)}`}
           className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap font-semibold text-green transition-colors hover:text-green-deep"

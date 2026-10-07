@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, MessageCircle } from "lucide-react";
 
+import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -14,19 +15,23 @@ export const metadata: Metadata = {
 type Tier = {
   name: string;
   price: string;
+  /** Shown under the price, e.g. "+ GST per year". */
+  priceNote: string;
   badgeVariant: "secondary" | "default" | "gold";
   features: string[];
-  cta: { label: string; href: string };
+  /** Paid plans open WhatsApp; Basic links to the free listing form. */
+  paid: boolean;
 };
 
-// Feature set from PRD Section 6. Prices are deliberately not shown here:
-// the PRD marks them "to be decided by the client," so Silver/Gold point
-// to a contact CTA instead of an invented number or a checkout button that
-// doesn't work yet (Razorpay checkout is a separate, not-yet-built feature).
+// Prices and buyer contact limits confirmed by the client on 2026-10-06.
+// Payment is manual (spec 0008): the plan button opens WhatsApp, the
+// supplier pays and sends the screenshot there, and an admin sets the plan
+// from the admin app.
 const TIERS: Tier[] = [
   {
     name: "Basic",
     price: "Free",
+    priceNote: "Limited features",
     badgeVariant: "secondary",
     features: [
       "Company profile page",
@@ -34,35 +39,56 @@ const TIERS: Tier[] = [
       "Normal search placement",
       "Receive buyer enquiries",
     ],
-    cta: { label: "List Your Business Free", href: "/list-business" },
+    paid: false,
   },
   {
     name: "Silver",
-    price: "Contact us",
+    price: "₹12,000",
+    priceNote: "+ GST per year",
     badgeVariant: "default",
     features: [
       "Everything in Basic",
       "List up to 25 products",
+      "15 buyer contacts per year",
       "Verified badge",
       "Higher search placement",
       "Sometimes featured on the home page",
     ],
-    cta: { label: "Contact Us", href: "mailto:info@exportsassam.com?subject=Silver%20membership" },
+    paid: true,
   },
   {
     name: "Gold",
-    price: "Contact us",
+    price: "₹23,999",
+    priceNote: "+ GST per year",
     badgeVariant: "gold",
     features: [
       "Everything in Silver",
       "Unlimited products",
+      "Unlimited buyer contacts",
       "Top priority search placement",
       "Always featured on the home page",
       "Priority buyer enquiries",
     ],
-    cta: { label: "Contact Us", href: "mailto:info@exportsassam.com?subject=Gold%20membership" },
+    paid: true,
   },
 ];
+
+const STEPS = [
+  "Choose Silver or Gold below. It opens a chat with us on WhatsApp.",
+  "Pay for your plan. We share the payment details with you on WhatsApp.",
+  "Send a screenshot of your payment to us in the same WhatsApp chat.",
+  "We check your payment and upgrade your account, usually within one working day.",
+];
+
+/** A wa.me link to the platform number with the plan typed in; email when the number isn't set. */
+function planWhatsappUrl(tier: Tier): string {
+  const platformNumber = process.env.PLATFORM_WHATSAPP_NUMBER;
+  const text = `Hi, I'd like the ${tier.name} plan (${tier.price} ${tier.priceNote}) on ${SITE_NAME}. My business name is: `;
+  if (!platformNumber) {
+    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`${tier.name} membership`)}&body=${encodeURIComponent(text)}`;
+  }
+  return `https://wa.me/${platformNumber.replace(/^\+/, "")}?text=${encodeURIComponent(text)}`;
+}
 
 export default function MembershipPage() {
   return (
@@ -75,6 +101,29 @@ export default function MembershipPage() {
             you&apos;re ready for more reach.
           </p>
         </div>
+
+        <section
+          aria-labelledby="how-to-upgrade"
+          className="mx-auto mb-8 w-full max-w-3xl rounded-2xl border border-green/20 bg-background p-5 shadow-sm sm:mb-10 sm:p-6"
+        >
+          <h2 id="how-to-upgrade" className="font-heading text-lg font-semibold text-green-deep">
+            How to upgrade
+          </h2>
+          <ol className="mt-3 grid gap-3 sm:grid-cols-2">
+            {STEPS.map((step, index) => (
+              <li key={step} className="flex items-start gap-3 text-sm text-foreground/80">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-green text-xs font-semibold text-white">
+                  {index + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Payment is not taken on this website. Please send your payment screenshot on WhatsApp so we can
+            upgrade your account. List your business for free first if you haven&apos;t already.
+          </p>
+        </section>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           {TIERS.map((tier) => (
@@ -93,7 +142,10 @@ export default function MembershipPage() {
                 >
                   {tier.name}
                 </Badge>
-                <span className="font-heading text-2xl font-bold text-green-deep">{tier.price}</span>
+                <div className="flex flex-col">
+                  <span className="font-heading text-2xl font-bold text-green-deep">{tier.price}</span>
+                  <span className="text-xs text-muted-foreground">{tier.priceNote}</span>
+                </div>
               </div>
 
               <ul className="flex flex-col gap-2.5">
@@ -105,29 +157,36 @@ export default function MembershipPage() {
                 ))}
               </ul>
 
-              <Button
-                size="lg"
-                variant={tier.name === "Basic" ? "default" : "outline"}
-                className={
-                  tier.name === "Basic"
-                    ? "mt-auto w-full rounded-full"
-                    : "mt-auto w-full rounded-full border-green bg-transparent text-green hover:bg-green/10"
-                }
-                render={<Link href={tier.cta.href} />}
-                nativeButton={false}
-              >
-                {tier.cta.label}
-              </Button>
+              {tier.paid ? (
+                <Button
+                  size="lg"
+                  className="mt-auto w-full rounded-full bg-[#25D366] text-white hover:bg-[#1EBE5A]"
+                  render={<a href={planWhatsappUrl(tier)} target="_blank" rel="noopener noreferrer" />}
+                  nativeButton={false}
+                >
+                  <MessageCircle className="size-4" aria-hidden="true" />
+                  Get {tier.name} on WhatsApp
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="mt-auto w-full rounded-full"
+                  render={<Link href="/list-business" />}
+                  nativeButton={false}
+                >
+                  List Your Business Free
+                </Button>
+              )}
             </div>
           ))}
         </div>
 
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          Already approved and want to upgrade? Reach out to{" "}
-          <a href="mailto:info@exportsassam.com" className="text-green underline underline-offset-2">
-            info@exportsassam.com
-          </a>{" "}
-          and we&apos;ll take care of it.
+          Questions about a plan? Reach out to{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-green underline underline-offset-2">
+            {CONTACT_EMAIL}
+          </a>
+          .
         </p>
       </div>
     </main>

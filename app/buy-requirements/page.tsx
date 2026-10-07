@@ -58,7 +58,7 @@ const SOURCING_STEPS = [
     step: "01",
     title: "Post What You Need",
     description:
-      "Tell us the product, quantity, and delivery location. Choose whether it is shown publicly on this board or kept private.",
+      "Tell us the product, quantity, and delivery location. Show it publicly on this board so suppliers can contact you, or keep it private.",
     icon: FileText,
     iconColor: "bg-green/15 text-green",
   },
@@ -74,7 +74,7 @@ const SOURCING_STEPS = [
     step: "03",
     title: "Talk on WhatsApp",
     description:
-      "We introduce you to the exporter on WhatsApp. Pricing, samples, and the deal are agreed between you; the platform takes no commission.",
+      "Suppliers who unlock a public requirement call or WhatsApp you directly, or our team introduces you. Pricing, samples, and the deal are agreed between you; the platform takes no commission.",
     icon: MessageCircle,
     iconColor: "bg-gold/15 text-gold",
   },
@@ -244,6 +244,7 @@ export default async function BuyRequirementsPage({ searchParams }: Props) {
                   quantity={requirement.quantity}
                   location={requirement.location}
                   createdAt={requirement.createdAt}
+                  contactUnlockable={requirement.contactUnlockable}
                 />
               ))}
             </div>

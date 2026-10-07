@@ -20,6 +20,9 @@ vi.mock("next/link", () => ({
 vi.mock("@/components/send-enquiry-dialog", () => ({
   SendEnquiryDialog: () => createElement("button", { "data-send-enquiry": true }, "Respond"),
 }));
+vi.mock("@/components/contact-buyer-dialog", () => ({
+  ContactBuyerDialog: () => createElement("button", { "data-contact-buyer": true }, "Contact Buyer"),
+}));
 vi.mock("@/components/search-bar", () => ({
   SearchBar: () => createElement("div", { "data-search-bar": true }),
 }));
@@ -27,8 +30,8 @@ vi.mock("@/components/search-bar", () => ({
 import BuyRequirementsPage from "./page";
 
 const requirements: LatestBuyRequirement[] = [
-  { id: "r1", productText: "Green cardamom", quantity: "5 MT", location: "Dubai", createdAt: "2026-09-25T10:00:00Z" },
-  { id: "r2", productText: "Assam CTC tea", quantity: "2 tonnes", location: null, createdAt: "2026-09-24T10:00:00Z" },
+  { id: "r1", productText: "Green cardamom", quantity: "5 MT", location: "Dubai", createdAt: "2026-09-25T10:00:00Z", contactUnlockable: true },
+  { id: "r2", productText: "Assam CTC tea", quantity: "2 tonnes", location: null, createdAt: "2026-09-24T10:00:00Z", contactUnlockable: false },
 ];
 
 async function renderPage(q?: string): Promise<string> {
@@ -55,6 +58,13 @@ describe("BuyRequirementsPage", () => {
     expect(html).toContain("Green cardamom");
     expect(html).toContain("Assam CTC tea");
     expect(html).not.toContain("most recent");
+  });
+
+  it("offers Contact Buyer only on requirements whose buyer agreed to share, Respond on the rest (spec 0009)", async () => {
+    const html = await renderPage();
+
+    expect(html.match(/data-contact-buyer/g)).toHaveLength(1);
+    expect(html.match(/data-send-enquiry/g)).toHaveLength(1);
   });
 
   it("says the list is cut off when it reaches the 100 post cap", async () => {

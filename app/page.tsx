@@ -313,6 +313,7 @@ export default async function Home() {
                   quantity={requirement.quantity}
                   location={requirement.location}
                   createdAt={requirement.createdAt}
+                  contactUnlockable={requirement.contactUnlockable}
                 />
               ))}
             </div>

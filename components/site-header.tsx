@@ -7,6 +7,7 @@ import {
   Building2,
   ChevronRight,
   ClipboardList,
+  Contact,
   Crown,
   FileText,
   Globe,
@@ -127,6 +128,9 @@ export function SiteHeader() {
             <Show when="signed-in">
               <Link href="/list-business" className="text-foreground transition-colors hover:text-green">
                 My Business
+              </Link>
+              <Link href="/my-buyer-contacts" className="text-foreground transition-colors hover:text-green">
+                Buyer Contacts
               </Link>
             </Show>
           </nav>
@@ -334,6 +338,15 @@ export function SiteHeader() {
                       >
                         <Store className="size-4 text-green" />
                         <span>My Business Profile</span>
+                      </SheetClose>
+
+                      <SheetClose
+                        render={<Link href="/my-buyer-contacts" />}
+                        nativeButton={false}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground shadow-2xs transition-all hover:bg-muted active:scale-[0.99]"
+                      >
+                        <Contact className="size-4 text-green" />
+                        <span>My Buyer Contacts</span>
                       </SheetClose>
 
                       <SheetClose

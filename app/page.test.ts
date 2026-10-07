@@ -34,6 +34,9 @@ vi.mock("next/link", () => ({
 vi.mock("@/components/send-enquiry-dialog", () => ({
   SendEnquiryDialog: () => createElement("button", { "data-send-enquiry": true }, "Respond"),
 }));
+vi.mock("@/components/contact-buyer-dialog", () => ({
+  ContactBuyerDialog: () => createElement("button", { "data-contact-buyer": true }, "Contact Buyer"),
+}));
 vi.mock("@/components/hero-search", () => ({
   HeroSearch: () => createElement("div", { "data-hero-search": true }),
 }));
@@ -54,7 +57,7 @@ const exporters: FeaturedExporter[] = [
   { id: "c1", slug: "avadi-herbs-india", name: "Avadi Herbs India", logoUrl: null, location: "Silchar", verified: true },
 ];
 const requirements: LatestBuyRequirement[] = [
-  { id: "r1", productText: "Green cardamom", quantity: "5 MT", location: "Dubai", createdAt: "2026-09-25T10:00:00Z" },
+  { id: "r1", productText: "Green cardamom", quantity: "5 MT", location: "Dubai", createdAt: "2026-09-25T10:00:00Z", contactUnlockable: true },
 ];
 
 const HEADINGS = {

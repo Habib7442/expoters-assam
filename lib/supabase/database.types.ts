@@ -39,6 +39,49 @@ export type Database = {
   }
   public: {
     Tables: {
+      buy_requirement_unlocks: {
+        Row: {
+          buy_requirement_id: string
+          company_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          buy_requirement_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          buy_requirement_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buy_requirement_unlocks_buy_requirement_id_fkey"
+            columns: ["buy_requirement_id"]
+            isOneToOne: false
+            referencedRelation: "buy_requirements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buy_requirement_unlocks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buy_requirement_unlocks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_tiers"
+            referencedColumns: ["company_id"]
+          },
+        ]
+      }
       buy_requirements: {
         Row: {
           buyer_id: string
@@ -47,6 +90,7 @@ export type Database = {
           consent_notice_version: string | null
           contact_email: string | null
           contact_name: string
+          contact_unlockable: boolean | null
           created_at: string
           id: string
           is_public: boolean
@@ -62,6 +106,7 @@ export type Database = {
           consent_notice_version?: string | null
           contact_email?: string | null
           contact_name: string
+          contact_unlockable?: boolean | null
           created_at?: string
           id?: string
           is_public?: boolean
@@ -77,6 +122,7 @@ export type Database = {
           consent_notice_version?: string | null
           contact_email?: string | null
           contact_name?: string
+          contact_unlockable?: boolean | null
           created_at?: string
           id?: string
           is_public?: boolean
@@ -369,6 +415,7 @@ export type Database = {
           id: string
           razorpay_order_id: string | null
           razorpay_payment_id: string | null
+          reviewed_at: string | null
           source: string
           starts_at: string
           status: string
@@ -381,6 +428,7 @@ export type Database = {
           id?: string
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
+          reviewed_at?: string | null
           source: string
           starts_at?: string
           status: string
@@ -393,6 +441,7 @@ export type Database = {
           id?: string
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
+          reviewed_at?: string | null
           source?: string
           starts_at?: string
           status?: string
@@ -533,6 +582,16 @@ export type Database = {
       }
     }
     Functions: {
+      contact_allowances: {
+        Args: { p_company_ids: string[] }
+        Returns: {
+          company_id: string
+          period_start: string
+          quota: number
+          tier: string
+          used: number
+        }[]
+      }
       create_admin_product: {
         Args: {
           p_category_id: string
@@ -706,7 +765,25 @@ export type Database = {
           score: number
         }[]
       }
+      set_company_plan: {
+        Args: { p_company_id: string; p_tier: string }
+        Returns: undefined
+      }
       slugify: { Args: { p_text: string }; Returns: string }
+      unlock_buy_requirement: {
+        Args: { p_buy_requirement_id: string; p_clerk_user_id: string }
+        Returns: {
+          contact_name: string
+          email: string
+          location: string
+          newly_unlocked: boolean
+          notes: string
+          phone: string
+          posted_at: string
+          product_text: string
+          quantity: string
+        }[]
+      }
       update_business_listing: {
         Args: {
           p_about: string

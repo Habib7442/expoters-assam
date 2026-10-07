@@ -135,6 +135,8 @@ export type LatestBuyRequirement = {
   quantity: string;
   location: string | null;
   createdAt: string;
+  /** Whether a supplier can unlock the buyer's details (spec 0009). Not personal data itself. */
+  contactUnlockable: boolean;
 };
 
 /**
@@ -152,7 +154,7 @@ export async function getLatestBuyRequirements(
 
   let filtered = supabase
     .from("buy_requirements")
-    .select("id, product_text, quantity, location, created_at")
+    .select("id, product_text, quantity, location, created_at, contact_unlockable")
     .eq("is_public", true);
   if (rankedIds) filtered = filtered.in("id", rankedIds);
 
@@ -173,5 +175,6 @@ export async function getLatestBuyRequirements(
     quantity: row.quantity,
     location: row.location,
     createdAt: row.created_at,
+    contactUnlockable: row.contact_unlockable ?? false,
   }));
 }

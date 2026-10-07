@@ -183,8 +183,8 @@ export function BuyRequirementForm({ categories, initialProductText }: BuyRequir
       <label htmlFor="req-public" className="flex items-start gap-2 text-sm text-muted-foreground">
         {/* Unticked by default: under the DPDP Act a pre-ticked box is not valid consent. */}
         <input id="req-public" name="isPublic" type="checkbox" className="mt-0.5 size-4 shrink-0" />
-        Show this requirement publicly under Latest Buy Requirements, so sellers can find it (your name,
-        phone, and email are never shown)
+        Show this requirement publicly under Latest Buy Requirements, so suppliers can find it and contact me.
+        Suppliers who unlock it on Exporters Assam can see my name, phone, and email.
       </label>
 
       <ConsentCheckbox

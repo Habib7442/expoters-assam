@@ -12,7 +12,7 @@ export default function TermsPage() {
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8 flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">Terms of Service</h1>
-          <p className="text-sm text-muted-foreground">Last updated: September 26, 2026</p>
+          <p className="text-sm text-muted-foreground">Last updated: October 7, 2026</p>
         </div>
 
         <div className="flex flex-col gap-8 text-sm leading-7 text-foreground/80 sm:text-base">
@@ -65,7 +65,10 @@ export default function TermsPage() {
             <h2 className="font-heading text-lg font-semibold text-green-deep">4. Buy requirements and enquiries</h2>
             <p>
               If you choose to show a buy requirement publicly, your stated need (product, quantity, location) is
-              visible to suppliers browsing the directory; your name, phone number, and email are never shown.
+              visible to suppliers browsing the directory. Your name, phone number, and email are never shown on
+              the site, but a signed in supplier with an approved listing can unlock them to contact you
+              directly (see our Privacy Policy). Buy requirements posted publicly before October 7, 2026 are
+              never unlocked.
               Sending an enquiry saves it with us and offers you a WhatsApp link to the supplier, pre-filled with
               the product or company name and your message. The name, phone number, and email you entered on our
               form are not included. If you open the link and send the message, the supplier sees it along with
@@ -80,8 +83,12 @@ export default function TermsPage() {
           <section className="flex flex-col gap-2">
             <h2 className="font-heading text-lg font-semibold text-green-deep">5. Membership and payment</h2>
             <p>
-              Suppliers may purchase a paid membership tier (Basic, Silver, or Gold) for enhanced visibility and
-              features on the directory. Membership payments are processed securely through Razorpay. Membership
+              Basic membership is free. Suppliers may buy a paid Silver or Gold plan for more visibility and
+              features on the directory, including more buyer contacts (Basic: 1, Silver: 15, Gold: unlimited per
+              plan year). A paid plan lasts one year from the day our team activates it. Payment is not taken on
+              this website: you pay us directly using the details we share on WhatsApp, send the payment
+              screenshot there, and we activate the plan once we&apos;ve confirmed it. A buyer contact is used
+              when you unlock a buy requirement, whether or not you then reach the buyer. Membership
               fees are for platform features only — they are never a fee charged on any transaction between a
               buyer and a supplier, since no such transaction happens through Exporters Assam.
             </p>

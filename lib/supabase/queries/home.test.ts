@@ -258,7 +258,7 @@ describe("getLatestBuyRequirements", () => {
     await getLatestBuyRequirements(5);
 
     const [columns] = builder.select.mock.calls[0] as [string];
-    expect(columns).toBe("id, product_text, quantity, location, created_at");
+    expect(columns).toBe("id, product_text, quantity, location, created_at, contact_unlockable");
     expect(columns).not.toMatch(/contact_name|contact_email|buyer_id/);
     expect(builder.eq).toHaveBeenCalledWith("is_public", true);
   });
@@ -277,13 +277,17 @@ describe("getLatestBuyRequirements", () => {
   it("maps rows to camelCase cards", async () => {
     fromMock.mockReturnValue(
       builderResolvingTo({
-        data: [{ id: "r1", product_text: "Cardamom", quantity: "5 MT", location: null, created_at: "2026-09-25T10:00:00Z" }],
+        data: [
+          { id: "r1", product_text: "Cardamom", quantity: "5 MT", location: null, created_at: "2026-09-25T10:00:00Z", contact_unlockable: true },
+          { id: "r2", product_text: "Tea", quantity: "1 MT", location: null, created_at: "2026-09-24T10:00:00Z", contact_unlockable: null },
+        ],
         error: null,
       }),
     );
 
     await expect(getLatestBuyRequirements(5)).resolves.toEqual([
-      { id: "r1", productText: "Cardamom", quantity: "5 MT", location: null, createdAt: "2026-09-25T10:00:00Z" },
+      { id: "r1", productText: "Cardamom", quantity: "5 MT", location: null, createdAt: "2026-09-25T10:00:00Z", contactUnlockable: true },
+      { id: "r2", productText: "Tea", quantity: "1 MT", location: null, createdAt: "2026-09-24T10:00:00Z", contactUnlockable: false },
     ]);
   });
 
