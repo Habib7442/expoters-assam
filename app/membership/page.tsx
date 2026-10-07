@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { Check, MessageCircle } from "lucide-react";
 
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site";
+import { getMyCompany } from "@/lib/supabase/queries/companies";
+import { getMyPlan, type MyPlan } from "@/lib/supabase/queries/my-plan";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { MyPlanCard } from "@/components/my-plan-card";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/membership" },
@@ -13,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 type Tier = {
+  tier: MyPlan["tier"];
   name: string;
   price: string;
   /** Shown under the price, e.g. "+ GST per year". */
@@ -29,6 +34,7 @@ type Tier = {
 // from the admin app.
 const TIERS: Tier[] = [
   {
+    tier: "basic",
     name: "Basic",
     price: "Free",
     priceNote: "Limited features",
@@ -42,6 +48,7 @@ const TIERS: Tier[] = [
     paid: false,
   },
   {
+    tier: "silver",
     name: "Silver",
     price: "₹12,000",
     priceNote: "+ GST per year",
@@ -57,6 +64,7 @@ const TIERS: Tier[] = [
     paid: true,
   },
   {
+    tier: "gold",
     name: "Gold",
     price: "₹23,999",
     priceNote: "+ GST per year",
@@ -90,7 +98,17 @@ function planWhatsappUrl(tier: Tier): string {
   return `https://wa.me/${platformNumber.replace(/^\+/, "")}?text=${encodeURIComponent(text)}`;
 }
 
-export default function MembershipPage() {
+/** The signed in supplier's plan, or null for a visitor or someone with no listing yet. */
+async function currentPlan(): Promise<MyPlan | null> {
+  const { userId } = await auth();
+  if (!userId) return null;
+  const company = await getMyCompany(userId);
+  return company ? getMyPlan(company.id) : null;
+}
+
+export default async function MembershipPage() {
+  const plan = await currentPlan();
+
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
       <div className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14">
@@ -98,9 +116,15 @@ export default function MembershipPage() {
           <h1 className="font-heading text-2xl font-bold text-green-deep sm:text-3xl">Membership Plans</h1>
           <p className="mx-auto max-w-xl text-sm text-muted-foreground sm:text-base">
             Membership decides how visible your business is on the directory. Start free, upgrade whenever
-            you&apos;re ready for more reach.
+            you&apos;re ready for more reach. Every account starts on the free Basic plan.
           </p>
         </div>
+
+        {plan && (
+          <div className="mx-auto mb-6 w-full max-w-3xl">
+            <MyPlanCard plan={plan} />
+          </div>
+        )}
 
         <section
           aria-labelledby="how-to-upgrade"
@@ -129,9 +153,16 @@ export default function MembershipPage() {
           {TIERS.map((tier) => (
             <div
               key={tier.name}
-              className="flex flex-col gap-5 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8"
+              className={`flex flex-col gap-5 rounded-2xl border bg-background p-6 shadow-sm sm:p-8 ${
+                plan?.tier === tier.tier ? "border-green ring-2 ring-green/30" : "border-border"
+              }`}
             >
               <div className="flex flex-col gap-2">
+                {plan?.tier === tier.tier && (
+                  <span className="w-fit rounded-full bg-green px-3 py-1 text-xs font-semibold text-white">
+                    Your current plan
+                  </span>
+                )}
                 <Badge
                   variant={tier.badgeVariant === "gold" ? "secondary" : tier.badgeVariant}
                   className={
@@ -174,7 +205,7 @@ export default function MembershipPage() {
                   render={<Link href="/list-business" />}
                   nativeButton={false}
                 >
-                  List Your Business Free
+                  {plan ? "View my listing" : "List Your Business Free"}
                 </Button>
               )}
             </div>

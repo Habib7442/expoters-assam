@@ -4,9 +4,11 @@ import { BadgeCheck } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 
 import { getMyCompany } from "@/lib/supabase/queries/companies";
+import { getMyPlan } from "@/lib/supabase/queries/my-plan";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { BusinessListingForm } from "@/components/business-listing-form";
 import { Button } from "@/components/ui/button";
+import { MyPlanCard } from "@/components/my-plan-card";
 
 export const metadata: Metadata = {
   // Per-user page: nothing here for search results (robots.txt disallows it too).
@@ -20,6 +22,7 @@ export default async function ListBusinessPage() {
   if (!userId) return redirectToSignIn({ returnBackUrl: "/list-business" });
 
   const company = await getMyCompany(userId);
+  const plan = company ? await getMyPlan(company.id) : null;
 
   return (
     <main className="flex flex-1 flex-col bg-bg-soft">
@@ -34,6 +37,12 @@ export default async function ListBusinessPage() {
               : "Tell buyers who you are. An admin reviews every listing before it goes live."}
           </p>
         </div>
+
+        {plan && (
+          <div className="mb-6">
+            <MyPlanCard plan={plan} />
+          </div>
+        )}
 
         {!company && <BusinessListingForm mode="create" />}
 
