@@ -184,7 +184,7 @@ code in `supabase/migrations/20260911010000_add_create_product_submission.sql`, 
 ## Slice 4: revenue
 
 ### 11. Membership plans (manual payment via WhatsApp) · in-progress
-Basic free, Silver ₹12,000 + GST per year (15 buyer contacts per year), Gold ₹23,999 + GST per year (unlimited). **Changed 2026-10-06 by the client:** no Razorpay. The plan buttons on `/membership` open WhatsApp; the supplier pays and sends the screenshot there, and an admin sets the plan from the admin app's Memberships page (all companies, 20 per page).
+Basic free, Silver ₹11,999 + GST per year (15 buyer contacts per year), Gold ₹23,999 + GST per year (unlimited). **Changed 2026-10-06 by the client:** no Razorpay. The plan buttons on `/membership` open WhatsApp; the supplier pays and sends the screenshot there, and an admin sets the plan from the admin app's Memberships page (all companies, 20 per page).
 **Done when:** a supplier can reach us on WhatsApp from a plan, is clearly told to send the payment screenshot, and the admin can set any company's plan so the tier updates for one year.
 - [x] Design it (spec): [0008](../specs/0008-manual-membership-requests.md)
 - [x] Build it: `/develop membership plans` (2026-10-06, migrations `20261006010000` and `20261006020000` applied; admin Memberships page built in `expoters-assam-admin`)

@@ -50,7 +50,7 @@ const TIERS: Tier[] = [
   {
     tier: "silver",
     name: "Silver",
-    price: "₹12,000",
+    price: "₹11,999",
     priceNote: "+ GST per year",
     badgeVariant: "default",
     features: [

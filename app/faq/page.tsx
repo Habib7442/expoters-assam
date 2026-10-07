@@ -80,7 +80,7 @@ const FAQ_GROUPS: { title: string; items: Faq[] }[] = [
       {
         question: "Are there paid plans?",
         answer:
-          "Listing is free on the Basic plan, which includes 1 buyer contact a year. Silver (₹12,000 + GST a year) adds more visibility and 15 buyer contacts a year; Gold (₹23,999 + GST a year) gives unlimited buyer contacts. To upgrade, choose a plan on the Membership page, pay using the details we share on WhatsApp, and send us the payment screenshot there.",
+          "Listing is free on the Basic plan, which includes 1 buyer contact a year. Silver (₹11,999 + GST a year) adds more visibility and 15 buyer contacts a year; Gold (₹23,999 + GST a year) gives unlimited buyer contacts. To upgrade, choose a plan on the Membership page, pay using the details we share on WhatsApp, and send us the payment screenshot there.",
       },
     ],
   },

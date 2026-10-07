@@ -11,7 +11,7 @@ The client decided this on 2026-10-06. A first version saved a pending request o
 
 ## Requirements
 
-- **AC-1**: `/membership` shows Basic (Free, limited features), Silver (₹12,000 + GST per year, 15 buyer contacts per year) and Gold (₹23,999 + GST per year, unlimited buyer contacts). Prices were confirmed by the client on 2026-10-06.
+- **AC-1**: `/membership` shows Basic (Free, limited features), Silver (₹11,999 + GST per year, 15 buyer contacts per year) and Gold (₹23,999 + GST per year, unlimited buyer contacts). Prices were confirmed by the client on 2026-10-06.
 - **AC-2**: The Silver and Gold buttons are `wa.me` links to `PLATFORM_WHATSAPP_NUMBER` with the plan and price typed in. If that setting is missing, they fall back to the contact email.
 - **AC-3**: A "How to upgrade" box sets out the steps clearly: choose a plan on WhatsApp, pay using the details shared there, send the payment screenshot on WhatsApp, and wait for the admin to upgrade you. It also says payment is not taken on the website.
 - **AC-4**: The admin Memberships page lists every company (any listing status), alphabetical, 20 per page, with Previous/Next links and a name search. Each row shows the email, WhatsApp number, listing status, current plan and plan end date.
