@@ -64,8 +64,10 @@ type TurnstileWidgetProps = {
 /**
  * Cloudflare Turnstile bot check (spec 0006). Rendered explicitly (not via
  * the auto scanning `cf-turnstile` class) so it also works inside a dialog
- * that mounts after page load. "interaction-only" keeps it invisible for
- * most visitors; it only shows a checkbox when Cloudflare needs one.
+ * that mounts after page load. "always" shows the Cloudflare box on every
+ * form (a spinner, then "Success!"), so visitors can see the check running
+ * and see Cloudflare's own message if it fails, instead of a submit button
+ * that silently stays disabled.
  * Renders nothing when no site key is configured (the server then skips
  * the check and logs it, AC-4).
  */
@@ -98,7 +100,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
         if (cancelled || !containerRef.current || !window.turnstile) return
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
-          appearance: "interaction-only",
+          appearance: "always",
           size: "flexible",
           callback: (token) => onTokenRef.current(token),
           "expired-callback": () => onTokenRef.current(null),
